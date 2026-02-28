@@ -10,15 +10,15 @@ extends Node
 # All stems must be loop-enabled and start in sync once.
 # Never restart stems individually; only adjust volume_db.
 
-const DEFAULT_SYNTH: AudioStream = preload("res://assets/stems/default/background_layer.ogg")
-const DEFAULT_BASS: AudioStream = preload("res://assets/stems/default/hype_layer.ogg")
-const DEFAULT_DRUMS: AudioStream = preload("res://assets/stems/default/match_layer.ogg")
-const DEFAULT_FX: AudioStream = preload("res://assets/stems/default/fx_layer.ogg")
+const DEFAULT_SYNTH_PATH := "res://assets/stems/default/background_layer.ogg"
+const DEFAULT_BASS_PATH := "res://assets/stems/default/hype_layer.ogg"
+const DEFAULT_DRUMS_PATH := "res://assets/stems/default/match_layer.ogg"
+const DEFAULT_FX_PATH := "res://assets/stems/default/fx_layer.ogg"
 
-const GLASSGRID_SYNTH: AudioStream = preload("res://assets/stems/glassgrid/background_layer.ogg")
-const GLASSGRID_BASS: AudioStream = preload("res://assets/stems/glassgrid/hype_layer.ogg")
-const GLASSGRID_DRUMS: AudioStream = preload("res://assets/stems/glassgrid/match_layer.ogg")
-const GLASSGRID_FX: AudioStream = preload("res://assets/stems/glassgrid/fx_layer.ogg")
+const GLASSGRID_SYNTH_PATH := "res://assets/stems/glassgrid/background_layer.ogg"
+const GLASSGRID_BASS_PATH := "res://assets/stems/glassgrid/hype_layer.ogg"
+const GLASSGRID_DRUMS_PATH := "res://assets/stems/glassgrid/match_layer.ogg"
+const GLASSGRID_FX_PATH := "res://assets/stems/glassgrid/fx_layer.ogg"
 
 var synth: AudioStreamPlayer
 var bass: AudioStreamPlayer
@@ -39,6 +39,9 @@ var _friendly_names := {
 }
 
 func _ready() -> void:
+	if _is_headless_singleton():
+		_set_music_bus_muted(true)
+		return
 	_ensure_music_bus()
 	synth = _ensure_player("Synth")
 	bass = _ensure_player("Bass")
@@ -48,7 +51,25 @@ func _ready() -> void:
 	_load_tracks_from_manifest(FeatureFlags.audio_track_manifest_path())
 	set_track(_initial_track_id(), false)
 
+func _exit_tree() -> void:
+	if is_instance_valid(_drums_fade_tween):
+		_drums_fade_tween.kill()
+	if is_instance_valid(_mix_fade_tween):
+		_mix_fade_tween.kill()
+	for player_var in [synth, bass, drums, fx]:
+		var player: AudioStreamPlayer = player_var as AudioStreamPlayer
+		if player == null:
+			continue
+		player.stop()
+		player.stream_paused = true
+		player.stream = null
+	_tracks.clear()
+	_track_bpms.clear()
+	_current_track_id = ""
+
 func start_all_synced() -> void:
+	if synth == null or bass == null or drums == null or fx == null:
+		return
 	if _current_track_id.is_empty():
 		set_track(_initial_track_id(), false)
 	for p in [synth, bass, drums, fx]:
@@ -57,12 +78,16 @@ func start_all_synced() -> void:
 	set_calm()
 
 func set_calm() -> void:
+	if synth == null or bass == null or drums == null or fx == null:
+		return
 	synth.volume_db = 0.0
 	bass.volume_db  = FeatureFlags.COMBO_FLOOR_DB
 	drums.volume_db = FeatureFlags.COMBO_FLOOR_DB
 	fx.volume_db    = FeatureFlags.COMBO_FLOOR_DB
 
 func fade_out_hype_layers(duration: float = 0.45) -> void:
+	if drums == null or fx == null:
+		return
 	if is_instance_valid(_mix_fade_tween):
 		_mix_fade_tween.kill()
 	_mix_fade_tween = create_tween()
@@ -71,6 +96,8 @@ func fade_out_hype_layers(duration: float = 0.45) -> void:
 	_mix_fade_tween.tween_property(fx, "volume_db", FeatureFlags.COMBO_FLOOR_DB, duration)
 
 func fade_to_calm(duration: float = 0.5) -> void:
+	if synth == null or bass == null or drums == null or fx == null:
+		return
 	if is_instance_valid(_mix_fade_tween):
 		_mix_fade_tween.kill()
 	_mix_fade_tween = create_tween()
@@ -81,11 +108,15 @@ func fade_to_calm(duration: float = 0.5) -> void:
 	_mix_fade_tween.tween_property(fx, "volume_db", FeatureFlags.COMBO_FLOOR_DB, duration)
 
 func set_gameplay() -> void:
+	if bass == null:
+		return
 	# Fade bass in for gameplay energy bed
 	var t := create_tween()
 	t.tween_property(bass, "volume_db", -8.0, 0.5)
 
 func on_match_made() -> void:
+	if drums == null:
+		return
 	if FeatureFlags.is_audio_test_mode():
 		return
 
@@ -104,6 +135,8 @@ func on_match_made() -> void:
 	)
 
 func maybe_trigger_high_combo_fx() -> void:
+	if fx == null:
+		return
 	if FeatureFlags.is_audio_test_mode():
 		return
 
@@ -119,6 +152,8 @@ func maybe_trigger_high_combo_fx() -> void:
 	t.tween_property(fx, "volume_db", FeatureFlags.COMBO_FLOOR_DB, 0.6)
 
 func set_ads_paused(paused: bool) -> void:
+	if synth == null or bass == null or drums == null or fx == null:
+		return
 	for p in [synth, bass, drums, fx]:
 		p.stream_paused = paused
 
@@ -168,6 +203,13 @@ func register_track(id: String, synth_stream: AudioStream, bass_stream: AudioStr
 	return true
 
 func set_track(id: String, restart_if_playing: bool = true) -> bool:
+	if synth == null or bass == null or drums == null or fx == null:
+		if id == "off":
+			_set_music_bus_muted(true)
+			_current_track_id = id
+			SaveStore.set_selected_track_id(id)
+			return true
+		return false
 	if id == "off":
 		_set_music_bus_muted(true)
 		_current_track_id = id
@@ -194,20 +236,20 @@ func set_track(id: String, restart_if_playing: bool = true) -> bool:
 	return true
 
 func _register_builtin_tracks() -> void:
-	register_track(
+	_register_track_from_paths(
 		"default",
-		DEFAULT_SYNTH,
-		DEFAULT_BASS,
-		DEFAULT_DRUMS,
-		DEFAULT_FX,
+		DEFAULT_SYNTH_PATH,
+		DEFAULT_BASS_PATH,
+		DEFAULT_DRUMS_PATH,
+		DEFAULT_FX_PATH,
 		95.0
 	)
-	register_track(
+	_register_track_from_paths(
 		"glassgrid",
-		GLASSGRID_SYNTH,
-		GLASSGRID_BASS,
-		GLASSGRID_DRUMS,
-		GLASSGRID_FX,
+		GLASSGRID_SYNTH_PATH,
+		GLASSGRID_BASS_PATH,
+		GLASSGRID_DRUMS_PATH,
+		GLASSGRID_FX_PATH,
 		95.0
 	)
 
@@ -285,11 +327,28 @@ func _register_track_entry(entry: Dictionary) -> void:
 		return
 	if not FileAccess.file_exists(fx_path):
 		return
-	register_track(
-		id,
-		load(synth_path) as AudioStream,
-		load(bass_path) as AudioStream,
-		load(drums_path) as AudioStream,
-		load(fx_path) as AudioStream,
-		bpm
-	)
+	_register_track_from_paths(id, synth_path, bass_path, drums_path, fx_path, bpm)
+
+func _register_track_from_paths(id: String, synth_path: String, bass_path: String, drums_path: String, fx_path: String, bpm: float) -> void:
+	var synth_stream: AudioStream = _load_stream(synth_path)
+	var bass_stream: AudioStream = _load_stream(bass_path)
+	var drums_stream: AudioStream = _load_stream(drums_path)
+	var fx_stream: AudioStream = _load_stream(fx_path)
+	if synth_stream == null or bass_stream == null or drums_stream == null or fx_stream == null:
+		return
+	register_track(id, synth_stream, bass_stream, drums_stream, fx_stream, bpm)
+
+func _load_stream(path: String) -> AudioStream:
+	if path.is_empty():
+		return null
+	if not ResourceLoader.exists(path):
+		return null
+	var resource: Resource = load(path)
+	if resource is AudioStream:
+		return resource as AudioStream
+	return null
+
+func _is_headless_singleton() -> bool:
+	if DisplayServer.get_name() != "headless":
+		return false
+	return str(get_path()) == "/root/MusicManager"

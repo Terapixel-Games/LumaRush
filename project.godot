@@ -19,8 +19,8 @@ config/icon="res://icon.svg"
 
 GameSiteSDK="*res://src/platform/GameSiteSDK.gd"
 SaveStore="*res://src/data/SaveStore.gd"
-StreakManager="*res://src/data/StreakManager.gd"
-AdManager="*res://src/ads/AdManager.gd"
+StreakManager="*res://addons/arcade_core/StreakManager.gd"
+AdManager="*res://addons/arcade_core/AdManager.gd"
 MusicManager="*res://src/audio/MusicManager.gd"
 BackgroundMood="*res://src/visual/BackgroundMood.gd"
 VFXManager="*res://src/vfx/VFXManager.gd"
@@ -34,6 +34,9 @@ SafeArea="*res://src/core/SafeArea.gd"
 Typography="*res://src/ui/Typography.gd"
 NakamaService="*res://src/network/NakamaService.gd"
 
+SaveManager="*res://addons/arcade_core/SaveManager.gd"
+AudioManager="*res://addons/arcade_core/AudioManager.gd"
+Fx="*res://addons/arcade_core/Fx.gd"
 [debug]
 
 gdscript/warnings/treat_warnings_as_errors=false
@@ -41,12 +44,14 @@ window/handheld/orientation="portrait"
 
 [display]
 
-window/size/resizable=false
+window/size/resizable=true
 window/size/borderless=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
 
+window/size/viewport_width=1080
+window/size/viewport_height=1920
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/AdmobPlugin/plugin.cfg", "res://addons/gdUnit4/plugin.cfg")

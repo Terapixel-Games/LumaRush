@@ -5,8 +5,8 @@ func test_main_scene_is_boot() -> void:
 
 func test_required_autoloads_are_registered() -> void:
 	assert_that(String(ProjectSettings.get_setting("autoload/SaveStore"))).is_equal("*res://src/data/SaveStore.gd")
-	assert_that(String(ProjectSettings.get_setting("autoload/StreakManager"))).is_equal("*res://src/data/StreakManager.gd")
-	assert_that(String(ProjectSettings.get_setting("autoload/AdManager"))).is_equal("*res://src/ads/AdManager.gd")
+	assert_that(String(ProjectSettings.get_setting("autoload/StreakManager"))).is_equal("*res://addons/arcade_core/StreakManager.gd")
+	assert_that(String(ProjectSettings.get_setting("autoload/AdManager"))).is_equal("*res://addons/arcade_core/AdManager.gd")
 	assert_that(String(ProjectSettings.get_setting("autoload/MusicManager"))).is_equal("*res://src/audio/MusicManager.gd")
 	assert_that(String(ProjectSettings.get_setting("autoload/BackgroundMood"))).is_equal("*res://src/visual/BackgroundMood.gd")
 	assert_that(String(ProjectSettings.get_setting("autoload/VFXManager"))).is_equal("*res://src/vfx/VFXManager.gd")

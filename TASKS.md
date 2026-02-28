@@ -153,3 +153,8 @@ Status:
 4. Play a run and submit score (`tpx_submit_score`) to OPEN mode.
 5. Open leaderboard (`tpx_list_leaderboard`) and verify the new record shows updated username.
 6. Repeat one additional score submission to confirm no stale cached username is reused.
+
+## Fun Scale Excellence Plan (2026-02-27)
+- [x] Baseline fun-scale gap audit completed (points 1-9).
+- [x] [P1] Eliminate remaining runtime warnings/resource leaks in headless runs to protect polish quality.
+- [x] [P2] Expand social loop depth (weekly challenge ladder + async rival targets).

@@ -28,7 +28,7 @@ var PROVIDERS_BY_EXPORT_TARGET := {
 var _base_url: String = DEFAULT_BASE_URL
 var _server_key: String = DEFAULT_SERVER_KEY
 var _leaderboard_limit: int = DEFAULT_LEADERBOARD_LIMIT
-var _connect_enabled: bool = true
+var _connect_enabled: bool = false
 var _export_target: String = DEFAULT_EXPORT_TARGET
 var _client_events_enabled := DEFAULT_CLIENT_EVENTS_ENABLED
 var _client_event_sample_rate := DEFAULT_CLIENT_EVENT_SAMPLE_RATE
@@ -59,6 +59,10 @@ var _wallet: Dictionary = {
 
 func _ready() -> void:
 	_read_runtime_settings()
+	if _is_headless_singleton():
+		_connect_enabled = false
+		_set_online_state("Offline")
+		return
 	if _connect_enabled:
 		call_deferred("_bootstrap")
 
@@ -751,6 +755,8 @@ func track_client_event(event_name: String, properties: Dictionary = {}, require
 		return
 	if not _client_events_rpc_available:
 		return
+	if not _connect_enabled:
+		return
 	var normalized_name := event_name.strip_edges().to_lower()
 	if normalized_name.is_empty():
 		return
@@ -1182,3 +1188,8 @@ func _bearer_auth_headers() -> PackedStringArray:
 func _set_online_state(status: String) -> void:
 	_online_status = status
 	online_state_changed.emit(status)
+
+func _is_headless_singleton() -> bool:
+	if DisplayServer.get_name() != "headless":
+		return false
+	return str(get_path()) == "/root/NakamaService"

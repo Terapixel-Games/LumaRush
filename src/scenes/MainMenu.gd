@@ -28,6 +28,7 @@ var _track_index: int = 0
 var _audio_overlay
 var _mode_button: Button
 var _daily_button: Button
+var _weekly_button: Button
 var _promo_button: Button
 var _scene_opened_msec: int = Time.get_ticks_msec()
 const BADGE_BG_COLOR: Color = Color(0.96, 0.22, 0.24, 1.0)
@@ -265,6 +266,13 @@ func _ensure_action_buttons() -> void:
 		_daily_button.pressed.connect(_on_daily_toggle_pressed)
 		panel_vbox.add_child(_daily_button)
 		panel_vbox.move_child(_daily_button, panel_vbox.get_child_count() - 1)
+	if _weekly_button == null:
+		_weekly_button = Button.new()
+		_weekly_button.name = "WeeklyLadderInfo"
+		_weekly_button.custom_minimum_size.y = 58.0
+		_weekly_button.disabled = true
+		panel_vbox.add_child(_weekly_button)
+		panel_vbox.move_child(_weekly_button, panel_vbox.get_child_count() - 1)
 	if _promo_button == null:
 		_promo_button = Button.new()
 		_promo_button.name = "CrossPromo"
@@ -275,14 +283,21 @@ func _ensure_action_buttons() -> void:
 		panel_vbox.move_child(_promo_button, panel_vbox.get_child_count() - 1)
 	UiFx.fade_in(_mode_button, 0.14)
 	UiFx.fade_in(_daily_button, 0.14)
+	UiFx.fade_in(_weekly_button, 0.14)
 	UiFx.fade_in(_promo_button, 0.14)
 
 func _sync_mode_buttons() -> void:
 	if _mode_button == null or _daily_button == null:
 		return
 	var mode_id := RunManager.get_selected_mode()
-	_mode_button.text = "Leaderboard Mode: %s" % mode_id
+	var week_points: int = int(SaveStore.data.get("social_week_points", 0))
+	var week_tier: int = int(SaveStore.data.get("social_week_tier", 0))
+	var rival_target: int = RunManager.get_active_rival_target()
+	var rival_name: String = str(SaveStore.data.get("social_rival_name", "Rival"))
+	_mode_button.text = "Leaderboard Mode: %s | Weekly Tier %d" % [mode_id, week_tier]
 	_daily_button.text = "Daily Challenge: %s" % ("On" if SaveStore.get_daily_challenge_enabled() else "Off")
+	if _weekly_button:
+		_weekly_button.text = "Weekly Ladder %d pts | %s target %d" % [week_points, rival_name, rival_target]
 
 func _on_mode_toggle_pressed() -> void:
 	var next_mode := "OPEN" if RunManager.get_selected_mode() == "PURE" else "PURE"

@@ -166,7 +166,7 @@ This repo now includes a Render Blueprint at `render.yaml` for a managed Postgre
 
 The Render startup script (`backend/nakama/render/start.sh`) runs migrations, starts Nakama on internal ports, and fronts it with nginx on Render's public `PORT`.
 
-On Render:
+On Render (fallback only):
 
 - API/Client endpoints: `https://<your-service>.onrender.com/`
 - Console: `https://<your-service>.onrender.com/console/`
@@ -174,6 +174,11 @@ On Render:
 ## Deploy on Cloud Run (primary)
 
 Cloud Run deployment scaffolding is available under `backend/nakama/cloudrun/`.
+
+Active runtime endpoints:
+- Production API/client: `https://terapixel.games/nakama/lumarush/`
+- Production console (Access-gated): `https://terapixel.games/nakama/lumarush/console`
+- Staging origin service: `https://lumarush-nakama-r42ojz43uq-uc.a.run.app`
 
 1. Build and push image with `backend/nakama/Dockerfile.render`.
 2. Create the required Secret Manager secrets (`nakama-db-address`, `nakama-server-key`, etc.).
