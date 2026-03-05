@@ -32,6 +32,7 @@ var _emission_activity: float = 1.0
 var _current_calm_weight: float = 1.0
 var _menu_density_mul: float = 1.0
 var _menu_alpha_mul: float = 1.0
+var _menu_contrast_mul: float = 1.0
 var _menu_emission_persistent: bool = false
 var _calm_point_color: Color = Color(0.36, 0.84, 1.0, 1.0)
 var _calm_streak_color: Color = Color(0.58, 0.92, 1.0, 1.0)
@@ -232,9 +233,10 @@ func set_emission_activity(value: float, stop_taper: bool = false) -> void:
 		_emission_tween.kill()
 	_set_emission_activity(value)
 
-func set_menu_visibility_boost(density_mul: float = 1.0, alpha_mul: float = 1.0) -> void:
+func set_menu_visibility_boost(density_mul: float = 1.0, alpha_mul: float = 1.0, contrast_mul: float = 1.0) -> void:
 	_menu_density_mul = max(1.0, density_mul)
 	_menu_alpha_mul = max(1.0, alpha_mul)
+	_menu_contrast_mul = max(1.0, contrast_mul)
 	_update_starfield_runtime()
 
 func set_menu_emission_persistent(enabled: bool) -> void:
@@ -304,7 +306,12 @@ func _update_starfield_runtime() -> void:
 	var beat_brightness_mul: float = 1.0 + (pulse01 * beat_pulse_depth * 0.5)
 	var density_mul: float = _menu_density_mul
 	var speed_mul: float = beat_speed_mul
-	var brightness_mul: float = _match_brightness_mul * beat_brightness_mul * _menu_alpha_mul
+	var menu_alive_mix: float = clamp((_menu_density_mul - 1.0) / 4.0, 0.0, 1.0)
+	var menu_twinkle_mul: float = 1.0 + (0.18 * menu_alive_mix * pulse01)
+	var brightness_mul: float = _match_brightness_mul * beat_brightness_mul * _menu_alpha_mul * menu_twinkle_mul
+	var menu_tint_mix: float = clamp(((_menu_contrast_mul - 1.0) * 0.42) + (menu_alive_mix * 0.22), 0.0, 0.36)
+	var point_color: Color = _base_point_color.lerp(Color(0.94, 0.99, 1.0, 1.0), menu_tint_mix)
+	var streak_color: Color = _base_streak_color.lerp(Color(0.9, 0.98, 1.0, 1.0), menu_tint_mix)
 
 	particles.amount = max(1, int(round(300.0 * _star_density * density_mul)))
 	streak_particles.amount = max(1, int(round(86.0 * _star_density * density_mul)))
@@ -314,30 +321,36 @@ func _update_starfield_runtime() -> void:
 	streak_particles.speed_scale = _star_speed * speed_mul
 	long_streak_particles.speed_scale = _star_speed * speed_mul * 1.12
 	particles.modulate = Color(
-		_base_point_color.r,
-		_base_point_color.g,
-		_base_point_color.b,
+		point_color.r,
+		point_color.g,
+		point_color.b,
 		min(1.0, 0.9 * _star_brightness * brightness_mul * _emission_activity)
 	)
 	streak_particles.modulate = Color(
-		_base_streak_color.r,
-		_base_streak_color.g,
-		_base_streak_color.b,
+		streak_color.r,
+		streak_color.g,
+		streak_color.b,
 		min(1.0, 1.0 * _star_brightness * brightness_mul * _emission_activity)
 	)
 	long_streak_particles.modulate = Color(
-		_base_streak_color.r,
-		_base_streak_color.g,
-		_base_streak_color.b,
+		streak_color.r,
+		streak_color.g,
+		streak_color.b,
 		min(1.0, 0.82 * _star_brightness * brightness_mul * _emission_activity)
 	)
 	particles.emitting = _emission_activity > 0.01
 	streak_particles.emitting = _emission_activity > 0.01
 	long_streak_particles.emitting = _emission_activity > 0.01
 	if center_glow.material:
+		var glow_base: float = 0.16
+		var glow_strength: float = 0.18
+		if menu_alive_mix > 0.0:
+			# Menu needs crisper particle separation from the glow wash.
+			glow_base = 0.1
+			glow_strength = 0.12
 		center_glow.material.set_shader_parameter(
 			"glow_color",
-			Color(_base_streak_color.r, _base_streak_color.g, _base_streak_color.b, 0.16 + (0.18 * _star_brightness * _emission_activity))
+			Color(streak_color.r, streak_color.g, streak_color.b, glow_base + (glow_strength * _star_brightness * _emission_activity))
 		)
 	_update_boost_emitters()
 
