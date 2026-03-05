@@ -213,6 +213,12 @@ func _selected_index_for_id(track_id: String, tracks: Array[Dictionary]) -> int:
 func _on_audio_overlay_track_selected(_track_name: String, index: int) -> void:
 	_apply_track_index(index)
 
+func _cycle_track(step: int) -> void:
+	if _tracks.is_empty():
+		return
+	var next_index: int = posmod(_track_index + step, _tracks.size())
+	_apply_track_index(next_index)
+
 func _apply_track_index(index: int) -> void:
 	if _tracks.is_empty():
 		return
