@@ -72,8 +72,11 @@ func _compare_with_golden(capture_path: String, golden_path: String) -> void:
 	var img_gold := Image.load_from_file(golden_path)
 	if _images_similar(img_new, img_gold):
 		return
-	img_new.save_png(golden_path)
-	push_warning("Updated golden baseline: %s" % golden_path)
+	if bool(ProjectSettings.get_setting("lumarush/update_goldens", false)):
+		img_new.save_png(golden_path)
+		push_warning("Updated golden baseline: %s" % golden_path)
+	else:
+		push_warning("Golden baseline differs: %s" % golden_path)
 
 func _images_similar(a: Image, b: Image) -> bool:
 	if a.get_width() != b.get_width() or a.get_height() != b.get_height():
