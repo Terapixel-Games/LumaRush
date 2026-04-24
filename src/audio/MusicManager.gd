@@ -40,6 +40,7 @@ var _friendly_names := {
 
 func _ready() -> void:
 	if _is_headless_singleton():
+		_ensure_music_bus()
 		_set_music_bus_muted(true)
 		return
 	_ensure_music_bus()
