@@ -8,5 +8,6 @@ reports/
 tmp/
 /tmp/
 *.tmp
+tmp_*.log
 changes.patch
 

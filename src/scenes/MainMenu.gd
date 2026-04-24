@@ -104,8 +104,9 @@ func _layout_menu() -> void:
 	root_margin.add_theme_constant_override("margin_bottom", outer_margin)
 
 	var panel_width: float = clamp(viewport_size.x - float(outer_margin * 2), 420.0, 1440.0)
-	var panel_height_cap: float = max(520.0, viewport_size.y - float(outer_margin * 2) - 12.0)
-	var panel_height: float = clamp(viewport_size.y - float(outer_margin * 2) - 8.0, 560.0, min(880.0, panel_height_cap))
+	var center_chrome_height: float = 84.0 + 84.0 + 32.0
+	var panel_height_cap: float = max(360.0, viewport_size.y - float(outer_margin * 2) - center_chrome_height)
+	var panel_height: float = clamp(min(viewport_size.y * 0.82, panel_height_cap), 360.0, min(880.0, panel_height_cap))
 	var panel_size := Vector2(panel_width, panel_height)
 	panel_shell.custom_minimum_size = panel_size
 	panel.custom_minimum_size = panel_size
@@ -125,7 +126,8 @@ func _layout_menu() -> void:
 	signal_grid.columns = 3 if viewport_size.x >= 960.0 else (2 if mid_layout else 1)
 	feature_grid.columns = 1
 
-	var card_height: float = clamp(panel_height - float(inner_margin * 2), 420.0, 620.0)
+	var card_height_available: float = max(260.0, panel_height - float(inner_margin * 2))
+	var card_height: float = clamp(card_height_available, 260.0, min(620.0, card_height_available))
 	hero_card.custom_minimum_size = Vector2(panel_width * 0.54 if wide_layout else 0.0, card_height)
 	launch_card.custom_minimum_size = Vector2(panel_width * 0.34 if wide_layout else 0.0, card_height)
 

@@ -35,6 +35,8 @@ func _layout_overlay_for_size(viewport_size: Vector2) -> void:
 	var safe_bottom: float = float(insets.get("bottom", 0.0))
 	var safe_left: float = float(insets.get("left", 0.0))
 	var safe_right: float = float(insets.get("right", 0.0))
+	safe_top = 0.0
+	safe_bottom = 0.0
 	var horizontal_insets: float = safe_left + safe_right
 	var vertical_insets: float = safe_top + safe_bottom
 	if horizontal_insets > viewport_size.x * 0.25:
@@ -70,13 +72,10 @@ func _layout_overlay_for_size(viewport_size: Vector2) -> void:
 	var panel_size := Vector2(panel_width, panel_height)
 	var safe_origin := Vector2(safe_left + margin_x, safe_top + margin_y)
 	var safe_size := Vector2(usable_width, usable_height)
-	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	panel.position = safe_origin + ((safe_size - panel_size) * 0.5)
-	panel.size = panel_size
+	var panel_position := safe_origin + ((safe_size - panel_size) * 0.5)
+	_set_control_rect(panel, Rect2(panel_position, panel_size))
 
-	vbox.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	vbox.position = panel.position + Vector2(inner_pad_x, inner_pad_y)
-	vbox.size = panel.size - Vector2(inner_pad_x * 2.0, inner_pad_y * 2.0)
+	_set_control_rect(vbox, Rect2(panel_position + Vector2(inner_pad_x, inner_pad_y), panel_size - Vector2(inner_pad_x * 2.0, inner_pad_y * 2.0)))
 	vbox.add_theme_constant_override("separation", int(round(content_gap)))
 
 	resume_button.custom_minimum_size.y = button_height
@@ -84,6 +83,16 @@ func _layout_overlay_for_size(viewport_size: Vector2) -> void:
 	title_label.add_theme_font_size_override("font_size", int(round(clamp(title_height * 0.66, 40.0, 88.0))))
 	resume_button.add_theme_font_size_override("font_size", int(round(clamp(button_height * 0.42, 22.0, 46.0))))
 	quit_button.add_theme_font_size_override("font_size", int(round(clamp(button_height * 0.42, 22.0, 46.0))))
+
+func _set_control_rect(control: Control, rect: Rect2) -> void:
+	control.anchor_left = 0.0
+	control.anchor_top = 0.0
+	control.anchor_right = 0.0
+	control.anchor_bottom = 0.0
+	control.offset_left = rect.position.x
+	control.offset_top = rect.position.y
+	control.offset_right = rect.position.x + rect.size.x
+	control.offset_bottom = rect.position.y + rect.size.y
 
 func _on_resume_pressed() -> void:
 	emit_signal("resume")

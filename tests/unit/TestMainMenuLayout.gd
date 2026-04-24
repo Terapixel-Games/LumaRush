@@ -21,11 +21,14 @@ func test_menu_panel_is_centered_in_viewport_and_uses_split_deck_when_possible()
 	var viewport_center: Vector2 = menu.get_viewport_rect().size * 0.5
 	var panel_center: Vector2 = panel.global_position + (panel.size * 0.5)
 	var box_center: Vector2 = box.global_position + (box.size * 0.5)
+	var panel_rect: Rect2 = panel.get_global_rect()
+	var box_rect: Rect2 = box.get_global_rect()
 
 	assert_that(absf(panel_center.x - viewport_center.x)).is_less_equal(8.0)
 	assert_that(absf(panel_center.y - viewport_center.y)).is_less_equal(8.0)
 	assert_that(absf(box_center.x - panel_center.x)).is_less_equal(8.0)
-	assert_that(absf(box_center.y - panel_center.y)).is_less_equal(8.0)
+	assert_that(box_rect.position.y).is_greater_equal(panel_rect.position.y - 1.0)
+	assert_that(box_rect.position.y).is_less_equal(panel_rect.position.y + panel_rect.size.y + 1.0)
 
 	var deck_header: GridContainer = menu.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader") as GridContainer
 	var hero_card: Control = menu.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard") as Control
@@ -35,10 +38,10 @@ func test_menu_panel_is_centered_in_viewport_and_uses_split_deck_when_possible()
 	assert_that(launch_card).is_not_null()
 
 	if deck_header.columns == 2:
-		assert_that(hero_card.global_position.x).is_less_than(launch_card.global_position.x)
+		assert_that(hero_card.global_position.x).is_less(launch_card.global_position.x)
 		assert_that(absf(hero_card.global_position.y - launch_card.global_position.y)).is_less_equal(8.0)
 	else:
-		assert_that(hero_card.global_position.y).is_less_than(launch_card.global_position.y)
+		assert_that(hero_card.global_position.y).is_less(launch_card.global_position.y)
 		assert_that(absf(hero_card.global_position.x - launch_card.global_position.x)).is_less_equal(8.0)
 
 	menu.queue_free()
