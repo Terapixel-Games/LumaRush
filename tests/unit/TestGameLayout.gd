@@ -48,6 +48,8 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		var expected_pause_center_y: float = top_rect.position.y + (top_rect.size.y * 0.5)
 		var pause_center_y: float = pause_rect.position.y + (pause_rect.size.y * 0.5)
 		assert_that(abs(pause_center_y - expected_pause_center_y)).is_less_equal(2.0)
+		if size.x / max(1.0, size.y) >= 1.45:
+			assert_that(top_rect.size.x).is_greater_equal(viewport_rect.size.x * 0.45)
 		assert_that(board_rect.position.x).is_greater_equal(0.0)
 		assert_that(board_rect.position.x + board_rect.size.x).is_less_equal(viewport_rect.size.x + 1.0)
 		assert_that(board_rect.position.y).is_greater_equal(top_rect.position.y + top_rect.size.y - 1.0)

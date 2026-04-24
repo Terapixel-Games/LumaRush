@@ -1,12 +1,12 @@
 extends Node
 
-const REFERENCE_HEIGHT: float = 2532.0
-const GLOBAL_TEXT_SCALE: float = 2.12
-const MIN_SCALE_FACTOR: float = 0.90
-const MAX_SCALE_FACTOR: float = 2.30
-const PRIMARY_TEXT: Color = Color8(242, 244, 255, 255)
-const SECONDARY_TEXT: Color = Color8(242, 244, 255, 166)
-const SHADOW_TEXT: Color = Color(0.02, 0.04, 0.12, 0.82)
+const REFERENCE_HEIGHT: float = 1600.0
+const GLOBAL_TEXT_SCALE: float = 1.0
+const MIN_SCALE_FACTOR: float = 0.78
+const MAX_SCALE_FACTOR: float = 1.18
+const PRIMARY_TEXT: Color = Color8(241, 248, 255, 255)
+const SECONDARY_TEXT: Color = Color8(188, 203, 255, 214)
+const SHADOW_TEXT: Color = Color(0.01, 0.03, 0.10, 0.88)
 
 const SIZE_SCORE: float = 60.0
 const SIZE_BUTTON: float = 30.0
@@ -78,13 +78,58 @@ func style_button(button: BaseButton, reference_size: float, weight: int = WEIGH
 
 func style_main_menu(scene: Control) -> void:
 	style_label(_node_from_paths(scene, [
-		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/Title",
-		"UI/VBox/Title",
-	]) as Label, SIZE_MENU_TITLE, WEIGHT_BOLD)
+		"UI/RootMargin/Layout/TopBar/Brand",
+	]) as Label, 14.0, WEIGHT_SEMIBOLD)
 	style_label(_node_from_paths(scene, [
-		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/Subtitle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Kicker",
+	]) as Label, 13.0, WEIGHT_SEMIBOLD, true)
+	style_label(_node_from_paths(scene, [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Title",
+		"UI/VBox/Title",
+	]) as Label, 48.0, WEIGHT_BOLD)
+	style_label(_node_from_paths(scene, [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Subtitle",
 		"UI/VBox/Subtitle",
-	]) as Label, SIZE_BODY, WEIGHT_REGULAR, true)
+	]) as Label, 18.0, WEIGHT_REGULAR, true)
+	style_label(_node_from_paths(scene, [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchEyebrow",
+	]) as Label, 12.0, WEIGHT_SEMIBOLD, true)
+	style_label(_node_from_paths(scene, [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchTitle",
+	]) as Label, 24.0, WEIGHT_BOLD)
+	style_label(_node_from_paths(scene, [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchMeta",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/LaunchNote",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchNote",
+	]) as Label, 14.0, WEIGHT_MEDIUM, true)
+	_style_labels(scene, [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox/ModeTitle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox/DailyTitle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox/WeeklyTitle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard/Margin/VBox/PromoTitle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/ModeCard/Margin/VBox/ModeTitle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/DailyCard/Margin/VBox/DailyTitle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/WeeklyCard/Margin/VBox/WeeklyTitle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/PromoCard/Margin/VBox/PromoTitle",
+	], 14.0, WEIGHT_SEMIBOLD, true)
+	_style_labels(scene, [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/PureCard/PureVBox/PureLabel",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/DailyCard/DailyVBox/DailyLabel",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/FlowCard/FlowVBox/FlowLabel",
+	], 12.0, WEIGHT_SEMIBOLD)
+	_style_labels(scene, [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/PureCard/PureVBox/PureMeta",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/DailyCard/DailyVBox/DailyMeta",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/FlowCard/FlowVBox/FlowMeta",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox/ModeMeta",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox/DailyMeta",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox/WeeklyMeta",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard/Margin/VBox/PromoMeta",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/ModeCard/Margin/VBox/ModeMeta",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/DailyCard/Margin/VBox/DailyMeta",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/WeeklyCard/Margin/VBox/WeeklyMeta",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/PromoCard/Margin/VBox/PromoMeta",
+	], 13.0, WEIGHT_MEDIUM, true)
 	style_button(_node_from_paths(scene, [
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/TrackSelector/VBox/CollapsedPill",
 	]) as BaseButton, 20.0, WEIGHT_MEDIUM)
@@ -101,9 +146,22 @@ func style_main_menu(scene: Control) -> void:
 		"UI/VBox/TrackCarousel/TrackNext",
 	]) as BaseButton, 24.0, WEIGHT_BOLD)
 	style_button(_node_from_paths(scene, [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Start",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/Start",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/PrimaryCTA/Start",
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/Start",
 		"UI/VBox/Start",
-	]) as BaseButton, SIZE_BUTTON, WEIGHT_SEMIBOLD)
+	]) as BaseButton, 24.0, WEIGHT_SEMIBOLD)
+	_style_buttons(scene, [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox/ModeToggle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox/DailyToggle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox/WeeklyLadderInfo",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard/Margin/VBox/CrossPromo",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/ModeCard/Margin/VBox/ModeToggle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/DailyCard/Margin/VBox/DailyToggle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/WeeklyCard/Margin/VBox/WeeklyLadderInfo",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/PromoCard/Margin/VBox/CrossPromo",
+	], 16.0, WEIGHT_SEMIBOLD)
 	style_button(_node_from_paths(scene, [
 		"UI/RootMargin/Layout/TopBar/Audio",
 	]) as BaseButton, 20.0, WEIGHT_SEMIBOLD)
@@ -112,14 +170,16 @@ func style_main_menu(scene: Control) -> void:
 		"UI/Account",
 	]) as BaseButton, 20.0, WEIGHT_SEMIBOLD)
 	style_button(_node_from_paths(scene, [
+		"UI/RootMargin/Layout/TopBar/Shop",
 		"UI/RootMargin/Layout/BottomBar/Shop",
 		"UI/Shop",
 	]) as BaseButton, 20.0, WEIGHT_SEMIBOLD)
 	style_label(_node_from_paths(scene, [
+		"UI/RootMargin/Layout/TopBar/Shop/CoinBadge/Value",
 		"UI/RootMargin/Layout/BottomBar/Shop/CoinBadge/Value",
 		"UI/RootMargin/Layout/BottomBar/CoinBadge",
 		"UI/Shop/CoinBadge",
-	]) as Label, 16.0, WEIGHT_BOLD)
+	]) as Label, 15.0, WEIGHT_BOLD)
 
 func style_game(scene: Control) -> void:
 	style_label(scene.get_node_or_null("UI/TopBar/ScoreBox/ScoreCaption"), 20.0, WEIGHT_MEDIUM, true)
@@ -152,6 +212,7 @@ func style_results(scene: Control) -> void:
 	var base_path := "UI/Panel/Scroll/VBox"
 	if scene.get_node_or_null("%s/Title" % base_path) == null:
 		base_path = "UI/VBox"
+	style_label(scene.get_node_or_null("%s/Kicker" % base_path), 15.0, WEIGHT_SEMIBOLD, true)
 	style_label(scene.get_node_or_null("%s/Title" % base_path), 62.0, WEIGHT_BOLD)
 	style_label(scene.get_node_or_null("%s/Score" % base_path), 64.0, WEIGHT_BOLD)
 	style_label(scene.get_node_or_null("%s/ModeBadge" % base_path), 20.0, WEIGHT_SEMIBOLD, true)
@@ -169,6 +230,8 @@ func style_results(scene: Control) -> void:
 	style_button(scene.get_node_or_null("%s/Menu" % base_path), 36.0, WEIGHT_BOLD)
 
 func style_pause_overlay(scene: Control) -> void:
+	style_label(scene.get_node_or_null("VBox/Kicker"), 14.0, WEIGHT_SEMIBOLD, true)
+	style_label(scene.get_node_or_null("Panel/VBox/Kicker"), 14.0, WEIGHT_SEMIBOLD, true)
 	style_label(scene.get_node_or_null("VBox/Title"), SIZE_MODAL_TITLE, WEIGHT_BOLD)
 	style_label(scene.get_node_or_null("Panel/VBox/Title"), SIZE_MODAL_TITLE, WEIGHT_BOLD)
 	style_button(scene.get_node_or_null("VBox/Resume"), SIZE_BUTTON, WEIGHT_SEMIBOLD)
@@ -221,3 +284,15 @@ func _node_from_paths(scene: Node, paths: Array[String]) -> Node:
 		if node != null:
 			return node
 	return null
+
+func _style_labels(scene: Node, paths: Array[String], reference_size: float, weight: int, secondary: bool = false) -> void:
+	for path in paths:
+		var node := scene.get_node_or_null(path)
+		if node is Label:
+			style_label(node as Label, reference_size, weight, secondary)
+
+func _style_buttons(scene: Node, paths: Array[String], reference_size: float, weight: int) -> void:
+	for path in paths:
+		var node := scene.get_node_or_null(path)
+		if node is BaseButton:
+			style_button(node as BaseButton, reference_size, weight)

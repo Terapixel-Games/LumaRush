@@ -62,7 +62,9 @@ const ICON_MUSIC_ON: Texture2D = preload("res://assets/ui/icons/atlas/music_on.t
 const ICON_MUSIC_OFF: Texture2D = preload("res://assets/ui/icons/atlas/music_off.tres")
 const TUTORIAL_TIP_SCENE := preload("res://addons/arcade_core/ui/TutorialTipModal.tscn")
 const HUD_MAX_WIDTH: float = 760.0
+const HUD_MAX_WIDTH_LANDSCAPE: float = 1100.0
 const POWERUPS_MAX_WIDTH: float = 700.0
+const POWERUPS_MAX_WIDTH_LANDSCAPE: float = 980.0
 const BADGE_BG_COLOR: Color = Color(0.96, 0.22, 0.24, 1.0)
 const BADGE_BORDER_COLOR: Color = Color(1.0, 0.9, 0.92, 0.96)
 
@@ -704,27 +706,36 @@ func _center_board() -> void:
 	if view_size.x <= 0.0 or view_size.y <= 0.0:
 		return
 
-	var outer_margin: float = clamp(view_size.x * 0.04, 14.0, 44.0)
-	var max_column_width: float = max(260.0, min(HUD_MAX_WIDTH, view_size.x - 8.0))
-	var min_column_width: float = min(340.0, max_column_width)
-	var content_width: float = clamp(view_size.x - (outer_margin * 2.0), min_column_width, max_column_width)
+	var is_wide: bool = ArcadeResponsiveLayout.is_wide(view_size)
+	var target_content_width: float = view_size.x * ArcadeResponsiveLayout.gameplay_content_ratio(view_size)
+	var hud_width_cap: float = ArcadeResponsiveLayout.gameplay_hud_max_width(view_size, HUD_MAX_WIDTH, HUD_MAX_WIDTH_LANDSCAPE)
+	var max_column_width: float = max(260.0, min(min(hud_width_cap, view_size.x - 8.0), target_content_width))
+	var min_column_width_target: float = 500.0 if is_wide else 340.0
+	var min_column_width: float = min(min_column_width_target, max_column_width)
+	var content_width: float = clamp(target_content_width, min_column_width, max_column_width)
 	var content_left: float = (view_size.x - content_width) * 0.5
 
 	_layout_top_bar(view_size, content_left, content_width)
 	_layout_top_right(view_size)
 
-	var powerup_row_height: float = clamp(view_size.y * 0.16, 96.0, 122.0)
-	var max_row_width: float = max(280.0, min(POWERUPS_MAX_WIDTH, content_width))
-	var min_row_width: float = min(320.0, max_row_width)
+	var powerup_row_height: float = clamp(view_size.y * (0.13 if is_wide else 0.16), 84.0, 122.0)
+	var powerups_width_cap: float = ArcadeResponsiveLayout.gameplay_powerups_max_width(
+		view_size,
+		POWERUPS_MAX_WIDTH,
+		POWERUPS_MAX_WIDTH_LANDSCAPE
+	)
+	var max_row_width: float = max(280.0, min(powerups_width_cap, content_width))
+	var min_row_width_target: float = 420.0 if is_wide else 320.0
+	var min_row_width: float = min(min_row_width_target, max_row_width)
 	var powerup_row_width: float = clamp(content_width, min_row_width, max_row_width)
 	_layout_powerups(view_size, powerup_row_width, powerup_row_height)
 	_apply_responsive_hud_typography(content_width, top_bar_bg.size.y, powerup_row_height)
 
-	var vertical_gap: float = clamp(view_size.y * 0.022, 14.0, 26.0)
+	var vertical_gap: float = clamp(view_size.y * (0.017 if is_wide else 0.022), 10.0, 26.0)
 	var top_limit: float = view_size.y * 0.14
 	if top_bar_bg and top_bar_bg.size.y > 0.0:
 		top_limit = top_bar_bg.position.y + top_bar_bg.size.y + vertical_gap
-	var bottom_limit: float = view_size.y * 0.81
+	var bottom_limit: float = view_size.y * (0.84 if is_wide else 0.81)
 	if powerups_row and powerups_row.size.y > 0.0:
 		bottom_limit = powerups_row.position.y - vertical_gap
 	var available_width: float = max(120.0, content_width)
@@ -759,8 +770,9 @@ func _center_board() -> void:
 func _layout_top_bar(view_size: Vector2, content_left: float, content_width: float) -> void:
 	if top_bar_bg == null or top_bar == null:
 		return
-	var top_margin: float = clamp(view_size.y * 0.03, 14.0, 30.0)
-	var bar_height: float = clamp(view_size.y * 0.16, 92.0, 132.0)
+	var is_wide: bool = ArcadeResponsiveLayout.is_wide(view_size)
+	var top_margin: float = clamp(view_size.y * (0.022 if is_wide else 0.03), 10.0, 30.0)
+	var bar_height: float = clamp(view_size.y * (0.13 if is_wide else 0.16), 84.0, 132.0)
 	top_bar_bg.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	top_bar_bg.position = Vector2(content_left, top_margin)
 	top_bar_bg.size = Vector2(content_width, bar_height)
@@ -817,7 +829,8 @@ func _apply_responsive_hud_typography(content_width: float, bar_height: float, p
 func _layout_powerups(view_size: Vector2, row_width: float, row_height: float) -> void:
 	if powerups_row == null:
 		return
-	var bottom_margin: float = clamp(view_size.y * 0.035, 14.0, 28.0)
+	var is_wide: bool = ArcadeResponsiveLayout.is_wide(view_size)
+	var bottom_margin: float = clamp(view_size.y * (0.024 if is_wide else 0.035), 10.0, 28.0)
 	powerups_row.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	powerups_row.position = Vector2((view_size.x - row_width) * 0.5, view_size.y - bottom_margin - row_height)
 	powerups_row.size = Vector2(row_width, row_height)

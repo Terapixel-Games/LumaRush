@@ -12,6 +12,7 @@ func after_test() -> void:
 	NakamaService.set("_connect_enabled", _original_enable_client)
 
 func test_results_actions_stay_inside_panel_on_wide_short_viewports() -> void:
+	var original_window_size: Vector2i = DisplayServer.window_get_size()
 	RunManager.last_score = 148
 	RunManager.last_run_leaderboard_mode = "OPEN"
 	SaveStore.data["high_score"] = 148
@@ -24,10 +25,14 @@ func test_results_actions_stay_inside_panel_on_wide_short_viewports() -> void:
 	await get_tree().process_frame
 
 	var panel: Control = results.get_node("UI/Panel") as Control
+	var title: Label = results.get_node("UI/Panel/Scroll/VBox/Title") as Label
+	var score: Label = results.get_node("UI/Panel/Scroll/VBox/StatsSplit/LeftColumn/Score") as Label
 	var play_again: Button = results.get_node("UI/Panel/Scroll/VBox/PlayAgain") as Button
 	var menu: Button = results.get_node("UI/Panel/Scroll/VBox/Menu") as Button
 	var audio_button: Control = results.get_node_or_null("UI/TopRightBar/Audio") as Control
 	assert_that(panel).is_not_null()
+	assert_that(title).is_not_null()
+	assert_that(score).is_not_null()
 	assert_that(play_again).is_not_null()
 	assert_that(menu).is_not_null()
 	assert_that(audio_button).is_not_null()
@@ -39,16 +44,25 @@ func test_results_actions_stay_inside_panel_on_wide_short_viewports() -> void:
 		Vector2(2560.0, 720.0),
 	]
 	for size in viewport_sizes:
-		results.call("_layout_results_for_size", size)
+		DisplayServer.window_set_size(Vector2i(size))
+		await get_tree().process_frame
+		await get_tree().process_frame
+		results.call("_layout_results")
 		await get_tree().process_frame
 		var panel_rect: Rect2 = panel.get_global_rect()
 		var play_rect: Rect2 = play_again.get_global_rect()
 		var menu_rect: Rect2 = menu.get_global_rect()
 		var audio_rect: Rect2 = audio_button.get_global_rect()
+		var viewport_rect := Rect2(Vector2.ZERO, results.get_viewport_rect().size)
 		_assert_rect_inside(play_rect, panel_rect)
 		_assert_rect_inside(menu_rect, panel_rect)
-		_assert_rect_inside(audio_rect, Rect2(Vector2.ZERO, size))
+		_assert_rect_inside(audio_rect, viewport_rect)
+		if viewport_rect.size.x / max(1.0, viewport_rect.size.y) >= 1.45:
+			assert_that(panel_rect.size.x).is_greater_equal(viewport_rect.size.x * 0.62)
+			assert_that(score.get_theme_font_size("font_size")).is_greater_equal(40)
+			assert_that(title.get_theme_font_size("font_size")).is_greater_equal(32)
 
+	DisplayServer.window_set_size(original_window_size)
 	results.queue_free()
 
 func _assert_rect_inside(inner: Rect2, outer: Rect2, epsilon: float = 1.0) -> void:

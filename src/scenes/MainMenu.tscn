@@ -40,10 +40,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
 
 [node name="Layout" type="VBoxContainer" parent="UI/RootMargin"]
 layout_mode = 2
@@ -52,17 +52,17 @@ size_flags_vertical = 3
 theme_override_constants/separation = 16
 
 [node name="TopBar" type="HBoxContainer" parent="UI/RootMargin/Layout"]
-custom_minimum_size = Vector2(0, 92)
+custom_minimum_size = Vector2(0, 84)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 12
 
 [node name="Brand" type="Label" parent="UI/RootMargin/Layout/TopBar"]
 layout_mode = 2
-text = "LumaRush"
+text = "LUMARUSH // RUN DECK"
 vertical_alignment = 1
 
-[node name="TopSpacer" type="Control" parent="UI/RootMargin/Layout/TopBar"]
+[node name="Spacer" type="Control" parent="UI/RootMargin/Layout/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -96,19 +96,20 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="BottomBalance" type="Control" parent="UI/RootMargin/Layout"]
-custom_minimum_size = Vector2(0, 92)
-layout_mode = 2
-size_flags_horizontal = 3
-
 [node name="PanelShell" type="PanelContainer" parent="UI/RootMargin/Layout/Center"]
-custom_minimum_size = Vector2(760, 620)
+custom_minimum_size = Vector2(1220, 760)
 layout_mode = 2
 
 [node name="Panel" parent="UI/RootMargin/Layout/Center/PanelShell" instance=ExtResource("5")]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+panel_tint = Color(0.03, 0.05, 0.11, 0.86)
+panel_edge = Color(0.48, 0.92, 1, 0.42)
+panel_glow = Color(0.24, 0.80, 1, 1)
+corner_radius = 0.16
+blur_radius = 6.6
+drop_shadow_alpha = 0.34
 
 [node name="ContentMargin" type="MarginContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel"]
 layout_mode = 1
@@ -122,81 +123,281 @@ theme_override_constants/margin_top = 30
 theme_override_constants/margin_right = 34
 theme_override_constants/margin_bottom = 30
 
-[node name="VBox" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin"]
+[node name="Scroll" type="ScrollContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
+mouse_filter = 2
+
+[node name="VBox" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="DeckHeader" type="GridContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 2
+theme_override_constants/h_separation = 18
+theme_override_constants/v_separation = 18
+
+[node name="HeroCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader"]
+custom_minimum_size = Vector2(0, 520)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Margin" type="MarginContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 28
+
+[node name="VBox" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin"]
+layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 16
-alignment = 1
 
-[node name="Title" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox"]
+[node name="Kicker" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
+layout_mode = 2
+text = "RUN DECK"
+
+[node name="Title" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
+layout_mode = 2
+text = "Launch the next lane"
+
+[node name="Subtitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
+layout_mode = 2
+text = "Pure or Open. Daily pressure armed. Rival pace live."
+autowrap_mode = 3
+
+[node name="SignalGrid" type="GridContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 84
-text = "LumaRush"
-horizontal_alignment = 1
+columns = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
 
-[node name="Subtitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
-text = "Calm flow, fast reads, clean runs."
-horizontal_alignment = 1
-
-[node name="PrimaryCTA" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox"]
+[node name="PureCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Start" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/PrimaryCTA" instance=ExtResource("6")]
+[node name="PureVBox" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/PureCard"]
 layout_mode = 2
-text = "Start Game"
+theme_override_constants/separation = 4
 
-[node name="SecondaryOptions" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox"]
+[node name="PureLabel" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/PureCard/PureVBox"]
+layout_mode = 2
+text = "ACTIVE LANE"
+
+[node name="PureMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/PureCard/PureVBox"]
+layout_mode = 2
+text = "PURE"
+autowrap_mode = 3
+
+[node name="DailyCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
 
-[node name="Heading" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/SecondaryOptions"]
+[node name="DailyVBox" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/DailyCard"]
 layout_mode = 2
-text = "Secondary Options"
+theme_override_constants/separation = 4
 
-[node name="OptionRow" type="HBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/SecondaryOptions"]
+[node name="DailyLabel" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/DailyCard/DailyVBox"]
 layout_mode = 2
+text = "DAILY FEED"
+
+[node name="DailyMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/DailyCard/DailyVBox"]
+layout_mode = 2
+text = "LIVE"
+autowrap_mode = 3
+
+[node name="FlowCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FlowVBox" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/FlowCard"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="FlowLabel" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/FlowCard/FlowVBox"]
+layout_mode = 2
+text = "RIVAL PACE"
+
+[node name="FlowMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/FlowCard/FlowVBox"]
+layout_mode = 2
+text = "Rival 0"
+autowrap_mode = 3
+
+[node name="Start" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox" instance=ExtResource("6")]
+layout_mode = 2
+text = "Start Run"
+
+[node name="LaunchNote" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
+layout_mode = 2
+text = "Loads straight into the active board."
+autowrap_mode = 3
+
+[node name="LaunchCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader"]
+custom_minimum_size = Vector2(0, 520)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Margin" type="MarginContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin"]
+layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 12
 
-[node name="ModeToggle" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/SecondaryOptions/OptionRow" instance=ExtResource("7")]
+[node name="LaunchEyebrow" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox"]
 layout_mode = 2
-text = "Leaderboard Mode"
+text = "INTEL CLUSTER"
 
-[node name="DailyToggle" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/SecondaryOptions/OptionRow" instance=ExtResource("7")]
+[node name="LaunchTitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox"]
 layout_mode = 2
-text = "Daily Challenge"
+text = "Live circuit status"
+autowrap_mode = 3
 
-[node name="Modes" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox"]
+[node name="LaunchMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox"]
+layout_mode = 2
+text = "Switch lanes, arm the daily feed, and check rival pace before drop."
+autowrap_mode = 3
+
+[node name="IntelGrid" type="GridContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
+size_flags_vertical = 3
+columns = 1
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
 
-[node name="Heading" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/Modes"]
+[node name="ModeCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid"]
 layout_mode = 2
-text = "Arcade Modes"
+size_flags_horizontal = 3
 
-[node name="ModeRow" type="HBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/Modes"]
+[node name="Margin" type="MarginContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
 
-[node name="WeeklyLadderInfo" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/Modes/ModeRow" instance=ExtResource("7")]
+[node name="VBox" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin"]
 layout_mode = 2
-text = "Weekly Ladder"
+theme_override_constants/separation = 8
 
-[node name="CrossPromo" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/Modes/ModeRow" instance=ExtResource("7")]
+[node name="ModeTitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox"]
 layout_mode = 2
-text = "Play ColorCrunch"
+text = "LANE CONTROL"
 
-[connection signal="pressed" from="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/PrimaryCTA/Start" to="." method="_on_start_pressed"]
+[node name="ModeMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox"]
+layout_mode = 2
+text = "PURE lane live // Tier 0"
+autowrap_mode = 3
+
+[node name="ModeToggle" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox" instance=ExtResource("7")]
+layout_mode = 2
+text = "Switch to OPEN"
+
+[node name="DailyCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="VBox" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DailyTitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox"]
+layout_mode = 2
+text = "DAILY HUNT"
+
+[node name="DailyMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox"]
+layout_mode = 2
+text = "Featured rival board armed."
+autowrap_mode = 3
+
+[node name="DailyToggle" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox" instance=ExtResource("7")]
+layout_mode = 2
+text = "Daily Feed: On"
+
+[node name="WeeklyCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="VBox" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WeeklyTitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox"]
+layout_mode = 2
+text = "SEASON PACE"
+
+[node name="WeeklyMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox"]
+layout_mode = 2
+text = "0 pts // Rival pace 0"
+autowrap_mode = 3
+
+[node name="WeeklyLadderInfo" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox" instance=ExtResource("7")]
+layout_mode = 2
+disabled = true
+text = "Season Ladder"
+
+[node name="PromoCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="VBox" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PromoTitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard/Margin/VBox"]
+layout_mode = 2
+text = "SIDE JUMP"
+
+[node name="PromoMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard/Margin/VBox"]
+layout_mode = 2
+text = "Contrast boards stay live in ColorCrunch."
+autowrap_mode = 3
+
+[node name="CrossPromo" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard/Margin/VBox" instance=ExtResource("7")]
+layout_mode = 2
+text = "Open ColorCrunch"
+
+[connection signal="pressed" from="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Start" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="UI/RootMargin/Layout/TopBar/Audio" to="." method="_on_audio_pressed"]
 [connection signal="pressed" from="UI/RootMargin/Layout/TopBar/Account" to="." method="_on_account_pressed"]
 [connection signal="pressed" from="UI/RootMargin/Layout/TopBar/Shop" to="." method="_on_shop_pressed"]
-[connection signal="pressed" from="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/SecondaryOptions/OptionRow/ModeToggle" to="." method="_on_mode_toggle_pressed"]
-[connection signal="pressed" from="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/SecondaryOptions/OptionRow/DailyToggle" to="." method="_on_daily_toggle_pressed"]
-[connection signal="pressed" from="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/Modes/ModeRow/CrossPromo" to="." method="_on_promo_pressed"]
+[connection signal="pressed" from="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox/ModeToggle" to="." method="_on_mode_toggle_pressed"]
+[connection signal="pressed" from="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox/DailyToggle" to="." method="_on_daily_toggle_pressed"]
+[connection signal="pressed" from="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard/Margin/VBox/CrossPromo" to="." method="_on_promo_pressed"]

@@ -1,51 +1,58 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
-[ext_resource type="Script" path="res://src/scenes/PauseOverlay.gd" id=1]
-[ext_resource type="Script" path="res://src/ui/GlassPanel.gd" id=2]
-[ext_resource type="Theme" path="res://src/ui/UiTheme.tres" id=3]
-[ext_resource type="Script" path="res://src/ui/LiquidGlassButton.gd" id=4]
+[ext_resource type="Script" path="res://src/scenes/PauseOverlay.gd" id="1"]
+[ext_resource type="Theme" path="res://addons/arcade_core/ui/theme/UITheme.tres" id="2"]
+[ext_resource type="PackedScene" path="res://addons/arcade_core/ui/components/GlassPanel.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://addons/arcade_core/ui/components/PrimaryButton.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://addons/arcade_core/ui/components/SecondaryButton.tscn" id="5"]
 
 [node name="PauseOverlay" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
-script = ExtResource( 1 )
-theme = ExtResource( 3 )
+script = ExtResource("1")
+theme = ExtResource("2")
 
 [node name="Dim" type="ColorRect" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0, 0, 0, 0.45)
+color = Color(0, 0, 0, 0.52)
 
-[node name="Panel" type="ColorRect" parent="."]
-script = ExtResource( 2 )
+[node name="Panel" parent="." instance=ExtResource("3")]
 anchor_left = 0.13
 anchor_top = 0.28
 anchor_right = 0.87
 anchor_bottom = 0.72
-color = Color(0.03, 0.07, 0.15, 0.68)
+panel_tint = Color(0.05, 0.07, 0.12, 0.84)
+panel_edge = Color(0.70, 0.90, 1, 0.30)
+panel_glow = Color(0.28, 0.88, 1, 1)
+corner_radius = 0.16
+blur_radius = 6.0
+drop_shadow_alpha = 0.28
 
 [node name="VBox" type="VBoxContainer" parent="."]
 anchor_left = 0.22
-anchor_top = 0.33
+anchor_top = 0.31
 anchor_right = 0.78
-anchor_bottom = 0.67
+anchor_bottom = 0.69
 alignment = 1
-theme_override_constants/separation = 18
+theme_override_constants/separation = 16
+
+[node name="Kicker" type="Label" parent="VBox"]
+text = "RUN HOLD"
+horizontal_alignment = 1
 
 [node name="Title" type="Label" parent="VBox"]
 text = "Paused"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 48
 
-[node name="Resume" type="Button" parent="VBox"]
-script = ExtResource( 4 )
-text = "Resume"
-custom_minimum_size = Vector2(0, 102)
+[node name="Resume" parent="VBox" instance=ExtResource("4")]
+text = "Resume Run"
+custom_minimum_size = Vector2(0, 96)
 
-[node name="Quit" type="Button" parent="VBox"]
-script = ExtResource( 4 )
-text = "Quit"
-custom_minimum_size = Vector2(0, 102)
+[node name="Quit" parent="VBox" instance=ExtResource("5")]
+text = "Leave Run"
+custom_minimum_size = Vector2(0, 92)
 
 [connection signal="pressed" from="VBox/Resume" to="." method="_on_resume_pressed"]
 [connection signal="pressed" from="VBox/Quit" to="." method="_on_quit_pressed"]

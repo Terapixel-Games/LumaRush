@@ -74,7 +74,8 @@ func start_all_synced() -> void:
 		set_track(_initial_track_id(), false)
 	for p in [synth, bass, drums, fx]:
 		p.stream_paused = false
-		p.play()
+		if not p.playing:
+			p.play()
 	set_calm()
 
 func set_calm() -> void:

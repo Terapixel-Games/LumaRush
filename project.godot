@@ -33,10 +33,10 @@ RunManager="*res://src/core/RunManager.gd"
 SafeArea="*res://src/core/SafeArea.gd"
 Typography="*res://src/ui/Typography.gd"
 NakamaService="*res://src/network/NakamaService.gd"
-
 SaveManager="*res://addons/arcade_core/SaveManager.gd"
 AudioManager="*res://addons/arcade_core/AudioManager.gd"
 Fx="*res://addons/arcade_core/Fx.gd"
+
 [debug]
 
 gdscript/warnings/treat_warnings_as_errors=false
@@ -44,14 +44,14 @@ window/handheld/orientation="portrait"
 
 [display]
 
-window/size/resizable=true
+window/size/viewport_width=1080
+window/size/viewport_height=1920
 window/size/borderless=true
+window/size/resizable=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
 
-window/size/viewport_width=1080
-window/size/viewport_height=1920
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/AdmobPlugin/plugin.cfg", "res://addons/gdUnit4/plugin.cfg")

@@ -106,12 +106,12 @@ func _on_menu_pressed() -> void:
 
 func _play_intro() -> void:
 	var ui: CanvasItem = $UI
-	var panel: CanvasItem = $UI/Panel
+	var panel_item: CanvasItem = $UI/Panel
 	var box_item: CanvasItem = box
 	var play_again: CanvasItem = play_again_button
 	var menu: CanvasItem = menu_button
 	ui.modulate.a = 0.0
-	panel.scale = Vector2(0.9, 0.9)
+	panel_item.scale = Vector2(0.9, 0.9)
 	box_item.scale = Vector2(0.95, 0.95)
 	play_again.modulate.a = 0.0
 	menu.modulate.a = 0.0
@@ -119,7 +119,7 @@ func _play_intro() -> void:
 		_intro_tween.kill()
 	_intro_tween = create_tween()
 	_intro_tween.tween_property(ui, "modulate:a", 1.0, 0.28)
-	_intro_tween.parallel().tween_property(panel, "scale", Vector2.ONE, 0.38).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_intro_tween.parallel().tween_property(panel_item, "scale", Vector2.ONE, 0.38).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_intro_tween.parallel().tween_property(box_item, "scale", Vector2.ONE, 0.34).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_intro_tween.tween_property(play_again, "modulate:a", 1.0, 0.16)
 	_intro_tween.tween_property(menu, "modulate:a", 1.0, 0.16)
@@ -156,17 +156,18 @@ func _layout_results_for_size(viewport_size: Vector2) -> void:
 		return
 	_stop_intro_animation()
 
-	var viewport_aspect: float = viewport_size.x / max(1.0, viewport_size.y)
-	var is_wide: bool = viewport_aspect >= 1.55
+	var viewport_aspect: float = ArcadeResponsiveLayout.viewport_aspect(viewport_size)
+	var is_wide: bool = ArcadeResponsiveLayout.is_wide(viewport_size)
+	var is_wide_short: bool = ArcadeResponsiveLayout.is_wide_short(viewport_size)
 	var outer_margin_x: float = clamp(viewport_size.x * 0.028, 10.0, 44.0)
 	var outer_margin_y: float = clamp(viewport_size.y * 0.022, 8.0, 24.0)
 	var max_panel_width: float = max(360.0, viewport_size.x - (outer_margin_x * 2.0))
 	var min_panel_width: float = min(460.0, max_panel_width)
-	var target_panel_width: float = viewport_size.x * (0.62 if is_wide else 0.82)
-	var panel_width: float = clamp(target_panel_width, min_panel_width, min(1040.0, max_panel_width))
+	var target_panel_width: float = viewport_size.x * ArcadeResponsiveLayout.results_panel_width_ratio(viewport_size)
+	var panel_width: float = clamp(target_panel_width, min_panel_width, min(1240.0, max_panel_width))
 	var max_panel_height: float = max(320.0, viewport_size.y - (outer_margin_y * 2.0))
 	var min_panel_height: float = min(460.0, max_panel_height)
-	var target_panel_height: float = viewport_size.y * (0.94 if is_wide else 0.82)
+	var target_panel_height: float = viewport_size.y * ArcadeResponsiveLayout.results_panel_height_ratio(viewport_size)
 	var panel_height: float = clamp(target_panel_height, min_panel_height, max_panel_height)
 	var panel_size: Vector2 = Vector2(panel_width, panel_height)
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -179,30 +180,41 @@ func _layout_results_for_size(viewport_size: Vector2) -> void:
 	var content_size: Vector2 = panel_size - Vector2(margin_x * 2.0, margin_y * 2.0)
 	var use_split: bool = viewport_aspect >= 1.45
 	_configure_stats_split(content_size, use_split)
+	var compact_mode: bool = is_wide_short
+	_set_compact_optional_rows(compact_mode)
 	if spacer:
 		spacer.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	var base_separation: float = clamp(round(content_size.y * 0.008), 4.0, 12.0)
 	var compact_scale: float = 1.0
-	for _i in range(6):
-		var separation: int = int(clamp(round(base_separation * compact_scale), 4.0, 12.0))
+	for _i in range(8):
+		var separation_min: float = 4.0 if compact_mode else 5.0
+		var separation: int = int(clamp(round(base_separation * compact_scale), separation_min, 12.0))
 		box.add_theme_constant_override("separation", separation)
-		_apply_responsive_typography(content_size, viewport_aspect, use_split, compact_scale)
+		_apply_responsive_typography(content_size, viewport_aspect, use_split, compact_scale, compact_mode)
 
-		var secondary_button_height: float = clamp(content_size.y * (0.056 if is_wide else 0.052) * compact_scale, 28.0, 62.0)
-		var primary_button_height: float = clamp(content_size.y * (0.072 if is_wide else 0.07) * compact_scale, 34.0, 72.0)
+		var secondary_min: float = 32.0 if compact_mode else 28.0
+		var primary_min: float = 36.0 if compact_mode else 34.0
+		var secondary_button_height: float = clamp(content_size.y * (0.056 if is_wide else 0.052) * compact_scale, secondary_min, 62.0)
+		var primary_button_height: float = clamp(content_size.y * (0.072 if is_wide else 0.07) * compact_scale, primary_min, 72.0)
 		double_reward_button.custom_minimum_size.y = secondary_button_height
 		if play_again_button:
 			play_again_button.custom_minimum_size.y = primary_button_height
 		if menu_button:
 			menu_button.custom_minimum_size.y = primary_button_height
 		if spacer:
-			spacer.custom_minimum_size.y = max(0.0, round(content_size.y * 0.008 * compact_scale))
+			var spacer_ratio: float = 0.003 if compact_mode else 0.008
+			spacer.custom_minimum_size.y = max(0.0, round(content_size.y * spacer_ratio * compact_scale))
 
 		var required_height: float = box.get_combined_minimum_size().y
 		if required_height <= content_size.y:
 			break
+		if not compact_mode:
+			compact_mode = true
+			_set_compact_optional_rows(compact_mode)
+			compact_scale = min(compact_scale, 0.82)
+			continue
 		var fit_ratio: float = content_size.y / max(1.0, required_height)
-		var next_scale: float = clamp(compact_scale * fit_ratio, 0.42, compact_scale)
+		var next_scale: float = clamp(compact_scale * fit_ratio, 0.6, compact_scale)
 		if absf(next_scale - compact_scale) < 0.01:
 			break
 		compact_scale = next_scale
@@ -254,7 +266,13 @@ func _configure_stats_split(content_size: Vector2, use_split: bool) -> void:
 	if leaderboard_label:
 		leaderboard_label.horizontal_alignment = right_alignment
 
-func _apply_responsive_typography(content_size: Vector2, viewport_aspect: float, use_split: bool, compact_scale: float = 1.0) -> void:
+func _apply_responsive_typography(
+		content_size: Vector2,
+		viewport_aspect: float,
+		use_split: bool,
+		compact_scale: float = 1.0,
+		compact_mode: bool = false
+	) -> void:
 	var is_wide: bool = viewport_aspect >= 1.55
 	var headline_scale: float = compact_scale
 	var action_scale: float = compact_scale
@@ -264,14 +282,22 @@ func _apply_responsive_typography(content_size: Vector2, viewport_aspect: float,
 	var stat_column_width: float = max(220.0, (content_size.x - split_gap) * 0.5) if use_split else content_size.x
 	var menu_title_px: int = Typography.px(Typography.SIZE_MENU_TITLE)
 	var menu_button_px: int = Typography.px(Typography.SIZE_BUTTON)
-	var title_size: int = int(round(clamp(float(menu_title_px) * 0.72 * headline_scale, 26.0, 106.0)))
-	var score_size: int = int(round(clamp(max(float(menu_title_px) * 0.8, stat_column_width * 0.12) * headline_scale, 34.0, 128.0)))
-	var mode_size: int = int(round(clamp(float(menu_button_px) * 0.62 * compact_scale, 12.0, 40.0)))
-	var stat_size: int = int(round(clamp(float(menu_button_px) * 0.74 * compact_scale, 16.0, 48.0)))
-	var body_size: int = int(round(clamp(float(menu_button_px) * 0.64 * compact_scale, 12.0, 36.0)))
-	var coin_size: int = int(round(clamp(float(menu_button_px) * 0.68 * compact_scale, 12.0, 38.0)))
-	var reward_button_size: int = int(round(clamp(float(menu_button_px) * 0.66 * action_scale, 12.0, 32.0)))
-	var primary_button_size: int = int(round(clamp(float(menu_button_px) * (0.76 if is_wide else 0.82) * action_scale, 14.0, 42.0)))
+	var title_min: float = 34.0 if compact_mode else 40.0
+	var score_min: float = 44.0 if compact_mode else 52.0
+	var mode_min: float = 14.0 if compact_mode else 16.0
+	var stat_min: float = 18.0 if compact_mode else 20.0
+	var body_min: float = 14.0 if compact_mode else 16.0
+	var coin_min: float = 14.0 if compact_mode else 16.0
+	var reward_min: float = 14.0 if compact_mode else 16.0
+	var primary_min: float = 16.0 if compact_mode else 18.0
+	var title_size: int = int(round(clamp(float(menu_title_px) * 0.72 * headline_scale, title_min, 106.0)))
+	var score_size: int = int(round(clamp(max(float(menu_title_px) * 0.8, stat_column_width * 0.12) * headline_scale, score_min, 128.0)))
+	var mode_size: int = int(round(clamp(float(menu_button_px) * 0.62 * compact_scale, mode_min, 40.0)))
+	var stat_size: int = int(round(clamp(float(menu_button_px) * 0.74 * compact_scale, stat_min, 48.0)))
+	var body_size: int = int(round(clamp(float(menu_button_px) * 0.64 * compact_scale, body_min, 36.0)))
+	var coin_size: int = int(round(clamp(float(menu_button_px) * 0.68 * compact_scale, coin_min, 38.0)))
+	var reward_button_size: int = int(round(clamp(float(menu_button_px) * 0.66 * action_scale, reward_min, 32.0)))
+	var primary_button_size: int = int(round(clamp(float(menu_button_px) * (0.76 if is_wide else 0.82) * action_scale, primary_min, 42.0)))
 
 	if title_label:
 		title_label.add_theme_font_size_override("font_size", title_size)
@@ -545,13 +571,25 @@ func _move_before_spacer(node: Control) -> void:
 	var spacer_index: int = spacer.get_index()
 	box.move_child(node, max(0, spacer_index))
 
+func _set_compact_optional_rows(compact_mode: bool) -> void:
+	if _encouragement_label:
+		_encouragement_label.visible = not compact_mode
+	if _unlock_progress:
+		_unlock_progress.visible = not compact_mode
+	if _dual_leaderboard_label:
+		_dual_leaderboard_label.visible = not compact_mode
+	if _weekly_ladder_label:
+		_weekly_ladder_label.visible = not compact_mode
+	if _rival_target_label:
+		_rival_target_label.visible = not compact_mode
+
 func _reset_scroll_top() -> void:
 	if scroll == null:
 		return
 	scroll.scroll_vertical = 0
 	scroll.scroll_horizontal = 0
 
-func _build_encouragement_text(local_best: int, best_value: int) -> String:
+func _build_encouragement_text(_local_best: int, best_value: int) -> String:
 	if best_value <= 0:
 		return "Great opener. Keep chaining for a bigger score."
 	if RunManager.last_score >= best_value:

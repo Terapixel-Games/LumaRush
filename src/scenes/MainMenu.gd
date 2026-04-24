@@ -11,12 +11,25 @@ const PROMO_URL := "https://terapixel.games/color-crunch"
 @onready var panel_shell: PanelContainer = $UI/RootMargin/Layout/Center/PanelShell
 @onready var panel: ColorRect = $UI/RootMargin/Layout/Center/PanelShell/Panel
 @onready var content_margin: MarginContainer = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin
-@onready var title_label: Label = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/Title
-@onready var start_button: Button = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/PrimaryCTA/Start
-@onready var mode_button: Button = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/SecondaryOptions/OptionRow/ModeToggle
-@onready var daily_button: Button = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/SecondaryOptions/OptionRow/DailyToggle
-@onready var weekly_button: Button = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/Modes/ModeRow/WeeklyLadderInfo
-@onready var promo_button: Button = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/Modes/ModeRow/CrossPromo
+@onready var content_box: VBoxContainer = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox
+@onready var deck_header: GridContainer = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader
+@onready var hero_card: PanelContainer = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard
+@onready var launch_card: PanelContainer = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard
+@onready var title_label: Label = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Title
+@onready var signal_grid: GridContainer = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid
+@onready var pure_meta: Label = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/PureCard/PureVBox/PureMeta
+@onready var daily_signal_meta: Label = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/DailyCard/DailyVBox/DailyMeta
+@onready var flow_meta: Label = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/FlowCard/FlowVBox/FlowMeta
+@onready var start_button: Button = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Start
+@onready var feature_grid: GridContainer = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid
+@onready var mode_button: Button = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox/ModeToggle
+@onready var mode_meta: Label = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox/ModeMeta
+@onready var daily_button: Button = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox/DailyToggle
+@onready var daily_meta: Label = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox/DailyMeta
+@onready var weekly_button: Button = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox/WeeklyLadderInfo
+@onready var weekly_meta: Label = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox/WeeklyMeta
+@onready var promo_button: Button = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard/Margin/VBox/CrossPromo
+@onready var promo_meta: Label = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard/Margin/VBox/PromoMeta
 @onready var audio_button: Button = $UI/RootMargin/Layout/TopBar/Audio
 @onready var account_button: Button = $UI/RootMargin/Layout/TopBar/Account
 @onready var shop_button: Button = $UI/RootMargin/Layout/TopBar/Shop
@@ -24,8 +37,8 @@ const PROMO_URL := "https://terapixel.games/color-crunch"
 @onready var coin_badge: Label = $UI/RootMargin/Layout/TopBar/Shop/CoinBadge/Value
 
 var _title_t: float = 0.0
-var _title_base_color: Color = Color(0.98, 0.99, 1.0, 1.0)
-var _title_accent_color: Color = Color(0.78, 0.88, 1.0, 1.0)
+var _title_base_color: Color = Color(0.84, 0.97, 1.0, 1.0)
+var _title_accent_color: Color = Color(0.98, 0.48, 0.88, 1.0)
 var _tracks: Array[Dictionary] = []
 var _track_index: int = 0
 var _audio_overlay: AudioTrackOverlay
@@ -78,38 +91,51 @@ func _notification(what: int) -> void:
 		_refresh_title_pivots()
 
 func _layout_menu() -> void:
-	if root_margin == null or panel_shell == null or content_margin == null:
+	if root_margin == null or panel_shell == null or content_margin == null or content_box == null or deck_header == null:
 		return
 	var viewport_size: Vector2 = get_viewport_rect().size
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return
 
-	var outer_margin: int = int(round(clamp(min(viewport_size.x, viewport_size.y) * 0.045, 12.0, 32.0)))
+	var outer_margin: int = int(round(clamp(min(viewport_size.x, viewport_size.y) * 0.032, 16.0, 38.0)))
 	root_margin.add_theme_constant_override("margin_left", outer_margin)
 	root_margin.add_theme_constant_override("margin_top", outer_margin)
 	root_margin.add_theme_constant_override("margin_right", outer_margin)
 	root_margin.add_theme_constant_override("margin_bottom", outer_margin)
 
-	var panel_width: float = clamp(viewport_size.x * 0.82, 320.0, min(880.0, viewport_size.x - float(outer_margin * 2)))
-	var panel_height_cap: float = max(320.0, viewport_size.y - float(outer_margin * 2) - 120.0)
-	var panel_height: float = clamp(viewport_size.y * 0.70, 420.0, panel_height_cap)
+	var panel_width: float = clamp(viewport_size.x - float(outer_margin * 2), 420.0, 1440.0)
+	var panel_height_cap: float = max(520.0, viewport_size.y - float(outer_margin * 2) - 12.0)
+	var panel_height: float = clamp(viewport_size.y - float(outer_margin * 2) - 8.0, 560.0, min(880.0, panel_height_cap))
 	var panel_size := Vector2(panel_width, panel_height)
 	panel_shell.custom_minimum_size = panel_size
 	panel.custom_minimum_size = panel_size
 
-	var inner_margin: int = int(round(clamp(panel_width * 0.052, 18.0, 38.0)))
+	var inner_margin: int = int(round(clamp(panel_width * 0.032, 18.0, 42.0)))
 	content_margin.add_theme_constant_override("margin_left", inner_margin)
-	content_margin.add_theme_constant_override("margin_top", inner_margin)
+	content_margin.add_theme_constant_override("margin_top", inner_margin - 2)
 	content_margin.add_theme_constant_override("margin_right", inner_margin)
-	content_margin.add_theme_constant_override("margin_bottom", inner_margin)
+	content_margin.add_theme_constant_override("margin_bottom", inner_margin - 2)
 
-	start_button.custom_minimum_size.y = clamp(viewport_size.y * 0.10, 86.0, 122.0)
-	mode_button.custom_minimum_size.y = clamp(viewport_size.y * 0.076, 62.0, 86.0)
+	var wide_layout: bool = viewport_size.x >= 1180.0 and viewport_size.y >= 700.0
+	var mid_layout: bool = viewport_size.x >= 820.0
+
+	deck_header.columns = 2 if wide_layout else 1
+	deck_header.add_theme_constant_override("h_separation", int(round(clamp(panel_width * 0.016, 16.0, 24.0))))
+	deck_header.add_theme_constant_override("v_separation", int(round(clamp(panel_height * 0.02, 14.0, 24.0))))
+	signal_grid.columns = 3 if viewport_size.x >= 960.0 else (2 if mid_layout else 1)
+	feature_grid.columns = 1
+
+	var card_height: float = clamp(panel_height - float(inner_margin * 2), 420.0, 620.0)
+	hero_card.custom_minimum_size = Vector2(panel_width * 0.54 if wide_layout else 0.0, card_height)
+	launch_card.custom_minimum_size = Vector2(panel_width * 0.34 if wide_layout else 0.0, card_height)
+
+	start_button.custom_minimum_size.y = clamp(viewport_size.y * 0.094, 86.0, 118.0)
+	mode_button.custom_minimum_size.y = clamp(viewport_size.y * 0.055, 54.0, 68.0)
 	daily_button.custom_minimum_size.y = mode_button.custom_minimum_size.y
 	weekly_button.custom_minimum_size.y = mode_button.custom_minimum_size.y
 	promo_button.custom_minimum_size.y = mode_button.custom_minimum_size.y
 
-	var icon_size: float = clamp(min(viewport_size.x, viewport_size.y) * 0.095, 62.0, 90.0)
+	var icon_size: float = clamp(min(viewport_size.x, viewport_size.y) * 0.072, 52.0, 76.0)
 	audio_button.custom_minimum_size = Vector2(icon_size, icon_size)
 	account_button.custom_minimum_size = Vector2(icon_size, icon_size)
 	shop_button.custom_minimum_size = Vector2(icon_size, icon_size)
@@ -263,13 +289,23 @@ func _sync_mode_buttons() -> void:
 	var week_tier: int = int(SaveStore.data.get("social_week_tier", 0))
 	var rival_target: int = RunManager.get_active_rival_target()
 	var rival_name: String = str(SaveStore.data.get("social_rival_name", "Rival"))
-	mode_button.text = "Leaderboard: %s (Tier %d)" % [mode_id, week_tier]
-	daily_button.text = "Daily Challenge: %s" % ("On" if SaveStore.get_daily_challenge_enabled() else "Off")
-	weekly_button.text = "Weekly: %d pts | %s %d" % [week_points, rival_name, rival_target]
-	promo_button.text = "ColorCrunch"
+	var next_mode: String = "OPEN" if mode_id == "PURE" else "PURE"
+	mode_button.text = "Switch to %s" % next_mode
+	mode_meta.text = "%s lane live // Tier %d" % [mode_id, week_tier]
+	var daily_enabled: bool = SaveStore.get_daily_challenge_enabled()
+	daily_button.text = "Daily Feed: %s" % ("On" if daily_enabled else "Off")
+	daily_meta.text = "Featured rival board %s." % ("armed" if daily_enabled else "muted")
+	weekly_button.text = "Season Ladder"
+	weekly_button.disabled = true
+	weekly_meta.text = "%d pts // %s pace %d" % [week_points, rival_name, rival_target]
+	promo_button.text = "Open ColorCrunch"
+	promo_meta.text = "Contrast boards stay on standby for a pace change."
+	pure_meta.text = "%s // TIER %d" % [mode_id, week_tier]
+	daily_signal_meta.text = "LIVE" if daily_enabled else "MUTED"
+	flow_meta.text = "%s %d" % [rival_name, rival_target]
 
 func _on_mode_toggle_pressed() -> void:
-	var next_mode := "OPEN" if RunManager.get_selected_mode() == "PURE" else "PURE"
+	var next_mode: String = "OPEN" if RunManager.get_selected_mode() == "PURE" else "PURE"
 	RunManager.set_selected_mode(next_mode, "menu_toggle")
 	_sync_mode_buttons()
 	UiFx.pop(mode_button)

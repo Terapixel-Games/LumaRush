@@ -1,20 +1,21 @@
 [gd_scene load_steps=8 format=3]
 
-[ext_resource type="Script" path="res://src/scenes/Results.gd" id=1]
-[ext_resource type="PackedScene" path="res://src/visual/BackgroundController.tscn" id=2]
-[ext_resource type="Script" path="res://src/ui/GlassPanel.gd" id=3]
-[ext_resource type="Theme" path="res://src/ui/UiTheme.tres" id=4]
-[ext_resource type="Script" path="res://src/ui/LiquidGlassButton.gd" id=5]
-[ext_resource type="PackedScene" path="res://ui/components/IconButton.tscn" id=6]
-[ext_resource type="Texture2D" path="res://assets/ui/icons/atlas/music_on.tres" id=7]
+[ext_resource type="Script" path="res://src/scenes/Results.gd" id="1"]
+[ext_resource type="PackedScene" path="res://src/visual/BackgroundController.tscn" id="2"]
+[ext_resource type="Theme" path="res://addons/arcade_core/ui/theme/UITheme.tres" id="3"]
+[ext_resource type="PackedScene" path="res://addons/arcade_core/ui/components/GlassPanel.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://addons/arcade_core/ui/components/PrimaryButton.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://addons/arcade_core/ui/components/SecondaryButton.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://addons/arcade_core/ui/components/IconButton.tscn" id="7"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/atlas/music_on.tres" id="8"]
 
 [node name="Results" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
-script = ExtResource( 1 )
-theme = ExtResource( 4 )
+script = ExtResource("1")
+theme = ExtResource("3")
 
-[node name="BackgroundController" parent="." instance=ExtResource( 2 )]
+[node name="BackgroundController" parent="." instance=ExtResource("2")]
 
 [node name="UI" type="Control" parent="."]
 anchor_right = 1.0
@@ -31,32 +32,27 @@ offset_top = 18.0
 offset_right = -18.0
 offset_bottom = 86.0
 
-[node name="Audio" parent="UI/TopRightBar" instance=ExtResource( 6 )]
+[node name="Audio" parent="UI/TopRightBar" instance=ExtResource("7")]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-icon_texture = ExtResource( 7 )
+icon_texture = ExtResource("8")
 tooltip_text_override = "Audio"
 accessibility_name_override = "Audio"
 
-[node name="Panel" type="ColorRect" parent="UI"]
-script = ExtResource( 3 )
-anchor_left = 0.12
-anchor_top = 0.2
-anchor_right = 0.88
-anchor_bottom = 0.8
-blur_radius = 5.2
-tint = Color(0.12, 0.18, 0.32, 0.22)
-edge = Color(0.9, 0.96, 1, 0.2)
-corner_radius = 0.11
-edge_width = 1.1
-warp_intensity = 0.12
-strength_x = 8.0
-strength_y = 8.0
-chromatic_strength = 0.18
-color = Color(0.12, 0.18, 0.32, 0.22)
+[node name="Panel" parent="UI" instance=ExtResource("4")]
+anchor_left = 0.10
+anchor_top = 0.16
+anchor_right = 0.90
+anchor_bottom = 0.84
+panel_tint = Color(0.05, 0.07, 0.12, 0.84)
+panel_edge = Color(0.70, 0.90, 1, 0.30)
+panel_glow = Color(0.28, 0.88, 1, 1)
+corner_radius = 0.16
+blur_radius = 6.0
+drop_shadow_alpha = 0.28
 
 [node name="Scroll" type="ScrollContainer" parent="UI/Panel"]
 anchor_right = 1.0
@@ -66,7 +62,11 @@ horizontal_scroll_mode = 0
 [node name="VBox" type="VBoxContainer" parent="UI/Panel/Scroll"]
 size_flags_horizontal = 3
 alignment = 0
-theme_override_constants/separation = 24
+theme_override_constants/separation = 22
+
+[node name="Kicker" type="Label" parent="UI/Panel/Scroll/VBox"]
+text = "RUN RECAP"
+horizontal_alignment = 1
 
 [node name="Title" type="Label" parent="UI/Panel/Scroll/VBox"]
 text = "LumaRush"
@@ -126,25 +126,22 @@ text = "Coins balance: 0"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 22
 
-[node name="DoubleReward" type="Button" parent="UI/Panel/Scroll/VBox"]
-script = ExtResource( 5 )
-text = "Watch Ad: Double Coins"
+[node name="DoubleReward" parent="UI/Panel/Scroll/VBox" instance=ExtResource("6")]
+text = "Double Coins"
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 88)
+custom_minimum_size = Vector2(0, 82)
 
 [node name="Spacer" type="Control" parent="UI/Panel/Scroll/VBox"]
 
-[node name="PlayAgain" type="Button" parent="UI/Panel/Scroll/VBox"]
-script = ExtResource( 5 )
-text = "Play Again"
+[node name="PlayAgain" parent="UI/Panel/Scroll/VBox" instance=ExtResource("5")]
+text = "Run Again"
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 118)
+custom_minimum_size = Vector2(0, 112)
 
-[node name="Menu" type="Button" parent="UI/Panel/Scroll/VBox"]
-script = ExtResource( 5 )
-text = "Main Menu"
+[node name="Menu" parent="UI/Panel/Scroll/VBox" instance=ExtResource("6")]
+text = "Back to Menu"
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 118)
+custom_minimum_size = Vector2(0, 96)
 
 [connection signal="pressed" from="UI/Panel/Scroll/VBox/PlayAgain" to="." method="_on_play_again_pressed"]
 [connection signal="pressed" from="UI/Panel/Scroll/VBox/Menu" to="." method="_on_menu_pressed"]
