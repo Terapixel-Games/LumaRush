@@ -64,10 +64,11 @@ func _ready() -> void:
 	Typography.style_main_menu(self)
 	ThemeManager.apply_to_scene(self)
 	_apply_neon_run_deck()
+	_apply_launch_bay_copy()
+	_apply_launch_bay_hierarchy()
 	_layout_menu()
 	call_deferred("_layout_menu")
 	_sync_mode_buttons()
-	title_label.add_theme_color_override("font_color", _title_base_color)
 	_populate_track_options()
 	_refresh_audio_icon()
 	_play_menu_motion()
@@ -90,6 +91,8 @@ func _notification(what: int) -> void:
 	if what == Control.NOTIFICATION_RESIZED:
 		Typography.style_main_menu(self)
 		_apply_neon_run_deck()
+		_apply_launch_bay_copy()
+		_apply_launch_bay_hierarchy()
 		_layout_menu()
 		_refresh_title_pivots()
 
@@ -106,10 +109,10 @@ func _layout_menu() -> void:
 	root_margin.add_theme_constant_override("margin_right", outer_margin)
 	root_margin.add_theme_constant_override("margin_bottom", outer_margin)
 
-	var panel_width: float = clamp(viewport_size.x - float(outer_margin * 2), 420.0, 1440.0)
+	var panel_width: float = clamp(viewport_size.x - float(outer_margin * 2), 520.0, 1680.0)
 	var center_chrome_height: float = 84.0 + 84.0 + 32.0
 	var panel_height_cap: float = max(360.0, viewport_size.y - float(outer_margin * 2) - center_chrome_height)
-	var panel_height: float = clamp(min(viewport_size.y * 0.82, panel_height_cap), 360.0, min(880.0, panel_height_cap))
+	var panel_height: float = clamp(min(viewport_size.y * 0.84, panel_height_cap), 430.0, min(860.0, panel_height_cap))
 	var panel_size := Vector2(panel_width, panel_height)
 	panel_shell.custom_minimum_size = panel_size
 	panel.custom_minimum_size = panel_size
@@ -123,19 +126,20 @@ func _layout_menu() -> void:
 	var wide_layout: bool = viewport_size.x >= 1180.0 and viewport_size.y >= 700.0
 	var mid_layout: bool = viewport_size.x >= 820.0
 
-	deck_header.columns = 2 if wide_layout else 1
+	deck_header.columns = 1
 	deck_header.add_theme_constant_override("h_separation", int(round(clamp(panel_width * 0.016, 16.0, 24.0))))
-	deck_header.add_theme_constant_override("v_separation", int(round(clamp(panel_height * 0.02, 14.0, 24.0))))
+	deck_header.add_theme_constant_override("v_separation", int(round(clamp(panel_height * 0.014, 10.0, 16.0))))
 	signal_grid.columns = 3 if viewport_size.x >= 960.0 else (2 if mid_layout else 1)
-	feature_grid.columns = 1
+	feature_grid.columns = 4 if wide_layout else (2 if mid_layout else 1)
 
 	var card_height_available: float = max(260.0, panel_height - float(inner_margin * 2))
-	var card_height: float = clamp(card_height_available, 260.0, min(620.0, card_height_available))
-	hero_card.custom_minimum_size = Vector2(panel_width * 0.54 if wide_layout else 0.0, card_height)
-	launch_card.custom_minimum_size = Vector2(panel_width * 0.34 if wide_layout else 0.0, card_height)
+	var hero_height: float = clamp(card_height_available * (0.62 if wide_layout else 0.54), 300.0, 500.0)
+	var rail_height: float = clamp(card_height_available - hero_height - 12.0, 190.0, 300.0)
+	hero_card.custom_minimum_size = Vector2(0.0, hero_height)
+	launch_card.custom_minimum_size = Vector2(0.0, rail_height)
 
-	start_button.custom_minimum_size.y = clamp(viewport_size.y * 0.094, 86.0, 118.0)
-	mode_button.custom_minimum_size.y = clamp(viewport_size.y * 0.055, 54.0, 68.0)
+	start_button.custom_minimum_size.y = clamp(viewport_size.y * 0.086, 82.0, 108.0)
+	mode_button.custom_minimum_size.y = clamp(viewport_size.y * 0.05, 50.0, 62.0)
 	daily_button.custom_minimum_size.y = mode_button.custom_minimum_size.y
 	weekly_button.custom_minimum_size.y = mode_button.custom_minimum_size.y
 	promo_button.custom_minimum_size.y = mode_button.custom_minimum_size.y
@@ -184,12 +188,11 @@ func _run_badge_pulse() -> void:
 func _run_panel_fade_in() -> void:
 	if is_instance_valid(_panel_fade_tween):
 		_panel_fade_tween.kill()
+	panel.modulate.a = 1.0
 	if FeatureFlags.is_visual_test_mode():
-		panel.modulate.a = 1.0
 		return
-	panel.modulate.a = 0.0
 	_panel_fade_tween = create_tween()
-	_panel_fade_tween.tween_property(panel, "modulate:a", 1.0, 0.48)
+	_panel_fade_tween.tween_property(panel, "modulate:a", 1.0, 0.16)
 
 func _on_start_pressed() -> void:
 	Telemetry.mark_mode_selected(RunManager.get_selected_mode(), "menu_start")
@@ -226,9 +229,57 @@ func _apply_wallet_to_ui(wallet: Dictionary) -> void:
 		ThemeManager.apply_from_shop_state(shop_state as Dictionary)
 		ThemeManager.apply_to_scene(self)
 		_apply_neon_run_deck()
+		_apply_launch_bay_hierarchy()
 
 func _apply_neon_run_deck() -> void:
 	NEON_RUN_DECK.apply_main_menu(self)
+
+func _apply_launch_bay_copy() -> void:
+	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Kicker", "RUN BAY // READY")
+	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Title", "LUMARUSH")
+	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Subtitle", "Pick the lane. Hit the board.")
+	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/LaunchNote", "")
+	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchEyebrow", "SYSTEM RAIL")
+	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchTitle", "")
+	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchMeta", "")
+
+func _apply_launch_bay_hierarchy() -> void:
+	if title_label == null or start_button == null:
+		return
+	title_label.add_theme_font_size_override("font_size", 76)
+	title_label.add_theme_color_override("font_color", Color(0.96, 0.99, 1.0, 1.0))
+	title_label.add_theme_color_override("font_outline_color", Color(0.0, 0.02, 0.08, 0.95))
+	title_label.add_theme_constant_override("outline_size", 6)
+	for path in [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Kicker",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchEyebrow",
+	]:
+		var label := get_node_or_null(path) as Label
+		if label != null:
+			label.add_theme_font_size_override("font_size", 18)
+			label.add_theme_color_override("font_color", Color(0.25, 0.92, 1.0, 1.0))
+			label.add_theme_constant_override("outline_size", 3)
+	for path in [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Subtitle",
+	]:
+		var label := get_node_or_null(path) as Label
+		if label != null:
+			label.add_theme_font_size_override("font_size", 24)
+			label.add_theme_color_override("font_color", Color(0.78, 0.88, 1.0, 1.0))
+	for path in [
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/LaunchNote",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchTitle",
+		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchMeta",
+	]:
+		var label := get_node_or_null(path) as Label
+		if label != null:
+			label.visible = false
+	start_button.add_theme_font_size_override("font_size", 34)
+
+func _set_label_text(path: String, value: String) -> void:
+	var label := get_node_or_null(path) as Label
+	if label != null:
+		label.text = value
 
 func _populate_track_options() -> void:
 	_tracks = MusicManager.get_available_tracks()
@@ -302,16 +353,16 @@ func _sync_mode_buttons() -> void:
 	var rival_target: int = RunManager.get_active_rival_target()
 	var rival_name: String = str(SaveStore.data.get("social_rival_name", "Rival"))
 	var next_mode: String = "OPEN" if mode_id == "PURE" else "PURE"
-	mode_button.text = "Switch to %s" % next_mode
-	mode_meta.text = "%s lane live // Tier %d" % [mode_id, week_tier]
+	mode_button.text = "TO %s" % next_mode
+	mode_meta.text = "%s // TIER %d" % [mode_id, week_tier]
 	var daily_enabled: bool = SaveStore.get_daily_challenge_enabled()
-	daily_button.text = "Daily Feed: %s" % ("On" if daily_enabled else "Off")
-	daily_meta.text = "Featured rival board %s." % ("armed" if daily_enabled else "muted")
-	weekly_button.text = "Season Ladder"
+	daily_button.text = "DAILY %s" % ("ON" if daily_enabled else "OFF")
+	daily_meta.text = "Rival board %s" % ("armed" if daily_enabled else "muted")
+	weekly_button.text = "LOCKED"
 	weekly_button.disabled = true
-	weekly_meta.text = "%d pts // %s pace %d" % [week_points, rival_name, rival_target]
-	promo_button.text = "Open ColorCrunch"
-	promo_meta.text = "Contrast boards stay on standby for a pace change."
+	weekly_meta.text = "%d pts // %s %d" % [week_points, rival_name, rival_target]
+	promo_button.text = "COLORCRUNCH"
+	promo_meta.text = "Side board"
 	pure_meta.text = "%s // TIER %d" % [mode_id, week_tier]
 	daily_signal_meta.text = "LIVE" if daily_enabled else "MUTED"
 	flow_meta.text = "%s %d" % [rival_name, rival_target]

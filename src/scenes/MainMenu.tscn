@@ -59,7 +59,7 @@ theme_override_constants/separation = 12
 
 [node name="Brand" type="Label" parent="UI/RootMargin/Layout/TopBar"]
 layout_mode = 2
-text = "LUMARUSH // RUN DECK"
+text = "LUMARUSH // LAUNCH BAY"
 vertical_alignment = 1
 
 [node name="Spacer" type="Control" parent="UI/RootMargin/Layout/TopBar"]
@@ -144,12 +144,12 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-columns = 2
+columns = 1
 theme_override_constants/h_separation = 18
-theme_override_constants/v_separation = 18
+theme_override_constants/v_separation = 12
 
 [node name="HeroCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader"]
-custom_minimum_size = Vector2(0, 520)
+custom_minimum_size = Vector2(0, 420)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -168,15 +168,15 @@ theme_override_constants/separation = 16
 
 [node name="Kicker" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
 layout_mode = 2
-text = "RUN DECK"
+text = "RUN BAY // READY"
 
 [node name="Title" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
 layout_mode = 2
-text = "Launch the next lane"
+text = "LUMARUSH"
 
 [node name="Subtitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
 layout_mode = 2
-text = "Pure or Open. Daily pressure armed. Rival pace live."
+text = "Pick the lane. Hit the board."
 autowrap_mode = 3
 
 [node name="SignalGrid" type="GridContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
@@ -239,18 +239,19 @@ autowrap_mode = 3
 
 [node name="Start" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox" instance=ExtResource("6")]
 layout_mode = 2
-text = "Start Run"
+text = "START RUN"
 
 [node name="LaunchNote" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
+visible = false
 layout_mode = 2
-text = "Loads straight into the active board."
+text = ""
 autowrap_mode = 3
 
 [node name="LaunchCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader"]
-custom_minimum_size = Vector2(0, 520)
+custom_minimum_size = Vector2(0, 210)
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
+size_flags_vertical = 1
 
 [node name="Margin" type="MarginContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard"]
 layout_mode = 2
@@ -261,28 +262,28 @@ theme_override_constants/margin_bottom = 24
 
 [node name="VBox" type="VBoxContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin"]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
 [node name="LaunchEyebrow" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox"]
 layout_mode = 2
-text = "INTEL CLUSTER"
+text = "SYSTEM RAIL"
 
 [node name="LaunchTitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox"]
+visible = false
 layout_mode = 2
-text = "Live circuit status"
+text = ""
 autowrap_mode = 3
 
 [node name="LaunchMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox"]
+visible = false
 layout_mode = 2
-text = "Switch lanes, arm the daily feed, and check rival pace before drop."
+text = ""
 autowrap_mode = 3
 
 [node name="IntelGrid" type="GridContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
-columns = 1
+columns = 4
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 12
 
@@ -303,7 +304,7 @@ theme_override_constants/separation = 8
 
 [node name="ModeTitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox"]
 layout_mode = 2
-text = "LANE CONTROL"
+text = "LANE"
 
 [node name="ModeMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox"]
 layout_mode = 2
@@ -331,7 +332,7 @@ theme_override_constants/separation = 8
 
 [node name="DailyTitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox"]
 layout_mode = 2
-text = "DAILY HUNT"
+text = "DAILY"
 
 [node name="DailyMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox"]
 layout_mode = 2
@@ -359,7 +360,7 @@ theme_override_constants/separation = 8
 
 [node name="WeeklyTitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox"]
 layout_mode = 2
-text = "SEASON PACE"
+text = "RIVAL"
 
 [node name="WeeklyMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox"]
 layout_mode = 2
@@ -388,7 +389,7 @@ theme_override_constants/separation = 8
 
 [node name="PromoTitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard/Margin/VBox"]
 layout_mode = 2
-text = "SIDE JUMP"
+text = "SIDE"
 
 [node name="PromoMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/PromoCard/Margin/VBox"]
 layout_mode = 2

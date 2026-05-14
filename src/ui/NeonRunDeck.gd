@@ -10,6 +10,17 @@ const SHADOW: Color = Color(0.005, 0.015, 0.045, 0.92)
 const BACKDROP: Color = Color(0.01, 0.015, 0.04, 0.78)
 
 static func apply_main_menu(scene: Node) -> void:
+	var bg_controller := scene.get_node_or_null("BackgroundController")
+	if bg_controller != null and bg_controller.is_node_ready() and bg_controller.has_method("set_theme_palette"):
+		bg_controller.call(
+			"set_theme_palette",
+			Color(0.01, 0.025, 0.075, 1.0),
+			Color(0.035, 0.07, 0.18, 1.0),
+			Color(0.08, 0.04, 0.22, 1.0),
+			Color(0.55, 0.10, 0.95, 1.0)
+		)
+	_style_color_rect(scene.get_node_or_null("BackgroundController/ColorRect"), Color(0.01, 0.02, 0.06, 1.0))
+	_style_color_rect(scene.get_node_or_null("BackgroundController/CenterGlow"), Color(0.55, 0.10, 1.0, 0.18))
 	_style_color_rect(scene.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel"), Color(0.035, 0.052, 0.13, 0.95))
 	_style_panels(scene, [
 		"UI/RootMargin/Layout/Center/PanelShell",
