@@ -109,10 +109,10 @@ func _layout_menu() -> void:
 	root_margin.add_theme_constant_override("margin_right", outer_margin)
 	root_margin.add_theme_constant_override("margin_bottom", outer_margin)
 
-	var panel_width: float = clamp(viewport_size.x - float(outer_margin * 2), 520.0, 1680.0)
+	var panel_width: float = clamp(viewport_size.x - float(outer_margin * 2), 540.0, 1520.0)
 	var center_chrome_height: float = 84.0 + 84.0 + 32.0
 	var panel_height_cap: float = max(360.0, viewport_size.y - float(outer_margin * 2) - center_chrome_height)
-	var panel_height: float = clamp(min(viewport_size.y * 0.84, panel_height_cap), 430.0, min(860.0, panel_height_cap))
+	var panel_height: float = clamp(min(viewport_size.y * 0.80, panel_height_cap), 460.0, min(800.0, panel_height_cap))
 	var panel_size := Vector2(panel_width, panel_height)
 	panel_shell.custom_minimum_size = panel_size
 	panel.custom_minimum_size = panel_size
@@ -133,12 +133,12 @@ func _layout_menu() -> void:
 	feature_grid.columns = 4 if wide_layout else (2 if mid_layout else 1)
 
 	var card_height_available: float = max(260.0, panel_height - float(inner_margin * 2))
-	var hero_height: float = clamp(card_height_available * (0.62 if wide_layout else 0.54), 300.0, 500.0)
-	var rail_height: float = clamp(card_height_available - hero_height - 12.0, 190.0, 300.0)
+	var hero_height: float = clamp(card_height_available * (0.68 if wide_layout else 0.58), 330.0, 520.0)
+	var rail_height: float = clamp(card_height_available - hero_height - 12.0, 170.0, 250.0)
 	hero_card.custom_minimum_size = Vector2(0.0, hero_height)
 	launch_card.custom_minimum_size = Vector2(0.0, rail_height)
 
-	start_button.custom_minimum_size.y = clamp(viewport_size.y * 0.086, 82.0, 108.0)
+	start_button.custom_minimum_size.y = clamp(viewport_size.y * 0.10, 94.0, 128.0)
 	mode_button.custom_minimum_size.y = clamp(viewport_size.y * 0.05, 50.0, 62.0)
 	daily_button.custom_minimum_size.y = mode_button.custom_minimum_size.y
 	weekly_button.custom_minimum_size.y = mode_button.custom_minimum_size.y
@@ -235,9 +235,11 @@ func _apply_neon_run_deck() -> void:
 	NEON_RUN_DECK.apply_main_menu(self)
 
 func _apply_launch_bay_copy() -> void:
-	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Kicker", "RUN BAY // READY")
+	if start_button != null:
+		start_button.text = "LAUNCH RUN"
+	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Kicker", "TRACK GATE // ARMED")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Title", "LUMARUSH")
-	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Subtitle", "Pick the lane. Hit the board.")
+	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Subtitle", "Gate locked. Lane hot.")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/LaunchNote", "")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchEyebrow", "SYSTEM RAIL")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchTitle", "")
@@ -274,7 +276,7 @@ func _apply_launch_bay_hierarchy() -> void:
 		var label := get_node_or_null(path) as Label
 		if label != null:
 			label.visible = false
-	start_button.add_theme_font_size_override("font_size", 34)
+	start_button.add_theme_font_size_override("font_size", 38)
 
 func _set_label_text(path: String, value: String) -> void:
 	var label := get_node_or_null(path) as Label

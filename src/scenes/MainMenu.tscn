@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/MainMenu.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/visual/BackgroundController.tscn" id="2"]
@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/icons/atlas/person.tres" id="10"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/atlas/cart.tres" id="11"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/atlas/music_on.tres" id="12"]
+[ext_resource type="Script" path="res://src/ui/NeonTrackGate.gd" id="13"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -32,6 +33,16 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="TrackGate" type="Control" parent="UI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("13")
 
 [node name="RootMargin" type="MarginContainer" parent="UI"]
 layout_mode = 1
@@ -59,7 +70,7 @@ theme_override_constants/separation = 12
 
 [node name="Brand" type="Label" parent="UI/RootMargin/Layout/TopBar"]
 layout_mode = 2
-text = "LUMARUSH // LAUNCH BAY"
+text = "LUMARUSH // TRACK GATE"
 vertical_alignment = 1
 
 [node name="Spacer" type="Control" parent="UI/RootMargin/Layout/TopBar"]
@@ -168,7 +179,7 @@ theme_override_constants/separation = 16
 
 [node name="Kicker" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
 layout_mode = 2
-text = "RUN BAY // READY"
+text = "TRACK GATE // ARMED"
 
 [node name="Title" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
 layout_mode = 2
@@ -176,7 +187,7 @@ text = "LUMARUSH"
 
 [node name="Subtitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
 layout_mode = 2
-text = "Pick the lane. Hit the board."
+text = "Gate locked. Lane hot."
 autowrap_mode = 3
 
 [node name="SignalGrid" type="GridContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
@@ -239,7 +250,7 @@ autowrap_mode = 3
 
 [node name="Start" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox" instance=ExtResource("6")]
 layout_mode = 2
-text = "START RUN"
+text = "LAUNCH RUN"
 
 [node name="LaunchNote" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
 visible = false

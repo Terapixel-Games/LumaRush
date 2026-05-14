@@ -21,13 +21,17 @@ static func apply_main_menu(scene: Node) -> void:
 		)
 	_style_color_rect(scene.get_node_or_null("BackgroundController/ColorRect"), Color(0.01, 0.02, 0.06, 1.0))
 	_style_color_rect(scene.get_node_or_null("BackgroundController/CenterGlow"), Color(0.55, 0.10, 1.0, 0.18))
-	_style_color_rect(scene.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel"), Color(0.035, 0.052, 0.13, 0.95))
+	_style_color_rect(scene.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel"), Color(0.018, 0.028, 0.08, 0.36))
+	_style_panels(scene, _find_paths_containing(scene, "Card"), "card")
 	_style_panels(scene, [
 		"UI/RootMargin/Layout/Center/PanelShell",
+	], "gate_shell")
+	_style_panels(scene, [
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard",
+	], "gate_panel")
+	_style_panels(scene, [
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard",
-	], "panel")
-	_style_panels(scene, _find_paths_containing(scene, "Card"), "card")
+	], "gate_rail")
 	_style_buttons(scene, [
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Start",
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/Start",
@@ -137,6 +141,25 @@ static func make_style(kind: String) -> StyleBoxFlat:
 			style.border_color = Color(0.82, 0.90, 1.0, 0.86)
 			style.shadow_color = Color(0.50, 0.10, 1.0, 0.22)
 			style.shadow_size = 6
+		"gate_shell":
+			style.bg_color = Color(0.005, 0.012, 0.035, 0.18)
+			style.border_color = Color(0.08, 0.90, 1.0, 0.54)
+			style.corner_radius_top_left = 28
+			style.corner_radius_top_right = 28
+			style.corner_radius_bottom_left = 28
+			style.corner_radius_bottom_right = 28
+			style.shadow_color = Color(0.05, 0.78, 1.0, 0.22)
+			style.shadow_size = 14
+		"gate_panel":
+			style.bg_color = Color(0.025, 0.04, 0.13, 0.52)
+			style.border_color = Color(0.10, 0.94, 1.0, 0.62)
+			style.shadow_color = Color(0.82, 0.12, 1.0, 0.18)
+			style.shadow_size = 10
+		"gate_rail":
+			style.bg_color = Color(0.015, 0.026, 0.085, 0.66)
+			style.border_color = Color(0.14, 0.86, 1.0, 0.54)
+			style.shadow_color = Color(0.0, 0.0, 0.0, 0.22)
+			style.shadow_size = 4
 		"badge", "hot_badge":
 			style.bg_color = Color(1.0, 0.22, 0.34, 0.98)
 			style.border_color = Color(1.0, 0.88, 0.92, 0.98)
