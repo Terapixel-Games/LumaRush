@@ -1,5 +1,7 @@
 extends Control
 
+const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
+
 @onready var board: BoardView = $BoardView
 @onready var top_bar_bg: Control = $UI/TopBarBg
 @onready var top_bar: Control = $UI/TopBar
@@ -82,6 +84,7 @@ func _ready() -> void:
 	_pure_mode_locked = _current_mode == "PURE"
 	Typography.style_game(self)
 	ThemeManager.apply_to_scene(self)
+	_apply_neon_run_deck()
 	BackgroundMood.register_controller($BackgroundController)
 	_update_gameplay_mood_from_matches(0.0)
 	BackgroundMood.reset_starfield_emission_taper()
@@ -140,6 +143,7 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == Control.NOTIFICATION_RESIZED:
 		Typography.style_game(self)
+		_apply_neon_run_deck()
 		_center_board()
 		call_deferred("_refresh_button_pivots")
 
@@ -631,6 +635,9 @@ func _style_badge_panel(panel: PanelContainer) -> void:
 	style.anti_aliasing_size = 1.2
 	panel.add_theme_stylebox_override("panel", style)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+func _apply_neon_run_deck() -> void:
+	NEON_RUN_DECK.apply_game(self)
 
 func _is_other_refill_pending(powerup_type: String) -> bool:
 	return not _pending_powerup_refill_type.is_empty() and _pending_powerup_refill_type != powerup_type

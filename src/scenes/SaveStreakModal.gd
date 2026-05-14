@@ -1,5 +1,7 @@
 extends Control
 
+const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
+
 @onready var status_label: Label = $Panel/VBox/Status
 @onready var save_button: Button = $Panel/VBox/SaveButton
 
@@ -10,6 +12,7 @@ func _ready() -> void:
 	# Keep it interactive in both paused and unpaused states.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Typography.style_save_streak(self)
+	_apply_neon_run_deck()
 	if not AdManager.is_connected("rewarded_earned", Callable(self, "_on_rewarded_earned")):
 		AdManager.connect("rewarded_earned", Callable(self, "_on_rewarded_earned"))
 	if not AdManager.is_connected("rewarded_closed", Callable(self, "_on_rewarded_closed")):
@@ -18,6 +21,7 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == Control.NOTIFICATION_RESIZED:
 		Typography.style_save_streak(self)
+		_apply_neon_run_deck()
 
 func _on_save_pressed() -> void:
 	status_label.text = "Loading ad..."
@@ -43,3 +47,6 @@ func _on_rewarded_closed() -> void:
 	status_label.text = "Try again later"
 	status_label.add_theme_color_override("font_color", Typography.SECONDARY_TEXT)
 	save_button.disabled = false
+
+func _apply_neon_run_deck() -> void:
+	NEON_RUN_DECK.apply_modal(self)

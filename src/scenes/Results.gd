@@ -3,6 +3,7 @@ extends Control
 const AUDIO_TRACK_OVERLAY_SCENE := preload("res://src/scenes/AudioTrackOverlay.tscn")
 const ICON_MUSIC_ON: Texture2D = preload("res://assets/ui/icons/atlas/music_on.tres")
 const ICON_MUSIC_OFF: Texture2D = preload("res://assets/ui/icons/atlas/music_off.tres")
+const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
 
 @onready var title_label: Label = $UI/Panel/Scroll/VBox/Title
 @onready var top_right_bar: Control = $UI/TopRightBar
@@ -45,6 +46,7 @@ func _ready() -> void:
 	VisualTestMode.apply_if_enabled($BackgroundController, $BackgroundController)
 	Typography.style_results(self)
 	ThemeManager.apply_to_scene(self)
+	_apply_neon_run_deck()
 	_refresh_audio_icon()
 	_layout_results()
 	call_deferred("_layout_results")
@@ -648,5 +650,9 @@ func _format_alt_mode_leaderboard(mode_id: String, records: Array) -> String:
 func _notification(what: int) -> void:
 	if what == Control.NOTIFICATION_RESIZED:
 		Typography.style_results(self)
+		_apply_neon_run_deck()
 		_layout_results()
 		_refresh_intro_pivots()
+
+func _apply_neon_run_deck() -> void:
+	NEON_RUN_DECK.apply_results(self)

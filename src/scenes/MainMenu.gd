@@ -5,6 +5,7 @@ const ACCOUNT_MODAL_SCENE := preload("res://src/scenes/AccountModal.tscn")
 const SHOP_MODAL_SCENE := preload("res://src/scenes/ShopModal.tscn")
 const ICON_SETTINGS_ON := preload("res://assets/ui/icons/atlas/music_on.tres")
 const ICON_SETTINGS_OFF := preload("res://assets/ui/icons/atlas/music_off.tres")
+const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
 const PROMO_URL := "https://terapixel.games/color-crunch"
 
 @onready var root_margin: MarginContainer = $UI/RootMargin
@@ -62,6 +63,7 @@ func _ready() -> void:
 	VisualTestMode.apply_if_enabled($BackgroundController, $BackgroundController)
 	Typography.style_main_menu(self)
 	ThemeManager.apply_to_scene(self)
+	_apply_neon_run_deck()
 	_layout_menu()
 	call_deferred("_layout_menu")
 	_sync_mode_buttons()
@@ -87,6 +89,7 @@ func _process(delta: float) -> void:
 func _notification(what: int) -> void:
 	if what == Control.NOTIFICATION_RESIZED:
 		Typography.style_main_menu(self)
+		_apply_neon_run_deck()
 		_layout_menu()
 		_refresh_title_pivots()
 
@@ -181,6 +184,9 @@ func _run_badge_pulse() -> void:
 func _run_panel_fade_in() -> void:
 	if is_instance_valid(_panel_fade_tween):
 		_panel_fade_tween.kill()
+	if FeatureFlags.is_visual_test_mode():
+		panel.modulate.a = 1.0
+		return
 	panel.modulate.a = 0.0
 	_panel_fade_tween = create_tween()
 	_panel_fade_tween.tween_property(panel, "modulate:a", 1.0, 0.48)
@@ -219,6 +225,10 @@ func _apply_wallet_to_ui(wallet: Dictionary) -> void:
 	if typeof(shop_state) == TYPE_DICTIONARY:
 		ThemeManager.apply_from_shop_state(shop_state as Dictionary)
 		ThemeManager.apply_to_scene(self)
+		_apply_neon_run_deck()
+
+func _apply_neon_run_deck() -> void:
+	NEON_RUN_DECK.apply_main_menu(self)
 
 func _populate_track_options() -> void:
 	_tracks = MusicManager.get_available_tracks()

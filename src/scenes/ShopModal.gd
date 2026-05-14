@@ -1,5 +1,6 @@
 extends Control
 
+const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
 const THEME_NEON_COST := 1500
 const POWERUP_COSTS := {
 	"undo": 120,
@@ -60,6 +61,7 @@ func _ready() -> void:
 	Typography.style_save_streak(self)
 	_apply_header_hierarchy()
 	_apply_static_shop_styling()
+	_apply_neon_run_deck()
 	_bind_theme_action_nodes()
 	_ensure_shop_icons()
 	_layout_modal()
@@ -571,6 +573,7 @@ func _on_close_pressed() -> void:
 
 func _notification(what: int) -> void:
 	if what == Control.NOTIFICATION_RESIZED:
+		_apply_neon_run_deck()
 		_layout_modal()
 		_refresh_panel_pivot()
 
@@ -932,6 +935,9 @@ func _apply_button_variant(button: Button, variant: String) -> void:
 	button.add_theme_constant_override("outline_size", 2)
 	if button.has_method("_sync_glass_state"):
 		button.call_deferred("_sync_glass_state")
+
+func _apply_neon_run_deck() -> void:
+	NEON_RUN_DECK.apply_modal(self)
 
 func _apply_centered_content_width(path: String, width: float) -> void:
 	var control := get_node_or_null(path) as Control

@@ -1,5 +1,7 @@
 extends Control
 
+const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
+
 const EMAIL_MAX_LENGTH := 320
 const MERGE_CODE_MAX_LENGTH := 64
 
@@ -36,6 +38,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Typography.style_save_streak(self)
 	header_title.text = "Account"
+	_apply_neon_run_deck()
 	_layout_modal()
 	call_deferred("_layout_modal")
 	_refresh_panel_pivot()
@@ -408,6 +411,7 @@ func _sanitize_username_input(value: String) -> String:
 
 func _notification(what: int) -> void:
 	if what == Control.NOTIFICATION_RESIZED:
+		_apply_neon_run_deck()
 		_layout_modal()
 		_refresh_panel_pivot()
 
@@ -505,6 +509,9 @@ func _play_open_animation() -> void:
 	_open_tween.tween_property(panel, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_open_tween.tween_property(panel, "modulate:a", 1.0, 0.18)
 	_open_tween.tween_property(backdrop, "modulate:a", 1.0, 0.18)
+
+func _apply_neon_run_deck() -> void:
+	NEON_RUN_DECK.apply_modal(self)
 
 func _exit_tree() -> void:
 	if is_instance_valid(_open_tween):

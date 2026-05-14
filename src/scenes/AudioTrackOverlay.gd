@@ -1,6 +1,8 @@
 extends Control
 class_name AudioTrackOverlay
 
+const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
+
 signal track_selected(track_name: String, index: int)
 signal closed
 
@@ -22,6 +24,7 @@ func _ready() -> void:
 	_apply_mouse_filters()
 	Typography.style_label(title_label, 28.0, Typography.WEIGHT_BOLD)
 	Typography.style_button(close_button, 18.0, Typography.WEIGHT_SEMIBOLD)
+	_apply_neon_run_deck()
 	_layout_modal()
 	call_deferred("_layout_modal")
 	_refresh_panel_pivot()
@@ -75,6 +78,7 @@ func _apply_mouse_filters() -> void:
 
 func _notification(what: int) -> void:
 	if what == Control.NOTIFICATION_RESIZED:
+		_apply_neon_run_deck()
 		_layout_modal()
 		_refresh_panel_pivot()
 
@@ -122,3 +126,6 @@ func _refresh_panel_pivot() -> void:
 	if panel.size.x <= 0.0 or panel.size.y <= 0.0:
 		return
 	panel.pivot_offset = panel.size * 0.5
+
+func _apply_neon_run_deck() -> void:
+	NEON_RUN_DECK.apply_modal(self)

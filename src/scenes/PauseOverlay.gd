@@ -1,5 +1,7 @@
 extends Control
 
+const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
+
 signal resume
 signal quit
 
@@ -12,11 +14,13 @@ signal quit
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_WHEN_PAUSED
 	Typography.style_pause_overlay(self)
+	_apply_neon_run_deck()
 	_layout_overlay()
 
 func _notification(what: int) -> void:
 	if what == Control.NOTIFICATION_RESIZED:
 		Typography.style_pause_overlay(self)
+		_apply_neon_run_deck()
 		_layout_overlay()
 
 func _layout_overlay() -> void:
@@ -93,6 +97,9 @@ func _set_control_rect(control: Control, rect: Rect2) -> void:
 	control.offset_top = rect.position.y
 	control.offset_right = rect.position.x + rect.size.x
 	control.offset_bottom = rect.position.y + rect.size.y
+
+func _apply_neon_run_deck() -> void:
+	NEON_RUN_DECK.apply_pause(self)
 
 func _on_resume_pressed() -> void:
 	emit_signal("resume")
