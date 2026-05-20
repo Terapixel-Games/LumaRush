@@ -310,14 +310,14 @@ func _apply_responsive_typography(
 	var coin_min: float = 14.0 if compact_mode else 16.0
 	var reward_min: float = 14.0 if compact_mode else 16.0
 	var primary_min: float = 16.0 if compact_mode else 18.0
-	var title_size: int = int(round(clamp(float(menu_title_px) * 0.72 * headline_scale, title_min, 106.0)))
-	var score_size: int = int(round(clamp(max(float(menu_title_px) * 0.92, stat_column_width * 0.14) * headline_scale, score_min, 138.0)))
-	var mode_size: int = int(round(clamp(float(menu_button_px) * 0.62 * compact_scale, mode_min, 40.0)))
-	var stat_size: int = int(round(clamp(float(menu_button_px) * 0.74 * compact_scale, stat_min, 48.0)))
-	var body_size: int = int(round(clamp(float(menu_button_px) * 0.64 * compact_scale, body_min, 36.0)))
-	var coin_size: int = int(round(clamp(float(menu_button_px) * 0.68 * compact_scale, coin_min, 38.0)))
-	var reward_button_size: int = int(round(clamp(float(menu_button_px) * 0.66 * action_scale, reward_min, 32.0)))
-	var primary_button_size: int = int(round(clamp(float(menu_button_px) * (0.76 if is_wide else 0.82) * action_scale, primary_min, 42.0)))
+	var title_size: int = int(round(clamp(float(menu_title_px) * 0.72 * headline_scale, title_min, 136.0)))
+	var score_size: int = int(round(clamp(max(float(menu_title_px) * 0.92, stat_column_width * 0.14) * headline_scale, score_min, 176.0)))
+	var mode_size: int = int(round(clamp(float(menu_button_px) * 0.66 * compact_scale, mode_min, 54.0)))
+	var stat_size: int = int(round(clamp(float(menu_button_px) * 0.78 * compact_scale, stat_min, 66.0)))
+	var body_size: int = int(round(clamp(float(menu_button_px) * 0.70 * compact_scale, body_min, 54.0)))
+	var coin_size: int = int(round(clamp(float(menu_button_px) * 0.74 * compact_scale, coin_min, 58.0)))
+	var reward_button_size: int = int(round(clamp(float(menu_button_px) * 0.72 * action_scale, reward_min, 48.0)))
+	var primary_button_size: int = int(round(clamp(float(menu_button_px) * (0.82 if is_wide else 0.88) * action_scale, primary_min, 58.0)))
 
 	if title_label:
 		title_label.add_theme_font_size_override("font_size", title_size)

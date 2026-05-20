@@ -600,7 +600,7 @@ func _set_badge_centered(panel: PanelContainer, label: Label) -> void:
 	panel.offset_top = 6.0
 	panel.offset_right = -8.0
 	panel.offset_bottom = -6.0
-	label.add_theme_font_size_override("font_size", int(round(clamp(panel.size.y * 0.28, 14.0, 22.0))))
+	label.add_theme_font_size_override("font_size", int(round(clamp(panel.size.y * 0.34, Typography.px(13.0), Typography.px(22.0)))))
 
 func _fit_badge_font_size(label: Label) -> void:
 	var font: Font = label.get_theme_font("font")
@@ -609,8 +609,9 @@ func _fit_badge_font_size(label: Label) -> void:
 	if label.size.x <= 0.0:
 		return
 	var max_width: float = max(24.0, label.size.x - 10.0)
-	var font_size_candidate: int = max(12, label.get_theme_font_size("font_size"))
-	while font_size_candidate > 12:
+	var minimum_font_size: int = Typography.px(12.0)
+	var font_size_candidate: int = max(minimum_font_size, label.get_theme_font_size("font_size"))
+	while font_size_candidate > minimum_font_size:
 		var measured_width: float = font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size_candidate).x
 		if measured_width <= max_width:
 			break
@@ -815,11 +816,11 @@ func _layout_top_right(view_size: Vector2) -> void:
 	audio_button.custom_minimum_size = Vector2(icon_size, icon_size)
 
 func _apply_responsive_hud_typography(content_width: float, bar_height: float, powerup_row_height: float) -> void:
-	var caption_size: int = int(round(clamp(bar_height * 0.25, 14.0, 30.0)))
-	var value_size: int = int(round(clamp(bar_height * 0.54, 26.0, 68.0)))
+	var caption_size: int = int(round(clamp(bar_height * 0.30, Typography.px(14.0), Typography.px(28.0))))
+	var value_size: int = int(round(clamp(bar_height * 0.62, Typography.px(28.0), Typography.px(60.0))))
 	if content_width < 520.0:
-		caption_size = min(caption_size, 22)
-		value_size = min(value_size, 48)
+		caption_size = min(caption_size, Typography.px(20.0))
+		value_size = min(value_size, Typography.px(44.0))
 	if score_caption_label:
 		score_caption_label.add_theme_font_size_override("font_size", caption_size)
 	if score_value_label:
@@ -827,7 +828,7 @@ func _apply_responsive_hud_typography(content_width: float, bar_height: float, p
 		score_value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		score_value_label.custom_minimum_size.y = clamp(bar_height * 0.5, 40.0, 72.0)
 
-	var badge_font_size: int = int(round(clamp(powerup_row_height * 0.27, 15.0, 28.0)))
+	var badge_font_size: int = int(round(clamp(powerup_row_height * 0.32, Typography.px(14.0), Typography.px(26.0))))
 	for badge in [undo_badge, prism_badge, hint_badge]:
 		if badge:
 			badge.add_theme_font_size_override("font_size", badge_font_size)
@@ -881,7 +882,7 @@ func _setup_combo_label() -> void:
 	_combo_label.add_theme_color_override("font_color", Color(1.0, 0.94, 0.5, 0.98))
 	_combo_label.add_theme_color_override("font_outline_color", Color(0.08, 0.12, 0.22, 0.95))
 	_combo_label.add_theme_constant_override("outline_size", 3)
-	_combo_label.add_theme_font_size_override("font_size", 34)
+	_combo_label.add_theme_font_size_override("font_size", Typography.px(28.0))
 	_combo_label.anchor_left = 0.5
 	_combo_label.anchor_right = 0.5
 	_combo_label.anchor_top = 0.0
@@ -958,7 +959,7 @@ func _maybe_show_micro_tutorial() -> void:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.text = "Tip: Chain matches quickly to escalate combo multipliers."
-	label.add_theme_font_size_override("font_size", 20)
+	label.add_theme_font_size_override("font_size", Typography.px(18.0))
 	label.add_theme_color_override("font_color", Color(0.93, 0.97, 1.0, 0.98))
 	panel.add_child(label)
 	$UI.add_child(panel)

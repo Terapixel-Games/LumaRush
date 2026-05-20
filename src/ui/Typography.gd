@@ -1,9 +1,10 @@
 extends Node
 
+const REFERENCE_WIDTH: float = 1080.0
 const REFERENCE_HEIGHT: float = 1600.0
 const GLOBAL_TEXT_SCALE: float = 1.0
 const MIN_SCALE_FACTOR: float = 0.78
-const MAX_SCALE_FACTOR: float = 1.18
+const MAX_SCALE_FACTOR: float = 1.65
 const PRIMARY_TEXT: Color = Color8(241, 248, 255, 255)
 const SECONDARY_TEXT: Color = Color8(188, 203, 255, 214)
 const SHADOW_TEXT: Color = Color(0.01, 0.03, 0.10, 0.88)
@@ -28,10 +29,15 @@ func scale_factor() -> float:
 	var tree := get_tree()
 	if tree == null or tree.root == null:
 		return 1.0
-	var h: float = tree.root.get_visible_rect().size.y
-	if h <= 0.0:
+	return scale_factor_for_size(tree.root.get_visible_rect().size)
+
+func scale_factor_for_size(viewport_size: Vector2) -> float:
+	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return 1.0
-	return clamp(h / REFERENCE_HEIGHT, MIN_SCALE_FACTOR, MAX_SCALE_FACTOR)
+	var height_scale: float = viewport_size.y / REFERENCE_HEIGHT
+	var area_scale: float = sqrt((viewport_size.x * viewport_size.y) / (REFERENCE_WIDTH * REFERENCE_HEIGHT))
+	var wide_bonus: float = clamp((viewport_size.x / max(1.0, viewport_size.y) - 1.35) * 0.16, 0.0, 0.18)
+	return clamp(max(height_scale, area_scale) + wide_bonus, MIN_SCALE_FACTOR, MAX_SCALE_FACTOR)
 
 func px(reference_size: float) -> int:
 	return int(round(reference_size * scale_factor() * GLOBAL_TEXT_SCALE))

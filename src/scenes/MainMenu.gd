@@ -113,8 +113,8 @@ func _layout_menu() -> void:
 	var panel_width: float = clamp(viewport_size.x - float(outer_margin * 2), 540.0, 2200.0)
 	var center_chrome_height: float = 84.0 + 84.0 + 32.0
 	var panel_height_cap: float = max(360.0, viewport_size.y - float(outer_margin * 2) - center_chrome_height)
-	var panel_height_ratio: float = 0.58 if viewport_size.x >= 1180.0 else 0.82
-	var panel_height: float = clamp(min(viewport_size.y * panel_height_ratio, panel_height_cap), 460.0, min(900.0, panel_height_cap))
+	var panel_height_ratio: float = 0.68 if viewport_size.x >= 1180.0 else 0.84
+	var panel_height: float = clamp(min(viewport_size.y * panel_height_ratio, panel_height_cap), 500.0, min(1080.0, panel_height_cap))
 	var panel_size := Vector2(panel_width, panel_height)
 	panel_shell.custom_minimum_size = panel_size
 	panel.custom_minimum_size = panel_size
@@ -258,9 +258,9 @@ func _apply_launch_bay_hierarchy() -> void:
 	if title_label == null or start_button == null:
 		return
 	if brand_label != null:
-		brand_label.add_theme_font_size_override("font_size", 18)
+		brand_label.add_theme_font_size_override("font_size", Typography.px(16.0))
 		brand_label.add_theme_color_override("font_color", Color(0.60, 0.90, 1.0, 0.96))
-	title_label.add_theme_font_size_override("font_size", 92)
+	title_label.add_theme_font_size_override("font_size", Typography.px(72.0))
 	title_label.add_theme_color_override("font_color", Color(0.96, 0.99, 1.0, 1.0))
 	title_label.add_theme_color_override("font_outline_color", Color(0.0, 0.02, 0.08, 0.95))
 	title_label.add_theme_constant_override("outline_size", 6)
@@ -270,7 +270,7 @@ func _apply_launch_bay_hierarchy() -> void:
 	]:
 		var label := get_node_or_null(path) as Label
 		if label != null:
-			label.add_theme_font_size_override("font_size", 24)
+			label.add_theme_font_size_override("font_size", Typography.px(17.0))
 			label.add_theme_color_override("font_color", Color(0.25, 0.92, 1.0, 1.0))
 			label.add_theme_constant_override("outline_size", 3)
 	for path in [
@@ -278,7 +278,7 @@ func _apply_launch_bay_hierarchy() -> void:
 	]:
 		var label := get_node_or_null(path) as Label
 		if label != null:
-			label.add_theme_font_size_override("font_size", 30)
+			label.add_theme_font_size_override("font_size", Typography.px(22.0))
 			label.add_theme_color_override("font_color", Color(0.78, 0.88, 1.0, 1.0))
 	for path in [
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/LaunchNote",
@@ -293,7 +293,7 @@ func _apply_launch_bay_hierarchy() -> void:
 		var label := get_node_or_null(path) as Label
 		if label != null:
 			label.visible = true
-			label.add_theme_font_size_override("font_size", 28 if label.name == "LaunchTitle" else 20)
+			label.add_theme_font_size_override("font_size", Typography.px(22.0 if label.name == "LaunchTitle" else 16.0))
 	for path in [
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox/ModeTitle",
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox/DailyTitle",
@@ -302,11 +302,11 @@ func _apply_launch_bay_hierarchy() -> void:
 	]:
 		var label := get_node_or_null(path) as Label
 		if label != null:
-			label.add_theme_font_size_override("font_size", 18)
+			label.add_theme_font_size_override("font_size", Typography.px(15.0))
 	for button in [mode_button, daily_button, weekly_button, promo_button]:
 		if button != null:
-			button.add_theme_font_size_override("font_size", 20)
-	start_button.add_theme_font_size_override("font_size", 42)
+			button.add_theme_font_size_override("font_size", Typography.px(18.0))
+	start_button.add_theme_font_size_override("font_size", Typography.px(34.0))
 
 func _set_label_text(path: String, value: String) -> void:
 	var label := get_node_or_null(path) as Label
