@@ -788,12 +788,11 @@ func _layout_top_bar(view_size: Vector2, content_left: float, content_width: flo
 	var content_inset_x: float = clamp(content_width * 0.055, 14.0, 34.0)
 	var content_inset_y: float = clamp(bar_height * 0.09, 8.0, 14.0)
 	var right_reserve: float = clamp(content_width * 0.03, 12.0, 28.0)
-	var vertical_lift: float = clamp(bar_height * 0.06, 4.0, 8.0)
 	top_bar.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	top_bar.position = Vector2(content_left + content_inset_x, top_margin + content_inset_y - vertical_lift)
+	top_bar.position = Vector2(content_left + content_inset_x, top_margin)
 	top_bar.size = Vector2(
 		max(220.0, content_width - (content_inset_x * 2.0) - right_reserve),
-		max(56.0, bar_height - (content_inset_y * 2.0))
+		max(56.0, bar_height)
 	)
 	top_bar.add_theme_constant_override("separation", int(round(clamp(content_width * 0.016, 10.0, 20.0))))
 	if score_box:
@@ -857,11 +856,13 @@ func _refresh_button_pivots() -> void:
 		button.pivot_offset = button.size * 0.5
 
 func _position_pause_button_overlap() -> void:
-	if pause_button == null or top_bar == null:
+	if pause_button == null or top_bar == null or top_bar_bg == null:
 		return
 	if pause_button.size.y <= 0.0:
 		return
-	var centered_y: float = floor((top_bar.size.y - pause_button.size.y) * 0.5)
+	var bg_center_y: float = top_bar_bg.global_position.y + (top_bar_bg.size.y * 0.5)
+	var top_bar_global_y: float = top_bar.global_position.y
+	var centered_y: float = floor(bg_center_y - top_bar_global_y - (pause_button.size.y * 0.5))
 	pause_button.position.y = centered_y
 
 func _queue_pause_button_overlap_position() -> void:

@@ -10,11 +10,13 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 	await get_tree().process_frame
 
 	var board: BoardView = game.get_node_or_null("BoardView") as BoardView
+	var top_bar_bg: Control = game.get_node_or_null("UI/TopBarBg") as Control
 	var top_bar: Control = game.get_node_or_null("UI/TopBar") as Control
 	var pause_button: Control = game.get_node_or_null("UI/TopBar/Pause") as Control
 	var powerups_row: Control = game.get_node_or_null("UI/Powerups") as Control
 	var undo_button: Control = game.get_node_or_null("UI/Powerups/Undo") as Control
 	assert_that(board).is_not_null()
+	assert_that(top_bar_bg).is_not_null()
 	assert_that(top_bar).is_not_null()
 	assert_that(pause_button).is_not_null()
 	assert_that(powerups_row).is_not_null()
@@ -33,6 +35,7 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		game.call("_center_board")
 		await get_tree().process_frame
 		var viewport_rect := Rect2(Vector2.ZERO, game.get_viewport_rect().size)
+		var top_bg_rect: Rect2 = top_bar_bg.get_global_rect()
 		var top_rect: Rect2 = top_bar.get_global_rect()
 		var pause_rect: Rect2 = pause_button.get_global_rect()
 		var powerups_rect: Rect2 = powerups_row.get_global_rect()
@@ -41,11 +44,12 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 			board.global_position,
 			Vector2(float(board.width) * board.tile_size, float(board.height) * board.tile_size)
 		)
+		_assert_rect_inside(top_bg_rect, viewport_rect)
 		_assert_rect_inside(top_rect, viewport_rect)
-		_assert_rect_inside(pause_rect, top_rect)
+		_assert_rect_inside(pause_rect, top_bg_rect)
 		_assert_rect_inside(powerups_rect, viewport_rect)
 		_assert_rect_inside(undo_rect, viewport_rect)
-		var expected_pause_center_y: float = top_rect.position.y + (top_rect.size.y * 0.5)
+		var expected_pause_center_y: float = top_bg_rect.position.y + (top_bg_rect.size.y * 0.5)
 		var pause_center_y: float = pause_rect.position.y + (pause_rect.size.y * 0.5)
 		assert_that(abs(pause_center_y - expected_pause_center_y)).is_less_equal(2.0)
 		if size.x / max(1.0, size.y) >= 1.45:
