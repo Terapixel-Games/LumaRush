@@ -65,11 +65,11 @@ alignment = 0
 theme_override_constants/separation = 22
 
 [node name="Kicker" type="Label" parent="UI/Panel/Scroll/VBox"]
-text = "RUN RECAP"
+text = "RUN RESULTS"
 horizontal_alignment = 1
 
 [node name="Title" type="Label" parent="UI/Panel/Scroll/VBox"]
-text = "LumaRush"
+text = "RUN COMPLETE"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 54
 
@@ -82,22 +82,22 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
 [node name="Score" type="Label" parent="UI/Panel/Scroll/VBox/StatsSplit/LeftColumn"]
-text = "Score: 0"
+text = "0"
 horizontal_alignment = 0
 theme_override_font_sizes/font_size = 84
 
 [node name="ModeBadge" type="Label" parent="UI/Panel/Scroll/VBox/StatsSplit/LeftColumn"]
-text = "Mode: Pure"
+text = "PURE LANE // ENDED"
 horizontal_alignment = 0
 theme_override_font_sizes/font_size = 20
 
 [node name="Best" type="Label" parent="UI/Panel/Scroll/VBox/StatsSplit/LeftColumn"]
-text = "Best: 0"
+text = "BEST 0"
 horizontal_alignment = 0
 theme_override_font_sizes/font_size = 30
 
 [node name="Streak" type="Label" parent="UI/Panel/Scroll/VBox/StatsSplit/LeftColumn"]
-text = "Streak: 0"
+text = "STREAK 0 DAYS"
 horizontal_alignment = 0
 theme_override_font_sizes/font_size = 30
 
@@ -106,40 +106,40 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
 [node name="OnlineStatus" type="Label" parent="UI/Panel/Scroll/VBox/StatsSplit/RightColumn"]
-text = "Online: connecting..."
+text = "SYNC CONNECTING..."
 horizontal_alignment = 0
 theme_override_font_sizes/font_size = 24
 
 [node name="Leaderboard" type="Label" parent="UI/Panel/Scroll/VBox/StatsSplit/RightColumn"]
-text = "Leaderboard loading..."
+text = "Board loading..."
 horizontal_alignment = 0
 theme_override_font_sizes/font_size = 24
 autowrap_mode = 2
 
 [node name="CoinsEarned" type="Label" parent="UI/Panel/Scroll/VBox"]
-text = "Coins earned: 0"
+text = "BANK +0"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 24
 
 [node name="CoinBalance" type="Label" parent="UI/Panel/Scroll/VBox"]
-text = "Coins balance: 0"
+text = "VAULT 0"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 22
 
 [node name="DoubleReward" parent="UI/Panel/Scroll/VBox" instance=ExtResource("6")]
-text = "Double Coins"
+text = "DOUBLE BANK"
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 82)
 
 [node name="Spacer" type="Control" parent="UI/Panel/Scroll/VBox"]
 
 [node name="PlayAgain" parent="UI/Panel/Scroll/VBox" instance=ExtResource("5")]
-text = "Run Again"
+text = "NEXT RUN"
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 112)
 
 [node name="Menu" parent="UI/Panel/Scroll/VBox" instance=ExtResource("6")]
-text = "Back to Menu"
+text = "RUN DECK"
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 96)
 

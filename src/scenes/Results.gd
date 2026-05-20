@@ -5,6 +5,7 @@ const ICON_MUSIC_ON: Texture2D = preload("res://assets/ui/icons/atlas/music_on.t
 const ICON_MUSIC_OFF: Texture2D = preload("res://assets/ui/icons/atlas/music_off.tres")
 const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
 
+@onready var kicker_label: Label = $UI/Panel/Scroll/VBox/Kicker
 @onready var title_label: Label = $UI/Panel/Scroll/VBox/Title
 @onready var top_right_bar: Control = $UI/TopRightBar
 @onready var audio_button: Button = $UI/TopRightBar/Audio
@@ -47,6 +48,7 @@ func _ready() -> void:
 	Typography.style_results(self)
 	ThemeManager.apply_to_scene(self)
 	_apply_neon_run_deck()
+	_apply_results_copy()
 	_refresh_audio_icon()
 	_layout_results()
 	call_deferred("_layout_results")
@@ -67,21 +69,23 @@ func _ready() -> void:
 
 func _update_labels() -> void:
 	score_label.text = "%d" % RunManager.last_score
-	mode_badge_label.text = "Mode: %s" % _mode_label()
 	var local_best: int = int(SaveStore.data["high_score"])
 	var online_record: Dictionary = NakamaService.get_my_high_score()
 	var online_best: int = int(online_record.get("score", 0))
 	var online_rank: int = int(online_record.get("rank", 0))
 	var best_value: int = max(local_best, online_best)
+	if title_label:
+		title_label.text = _results_title(best_value)
+	mode_badge_label.text = "%s LANE // %s" % [_mode_label().to_upper(), "CLEAR" if RunManager.last_run_completed_by_gameplay else "ENDED"]
 	if online_best > 0 and online_rank > 0:
-		best_label.text = "Best: %d (Global #%d)" % [best_value, online_rank]
+		best_label.text = "BEST %d // GLOBAL #%d" % [best_value, online_rank]
 	else:
-		best_label.text = "Best: %d" % best_value
-	streak_label.text = "Streak: %d" % StreakManager.get_streak_days()
-	online_status_label.text = "Online: %s" % NakamaService.get_online_status()
+		best_label.text = "BEST %d" % best_value
+	streak_label.text = "STREAK %d DAYS" % StreakManager.get_streak_days()
+	online_status_label.text = "SYNC %s" % NakamaService.get_online_status().to_upper()
 	leaderboard_label.text = _format_leaderboard(NakamaService.get_leaderboard_records())
 	if _powerups_label:
-		_powerups_label.text = "Powerups used: %d" % RunManager.last_run_powerups_used
+		_powerups_label.text = "POWERUPS %d" % RunManager.last_run_powerups_used
 	if _encouragement_label:
 		_encouragement_label.text = _build_encouragement_text(local_best, best_value)
 	if _unlock_progress:
@@ -89,12 +93,19 @@ func _update_labels() -> void:
 	if _dual_leaderboard_label:
 		_dual_leaderboard_label.text = ""
 	_update_social_labels()
-	coin_balance_label.text = "Coins balance: %d" % NakamaService.get_coin_balance()
+	coin_balance_label.text = "VAULT %d" % NakamaService.get_coin_balance()
 	if _base_reward_claimed:
-		coins_earned_label.text = "Coins earned: %d" % _base_reward_amount
+		coins_earned_label.text = "BANK +%d" % _base_reward_amount
 	else:
-		coins_earned_label.text = "Coins earned: pending"
+		coins_earned_label.text = "BANK PENDING"
 	_layout_results()
+
+func _results_title(best_value: int) -> String:
+	if RunManager.last_score > 0 and RunManager.last_score >= best_value:
+		return "NEW BEST"
+	if RunManager.last_run_completed_by_gameplay:
+		return "RUN BANKED"
+	return "RUN COMPLETE"
 
 func _on_play_again_pressed() -> void:
 	_close_audio_overlay()
@@ -161,19 +172,22 @@ func _layout_results_for_size(viewport_size: Vector2) -> void:
 	var viewport_aspect: float = ArcadeResponsiveLayout.viewport_aspect(viewport_size)
 	var is_wide: bool = ArcadeResponsiveLayout.is_wide(viewport_size)
 	var is_wide_short: bool = ArcadeResponsiveLayout.is_wide_short(viewport_size)
-	var outer_margin_x: float = clamp(viewport_size.x * 0.028, 10.0, 44.0)
+	var outer_margin_x: float = clamp(viewport_size.x * 0.032, 12.0, 52.0)
 	var outer_margin_y: float = clamp(viewport_size.y * 0.022, 8.0, 24.0)
 	var max_panel_width: float = max(360.0, viewport_size.x - (outer_margin_x * 2.0))
 	var min_panel_width: float = min(460.0, max_panel_width)
 	var target_panel_width: float = viewport_size.x * ArcadeResponsiveLayout.results_panel_width_ratio(viewport_size)
-	var panel_width: float = clamp(target_panel_width, min_panel_width, min(1240.0, max_panel_width))
+	var panel_width: float = clamp(target_panel_width, min_panel_width, min(1320.0, max_panel_width))
 	var max_panel_height: float = max(320.0, viewport_size.y - (outer_margin_y * 2.0))
 	var min_panel_height: float = min(460.0, max_panel_height)
-	var target_panel_height: float = viewport_size.y * ArcadeResponsiveLayout.results_panel_height_ratio(viewport_size)
-	var panel_height: float = clamp(target_panel_height, min_panel_height, max_panel_height)
+	var target_panel_height: float = viewport_size.y * (0.36 if is_wide else ArcadeResponsiveLayout.results_panel_height_ratio(viewport_size))
+	var panel_height_cap: float = max_panel_height if not is_wide else min(max_panel_height, viewport_size.y * 0.86)
+	var panel_height: float = clamp(target_panel_height, min_panel_height, panel_height_cap)
 	var panel_size: Vector2 = Vector2(panel_width, panel_height)
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	panel.position = (viewport_size - panel_size) * 0.5
+	var panel_x: float = (viewport_size.x - panel_size.x) * 0.5
+	var panel_y: float = (viewport_size.y - panel_size.y) * (0.50 if is_wide else 0.48)
+	panel.position = Vector2(panel_x, panel_y)
 	panel.size = panel_size
 	_layout_top_right(viewport_size)
 
@@ -186,7 +200,7 @@ func _layout_results_for_size(viewport_size: Vector2) -> void:
 	_set_compact_optional_rows(compact_mode)
 	if spacer:
 		spacer.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	var base_separation: float = clamp(round(content_size.y * 0.008), 4.0, 12.0)
+	var base_separation: float = clamp(round(content_size.y * 0.007), 4.0, 11.0)
 	var compact_scale: float = 1.0
 	for _i in range(8):
 		var separation_min: float = 4.0 if compact_mode else 5.0
@@ -194,10 +208,10 @@ func _layout_results_for_size(viewport_size: Vector2) -> void:
 		box.add_theme_constant_override("separation", separation)
 		_apply_responsive_typography(content_size, viewport_aspect, use_split, compact_scale, compact_mode)
 
-		var secondary_min: float = 32.0 if compact_mode else 28.0
-		var primary_min: float = 36.0 if compact_mode else 34.0
-		var secondary_button_height: float = clamp(content_size.y * (0.056 if is_wide else 0.052) * compact_scale, secondary_min, 62.0)
-		var primary_button_height: float = clamp(content_size.y * (0.072 if is_wide else 0.07) * compact_scale, primary_min, 72.0)
+		var secondary_min: float = 34.0 if compact_mode else 30.0
+		var primary_min: float = 44.0 if compact_mode else 40.0
+		var secondary_button_height: float = clamp(content_size.y * (0.052 if is_wide else 0.05) * compact_scale, secondary_min, 58.0)
+		var primary_button_height: float = clamp(content_size.y * (0.082 if is_wide else 0.074) * compact_scale, primary_min, 82.0)
 		double_reward_button.custom_minimum_size.y = secondary_button_height
 		if play_again_button:
 			play_again_button.custom_minimum_size.y = primary_button_height
@@ -260,6 +274,10 @@ func _configure_stats_split(content_size: Vector2, use_split: bool) -> void:
 		stats_right_column.custom_minimum_size.x = column_width if use_split else content_size.x
 	var left_alignment: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT if use_split else HORIZONTAL_ALIGNMENT_CENTER
 	var right_alignment: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT if use_split else HORIZONTAL_ALIGNMENT_CENTER
+	if kicker_label:
+		kicker_label.horizontal_alignment = left_alignment
+	if title_label:
+		title_label.horizontal_alignment = left_alignment
 	for label in [score_label, mode_badge_label, best_label, streak_label]:
 		if label:
 			label.horizontal_alignment = left_alignment
@@ -293,7 +311,7 @@ func _apply_responsive_typography(
 	var reward_min: float = 14.0 if compact_mode else 16.0
 	var primary_min: float = 16.0 if compact_mode else 18.0
 	var title_size: int = int(round(clamp(float(menu_title_px) * 0.72 * headline_scale, title_min, 106.0)))
-	var score_size: int = int(round(clamp(max(float(menu_title_px) * 0.8, stat_column_width * 0.12) * headline_scale, score_min, 128.0)))
+	var score_size: int = int(round(clamp(max(float(menu_title_px) * 0.92, stat_column_width * 0.14) * headline_scale, score_min, 138.0)))
 	var mode_size: int = int(round(clamp(float(menu_button_px) * 0.62 * compact_scale, mode_min, 40.0)))
 	var stat_size: int = int(round(clamp(float(menu_button_px) * 0.74 * compact_scale, stat_min, 48.0)))
 	var body_size: int = int(round(clamp(float(menu_button_px) * 0.64 * compact_scale, body_min, 36.0)))
@@ -337,6 +355,16 @@ func _apply_responsive_typography(
 	if menu_button:
 		menu_button.add_theme_font_size_override("font_size", primary_button_size)
 
+func _apply_results_copy() -> void:
+	if kicker_label:
+		kicker_label.text = "RUN RESULTS"
+	if play_again_button:
+		play_again_button.text = "NEXT RUN"
+	if menu_button:
+		menu_button.text = "RUN DECK"
+	if double_reward_button:
+		double_reward_button.text = "DOUBLE BANK"
+
 func _bind_online_signals() -> void:
 	if not NakamaService.online_state_changed.is_connected(_on_online_state_changed):
 		NakamaService.online_state_changed.connect(_on_online_state_changed)
@@ -346,7 +374,7 @@ func _bind_online_signals() -> void:
 		NakamaService.leaderboard_updated.connect(_on_leaderboard_updated)
 
 func _on_online_state_changed(status: String) -> void:
-	online_status_label.text = "Online: %s" % status
+	online_status_label.text = "SYNC %s" % status.to_upper()
 
 func _on_high_score_updated(_record: Dictionary) -> void:
 	_update_labels()
@@ -385,8 +413,8 @@ func _sync_wallet_rewards() -> void:
 		var data: Dictionary = claim.get("data", {})
 		_base_reward_claimed = bool(data.get("granted", false))
 		_base_reward_amount = int(data.get("rewardCoins", 0))
-	coin_balance_label.text = "Coins balance: %d" % NakamaService.get_coin_balance()
-	coins_earned_label.text = "Coins earned: %d" % _base_reward_amount
+	coin_balance_label.text = "VAULT %d" % NakamaService.get_coin_balance()
+	coins_earned_label.text = "BANK +%d" % _base_reward_amount
 	double_reward_button.disabled = not RunManager.last_run_completed_by_gameplay
 
 func _on_double_reward_pressed() -> void:
@@ -396,11 +424,11 @@ func _on_double_reward_pressed() -> void:
 		return
 	_double_reward_pending = true
 	double_reward_button.disabled = true
-	double_reward_button.text = "Loading ad..."
+	double_reward_button.text = "LOADING AD..."
 	if not AdManager.show_rewarded_for_powerup():
 		_double_reward_pending = false
 		double_reward_button.disabled = false
-		double_reward_button.text = "Watch Ad: Double Coins"
+		double_reward_button.text = "DOUBLE BANK"
 
 func _on_double_reward_ad_earned() -> void:
 	if not _double_reward_pending:
@@ -417,14 +445,14 @@ func _on_double_reward_ad_earned() -> void:
 		var data: Dictionary = claim.get("data", {})
 		var extra: int = int(data.get("rewardCoins", 0))
 		_base_reward_amount += extra
-	coins_earned_label.text = "Coins earned: %d" % _base_reward_amount
-	coin_balance_label.text = "Coins balance: %d" % NakamaService.get_coin_balance()
-	double_reward_button.text = "Coins Doubled"
+	coins_earned_label.text = "BANK +%d" % _base_reward_amount
+	coin_balance_label.text = "VAULT %d" % NakamaService.get_coin_balance()
+	double_reward_button.text = "BANK DOUBLED"
 
 func _format_leaderboard(records: Array) -> String:
 	var mode_label := _mode_label()
 	if records.is_empty():
-		return "%s Leaderboard: no online records yet" % mode_label
+		return "%s board waiting for records" % mode_label
 	var lines: Array[String] = []
 	var count: int = min(records.size(), 3)
 	for i in range(count):
@@ -436,7 +464,7 @@ func _format_leaderboard(records: Array) -> String:
 		var username: String = str(row.get("username", "Player"))
 		var score: int = int(row.get("score", 0))
 		lines.append("%d. %s - %d" % [rank, username, score])
-	return "%s Leaderboard\n%s" % [mode_label, "\n".join(lines)]
+	return "%s board\n%s" % [mode_label, "\n".join(lines)]
 
 func _mode_label() -> String:
 	return "Pure" if String(RunManager.last_run_leaderboard_mode).to_upper() == "PURE" else "Open"
@@ -611,7 +639,7 @@ func _update_social_labels() -> void:
 		var tier_after: int = int(weekly.get("tier_after", 0))
 		var to_next: int = int(weekly.get("to_next_tier", 0))
 		var week_best: int = int(weekly.get("week_best", 0))
-		_weekly_ladder_label.text = "Weekly Ladder %s  Tier %d  Points %d (+%d)  Next tier in %d  Week best %d" % [
+		_weekly_ladder_label.text = "WEEK %s // TIER %d // %d PTS (+%d) // NEXT %d // BEST %d" % [
 			week_key,
 			tier_after,
 			points_after,
@@ -625,15 +653,15 @@ func _update_social_labels() -> void:
 		var delta_after: int = int(rival.get("delta_after", max(0, target_after - RunManager.last_score)))
 		var cleared: bool = bool(rival.get("cleared", false))
 		if cleared:
-			_rival_target_label.text = "Rival %s defeated. New async target: %d" % [rival_name, target_after]
+			_rival_target_label.text = "%s CLEARED // NEXT TARGET %d" % [rival_name.to_upper(), target_after]
 			_rival_target_label.add_theme_color_override("font_color", Color(1.0, 0.93, 0.58, 0.98))
 		else:
-			_rival_target_label.text = "Rival %s target %d (%d to go)" % [rival_name, target_after, max(0, delta_after)]
+			_rival_target_label.text = "%s TARGET %d // %d TO GO" % [rival_name.to_upper(), target_after, max(0, delta_after)]
 			_rival_target_label.add_theme_color_override("font_color", Color(0.86, 0.94, 1.0, 0.98))
 
 func _format_alt_mode_leaderboard(mode_id: String, records: Array) -> String:
 	if records.is_empty():
-		return "%s leaderboard is waiting for records." % mode_id.capitalize()
+		return "%s board waiting for records." % mode_id.capitalize()
 	var lines: Array[String] = []
 	for i in range(min(2, records.size())):
 		var row_var: Variant = records[i]
@@ -645,12 +673,13 @@ func _format_alt_mode_leaderboard(mode_id: String, records: Array) -> String:
 			str(row.get("username", "Player")),
 			int(row.get("score", 0)),
 		])
-	return "%s Preview\n%s" % [mode_id.capitalize(), "\n".join(lines)]
+	return "%s preview\n%s" % [mode_id.capitalize(), "\n".join(lines)]
 
 func _notification(what: int) -> void:
 	if what == Control.NOTIFICATION_RESIZED:
 		Typography.style_results(self)
 		_apply_neon_run_deck()
+		_apply_results_copy()
 		_layout_results()
 		_refresh_intro_pivots()
 

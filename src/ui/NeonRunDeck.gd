@@ -57,6 +57,17 @@ static func apply_game(scene: Node) -> void:
 	_tint_labels(scene)
 
 static func apply_results(scene: Node) -> void:
+	var bg_controller := scene.get_node_or_null("BackgroundController")
+	if bg_controller != null and bg_controller.is_node_ready() and bg_controller.has_method("set_theme_palette"):
+		bg_controller.call(
+			"set_theme_palette",
+			Color(0.01, 0.025, 0.075, 1.0),
+			Color(0.035, 0.07, 0.18, 1.0),
+			Color(0.05, 0.09, 0.20, 1.0),
+			Color(0.12, 0.78, 1.0, 1.0)
+		)
+	_style_color_rect(scene.get_node_or_null("BackgroundController/ColorRect"), Color(0.01, 0.02, 0.06, 1.0))
+	_style_color_rect(scene.get_node_or_null("BackgroundController/CenterGlow"), Color(0.10, 0.75, 1.0, 0.12))
 	_style_color_rect(scene.get_node_or_null("UI/Panel"), Color(0.035, 0.052, 0.13, 0.95))
 	_style_panels(scene, ["UI/Panel"], "panel")
 	_style_buttons(scene, ["UI/Panel/Scroll/VBox/PlayAgain"], "primary")

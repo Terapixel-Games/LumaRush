@@ -70,7 +70,7 @@ theme_override_constants/separation = 12
 
 [node name="Brand" type="Label" parent="UI/RootMargin/Layout/TopBar"]
 layout_mode = 2
-text = "LUMARUSH // TRACK GATE"
+text = "LUMARUSH // RUN DECK"
 vertical_alignment = 1
 
 [node name="Spacer" type="Control" parent="UI/RootMargin/Layout/TopBar"]
@@ -179,7 +179,7 @@ theme_override_constants/separation = 16
 
 [node name="Kicker" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
 layout_mode = 2
-text = "TRACK GATE // ARMED"
+text = "RUN DECK"
 
 [node name="Title" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
 layout_mode = 2
@@ -187,7 +187,7 @@ text = "LUMARUSH"
 
 [node name="Subtitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
 layout_mode = 2
-text = "Gate locked. Lane hot."
+text = "Pick a lane. Break the rival mark. Bank the streak."
 autowrap_mode = 3
 
 [node name="SignalGrid" type="GridContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
@@ -250,7 +250,7 @@ autowrap_mode = 3
 
 [node name="Start" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox" instance=ExtResource("6")]
 layout_mode = 2
-text = "LAUNCH RUN"
+text = "START RUN"
 
 [node name="LaunchNote" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
 visible = false
@@ -277,18 +277,16 @@ theme_override_constants/separation = 10
 
 [node name="LaunchEyebrow" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox"]
 layout_mode = 2
-text = "SYSTEM RAIL"
+text = "LANE INTEL"
 
 [node name="LaunchTitle" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox"]
-visible = false
 layout_mode = 2
-text = ""
+text = "Set the run pressure"
 autowrap_mode = 3
 
 [node name="LaunchMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox"]
-visible = false
 layout_mode = 2
-text = ""
+text = "Mode, daily board, rival target, and side jump stay here."
 autowrap_mode = 3
 
 [node name="IntelGrid" type="GridContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox"]
@@ -381,7 +379,7 @@ autowrap_mode = 3
 [node name="WeeklyLadderInfo" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox" instance=ExtResource("7")]
 layout_mode = 2
 disabled = true
-text = "Season Ladder"
+text = "LADDER LOCKED"
 
 [node name="PromoCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid"]
 layout_mode = 2
