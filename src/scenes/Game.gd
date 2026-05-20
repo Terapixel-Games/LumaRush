@@ -787,18 +787,21 @@ func _layout_top_bar(view_size: Vector2, content_left: float, content_width: flo
 
 	var content_inset_x: float = clamp(content_width * 0.055, 14.0, 34.0)
 	var content_inset_y: float = clamp(bar_height * 0.09, 8.0, 14.0)
+	var content_height: float = max(56.0, bar_height - (content_inset_y * 2.0))
 	var right_reserve: float = clamp(content_width * 0.03, 12.0, 28.0)
 	top_bar.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	top_bar.position = Vector2(content_left + content_inset_x, top_margin)
+	top_bar.position = Vector2(content_left + content_inset_x, top_margin + content_inset_y)
 	top_bar.size = Vector2(
 		max(220.0, content_width - (content_inset_x * 2.0) - right_reserve),
-		max(56.0, bar_height)
+		content_height
 	)
 	top_bar.add_theme_constant_override("separation", int(round(clamp(content_width * 0.016, 10.0, 20.0))))
 	if score_box:
-		score_box.add_theme_constant_override("separation", int(round(clamp(bar_height * 0.035, 4.0, 8.0))))
+		score_box.custom_minimum_size.y = content_height
+		score_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		score_box.add_theme_constant_override("separation", int(round(clamp(content_height * 0.02, 2.0, 5.0))))
 	if pause_button:
-		var pause_size: float = clamp(top_bar.size.y * 0.74, 52.0, 82.0)
+		var pause_size: float = clamp(bar_height * 0.74, 52.0, 82.0)
 		pause_button.custom_minimum_size = Vector2(pause_size, pause_size)
 		pause_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		pause_button.size_flags_horizontal = Control.SIZE_SHRINK_END
@@ -815,17 +818,21 @@ func _layout_top_right(view_size: Vector2) -> void:
 	audio_button.custom_minimum_size = Vector2(icon_size, icon_size)
 
 func _apply_responsive_hud_typography(content_width: float, bar_height: float, powerup_row_height: float) -> void:
-	var caption_size: int = int(round(clamp(bar_height * 0.30, Typography.px(14.0), Typography.px(28.0))))
-	var value_size: int = int(round(clamp(bar_height * 0.62, Typography.px(28.0), Typography.px(60.0))))
+	var content_inset_y: float = clamp(bar_height * 0.09, 8.0, 14.0)
+	var score_inner_height: float = max(48.0, bar_height - (content_inset_y * 2.0))
+	var caption_size: int = int(round(clamp(score_inner_height * 0.24, Typography.px(14.0), Typography.px(26.0))))
+	var value_size: int = int(round(clamp(score_inner_height * 0.52, Typography.px(30.0), Typography.px(56.0))))
 	if content_width < 520.0:
-		caption_size = min(caption_size, Typography.px(20.0))
-		value_size = min(value_size, Typography.px(44.0))
+		caption_size = min(caption_size, Typography.px(18.0))
+		value_size = min(value_size, Typography.px(40.0))
 	if score_caption_label:
 		score_caption_label.add_theme_font_size_override("font_size", caption_size)
+		score_caption_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		score_caption_label.custom_minimum_size.y = clamp(score_inner_height * 0.24, 18.0, 32.0)
 	if score_value_label:
 		score_value_label.add_theme_font_size_override("font_size", value_size)
 		score_value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		score_value_label.custom_minimum_size.y = clamp(bar_height * 0.5, 40.0, 72.0)
+		score_value_label.custom_minimum_size.y = clamp(score_inner_height * 0.54, 32.0, 62.0)
 
 	var badge_font_size: int = int(round(clamp(powerup_row_height * 0.32, Typography.px(14.0), Typography.px(26.0))))
 	for badge in [undo_badge, prism_badge, hint_badge]:

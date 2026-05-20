@@ -12,12 +12,18 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 	var board: BoardView = game.get_node_or_null("BoardView") as BoardView
 	var top_bar_bg: Control = game.get_node_or_null("UI/TopBarBg") as Control
 	var top_bar: Control = game.get_node_or_null("UI/TopBar") as Control
+	var score_box: Control = game.get_node_or_null("UI/TopBar/ScoreBox") as Control
+	var score_caption: Control = game.get_node_or_null("UI/TopBar/ScoreBox/ScoreCaption") as Control
+	var score_value: Control = game.get_node_or_null("UI/TopBar/ScoreBox/ScoreValue") as Control
 	var pause_button: Control = game.get_node_or_null("UI/TopBar/Pause") as Control
 	var powerups_row: Control = game.get_node_or_null("UI/Powerups") as Control
 	var undo_button: Control = game.get_node_or_null("UI/Powerups/Undo") as Control
 	assert_that(board).is_not_null()
 	assert_that(top_bar_bg).is_not_null()
 	assert_that(top_bar).is_not_null()
+	assert_that(score_box).is_not_null()
+	assert_that(score_caption).is_not_null()
+	assert_that(score_value).is_not_null()
 	assert_that(pause_button).is_not_null()
 	assert_that(powerups_row).is_not_null()
 	assert_that(undo_button).is_not_null()
@@ -37,6 +43,9 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		var viewport_rect := Rect2(Vector2.ZERO, game.get_viewport_rect().size)
 		var top_bg_rect: Rect2 = top_bar_bg.get_global_rect()
 		var top_rect: Rect2 = top_bar.get_global_rect()
+		var score_box_rect: Rect2 = score_box.get_global_rect()
+		var score_caption_rect: Rect2 = score_caption.get_global_rect()
+		var score_value_rect: Rect2 = score_value.get_global_rect()
 		var pause_rect: Rect2 = pause_button.get_global_rect()
 		var powerups_rect: Rect2 = powerups_row.get_global_rect()
 		var undo_rect: Rect2 = undo_button.get_global_rect()
@@ -46,9 +55,14 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		)
 		_assert_rect_inside(top_bg_rect, viewport_rect)
 		_assert_rect_inside(top_rect, viewport_rect)
+		_assert_rect_inside(top_rect, top_bg_rect)
+		_assert_rect_inside(score_box_rect, top_bg_rect)
+		_assert_rect_inside(score_caption_rect, top_bg_rect)
+		_assert_rect_inside(score_value_rect, top_bg_rect)
 		_assert_rect_inside(pause_rect, top_bg_rect)
 		_assert_rect_inside(powerups_rect, viewport_rect)
 		_assert_rect_inside(undo_rect, viewport_rect)
+		assert_that(score_caption_rect.position.y + score_caption_rect.size.y).is_less_equal(score_value_rect.position.y + 1.0)
 		var expected_pause_center_y: float = top_bg_rect.position.y + (top_bg_rect.size.y * 0.5)
 		var pause_center_y: float = pause_rect.position.y + (pause_rect.size.y * 0.5)
 		assert_that(abs(pause_center_y - expected_pause_center_y)).is_less_equal(2.0)
