@@ -42,6 +42,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
+          "$GODOT_BIN" --headless --path . --import --quit
           xvfb-run -a bash ./addons/gdUnit4/runtest.sh --godot_binary "$GODOT_BIN" -a tests --ignoreHeadlessMode
 
       - name: Run Nakama Module Tests
