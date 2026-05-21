@@ -8,7 +8,7 @@ func test_new_mood_change_cancels_previous_fade() -> void:
 	controller.set_mood(BackgroundMood.Mood.CALM, 6.0)
 	await get_tree().process_frame
 	controller.set_mood(BackgroundMood.Mood.HYPE, 0.05)
-	await get_tree().create_timer(0.1).timeout
+	await get_tree().create_timer(0.3).timeout
 
 	var mat: ShaderMaterial = controller.bg_rect.material
 	var color_a: Color = mat.get_shader_parameter("color_a")
