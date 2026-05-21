@@ -843,19 +843,19 @@ func _layout_top_right(view_size: Vector2) -> void:
 func _apply_responsive_hud_typography(content_width: float, bar_height: float, powerup_row_height: float) -> void:
 	var content_inset_y: float = clamp(bar_height * 0.09, 8.0, 14.0)
 	var score_inner_height: float = max(48.0, bar_height - (content_inset_y * 2.0))
-	var caption_size: int = int(round(clamp(score_inner_height * 0.24, Typography.px(14.0), Typography.px(26.0))))
-	var value_size: int = int(round(clamp(score_inner_height * 0.52, Typography.px(30.0), Typography.px(56.0))))
+	var caption_size: int = int(round(clamp(score_inner_height * 0.18, Typography.px(13.0), Typography.px(21.0))))
+	var value_size: int = int(round(clamp(score_inner_height * 0.42, Typography.px(28.0), Typography.px(48.0))))
 	if content_width < 520.0:
-		caption_size = min(caption_size, Typography.px(18.0))
-		value_size = min(value_size, Typography.px(40.0))
+		caption_size = min(caption_size, Typography.px(16.0))
+		value_size = min(value_size, Typography.px(36.0))
 	if score_caption_label:
 		score_caption_label.add_theme_font_size_override("font_size", caption_size)
 		score_caption_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		score_caption_label.custom_minimum_size.y = clamp(score_inner_height * 0.24, 18.0, 32.0)
+		score_caption_label.custom_minimum_size.y = clamp(score_inner_height * 0.18, 16.0, 24.0)
 	if score_value_label:
 		score_value_label.add_theme_font_size_override("font_size", value_size)
 		score_value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		score_value_label.custom_minimum_size.y = clamp(score_inner_height * 0.54, 32.0, 62.0)
+		score_value_label.custom_minimum_size.y = clamp(score_inner_height * 0.42, 30.0, 50.0)
 
 	var badge_font_size: int = int(round(clamp(powerup_row_height * 0.32, Typography.px(14.0), Typography.px(26.0))))
 	for badge in [undo_badge, prism_badge, hint_badge]:
