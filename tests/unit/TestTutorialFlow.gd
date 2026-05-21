@@ -154,9 +154,12 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	var modal: Control = game.get_node_or_null("TutorialTipModal") as Control
 	assert_that(modal).is_not_null()
 	var title: Label = modal.get_node_or_null("Center/Panel/VBox/Title") as Label
+	var message: Label = modal.get_node_or_null("Center/Panel/VBox/Message") as Label
 	var confirm: Button = modal.get_node_or_null("Center/Panel/VBox/Confirm") as Button
 	assert_that(title.text).is_equal("Open Run")
-	assert_that(confirm.text).is_equal("Continue Open")
+	assert_that(message.text).contains("will not qualify for the Pure leaderboard")
+	assert_that(message.text).contains("post this run to Open")
+	assert_that(confirm.text).is_equal("Use Power-Up")
 
 	game.call("_on_open_mode_tip_dismissed", true)
 	assert_that(SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)).is_false()

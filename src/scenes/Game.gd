@@ -452,8 +452,8 @@ func _maybe_show_open_mode_tip() -> void:
 	if modal.has_method("configure"):
 		modal.configure({
 			"title": "Open Run",
-			"message": "Using a power-up moves this run to the Open leaderboard. Future runs still start Pure until a power-up is used.",
-			"confirm_text": "Continue Open",
+			"message": "Using this power-up means this run will not qualify for the Pure leaderboard. Continue to use it and post this run to Open.",
+			"confirm_text": "Use Power-Up",
 			"checkbox_text": "Don't show this again",
 			"show_checkbox": true,
 		})

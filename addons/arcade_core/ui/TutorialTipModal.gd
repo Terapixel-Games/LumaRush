@@ -7,9 +7,13 @@ signal dismissed(do_not_show_again: bool)
 @onready var confirm_button: Button = $Center/Panel/VBox/Confirm
 @onready var do_not_show_toggle: CheckButton = $Center/Panel/VBox/DoNotShow
 
+var _pending_config: Dictionary = {}
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process_unhandled_input(true)
+	if not _pending_config.is_empty():
+		_apply_config(_pending_config)
 	_apply_optional_style()
 
 func _notification(what: int) -> void:
@@ -22,6 +26,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func configure(config: Dictionary) -> void:
+	_pending_config = config.duplicate(true)
+	_apply_config(_pending_config)
+
+func _apply_config(config: Dictionary) -> void:
 	if title_label:
 		title_label.text = str(config.get("title", "Tip"))
 	if message_label:
