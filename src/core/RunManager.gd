@@ -36,7 +36,12 @@ func goto_menu() -> void:
 	start_game()
 
 func start_game() -> void:
-	last_run_selected_mode = SaveStore.get_preferred_mode()
+	prepare_run_start()
+	get_tree().change_scene_to_file(GAME_SCENE)
+
+func prepare_run_start() -> void:
+	SaveStore.set_preferred_mode("PURE")
+	last_run_selected_mode = "PURE"
 	last_run_daily_challenge = SaveStore.get_daily_challenge_enabled()
 	last_run_powerups_used = 0
 	last_run_coins_spent = 0
@@ -47,7 +52,6 @@ func start_game() -> void:
 	_pending_daily_seed = _daily_seed_for_today() if last_run_daily_challenge else -1
 	if Telemetry and Telemetry.has_method("mark_run_start"):
 		Telemetry.mark_run_start(last_run_selected_mode, last_run_daily_challenge)
-	get_tree().change_scene_to_file(GAME_SCENE)
 
 func set_run_leaderboard_context(powerups_used: int, coins_spent: int = 0, powerup_breakdown: Dictionary = {}) -> void:
 	last_run_powerups_used = max(0, powerups_used)

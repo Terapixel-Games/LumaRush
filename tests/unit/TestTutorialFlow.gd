@@ -2,14 +2,17 @@ extends GdUnitTestSuite
 
 var _original_tutorial_seen: bool = false
 var _original_mode: String = "PURE"
+var _original_open_tip_visible: bool = true
 
 func before_test() -> void:
 	_original_tutorial_seen = SaveStore.is_tutorial_seen()
 	_original_mode = RunManager.get_selected_mode()
+	_original_open_tip_visible = SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)
 
 func after_test() -> void:
 	SaveStore.set_tutorial_seen(_original_tutorial_seen)
 	RunManager.set_selected_mode(_original_mode, "test")
+	SaveStore.set_tip_dismissed(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, not _original_open_tip_visible)
 
 func test_first_run_tutorial_teaches_board_music_and_powerups() -> void:
 	SaveStore.set_tutorial_seen(false)
@@ -96,7 +99,7 @@ func test_powerup_tutorial_highlights_one_button_at_a_time() -> void:
 	assert_that(_highlight_count(overlay)).is_equal(1)
 	game.queue_free()
 
-func test_powerup_tutorial_does_not_show_disabled_buttons_in_pure_mode() -> void:
+func test_powerups_are_available_during_pure_run_until_used() -> void:
 	RunManager.set_selected_mode("PURE", "test")
 	SaveStore.set_tutorial_seen(false)
 	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
@@ -112,6 +115,9 @@ func test_powerup_tutorial_does_not_show_disabled_buttons_in_pure_mode() -> void
 	var undo_button: Button = game.get_node_or_null("UI/Powerups/Undo") as Button
 	var prism_button: Button = game.get_node_or_null("UI/Powerups/RemoveColor") as Button
 	var hint_button: Button = game.get_node_or_null("UI/Powerups/Hint") as Button
+	assert_that(undo_button.tooltip_text).is_equal("Undo")
+	assert_that(prism_button.disabled).is_false()
+	assert_that(hint_button.disabled).is_false()
 	assert_that(undo_button.disabled).is_true()
 	next_button.pressed.emit()
 	next_button.pressed.emit()
@@ -128,7 +134,34 @@ func test_powerup_tutorial_does_not_show_disabled_buttons_in_pure_mode() -> void
 	await get_tree().process_frame
 	assert_that(game.get_node_or_null("UI/TutorialOverlay")).is_null()
 	assert_that(undo_button.disabled).is_true()
-	assert_that(undo_button.tooltip_text).is_equal("PURE mode disables powerups")
+	assert_that(prism_button.disabled).is_false()
+	assert_that(hint_button.disabled).is_false()
+	game.queue_free()
+
+func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_prompt() -> void:
+	RunManager.set_selected_mode("PURE", "test")
+	SaveStore.set_tutorial_seen(true)
+	SaveStore.set_tip_dismissed(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, false)
+	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
+	var game: Control = scene.instantiate() as Control
+	assert_that(game).is_not_null()
+	get_tree().root.add_child(game)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	game.call("_record_powerup_use", "hint")
+	await get_tree().process_frame
+	var modal: Control = game.get_node_or_null("TutorialTipModal") as Control
+	assert_that(modal).is_not_null()
+	var title: Label = modal.get_node_or_null("Center/Panel/VBox/Title") as Label
+	var confirm: Button = modal.get_node_or_null("Center/Panel/VBox/Confirm") as Button
+	assert_that(title.text).is_equal("Open Run")
+	assert_that(confirm.text).is_equal("Continue Open")
+
+	game.call("_on_open_mode_tip_dismissed", true)
+	assert_that(SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)).is_false()
+	game.call("_on_tutorial_requested")
+	assert_that(SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)).is_true()
 	game.queue_free()
 
 func test_powerup_tutorial_panel_keeps_text_and_buttons_in_bounds() -> void:

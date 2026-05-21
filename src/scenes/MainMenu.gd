@@ -379,14 +379,14 @@ func _layout_coin_badge(icon_size: float) -> void:
 	coin_badge_panel.offset_bottom = coin_badge_panel.offset_top + (radius * 2.0)
 
 func _sync_mode_buttons() -> void:
-	var mode_id := RunManager.get_selected_mode()
+	var mode_id := "PURE"
 	var week_points: int = int(SaveStore.data.get("social_week_points", 0))
 	var week_tier: int = int(SaveStore.data.get("social_week_tier", 0))
 	var rival_target: int = RunManager.get_active_rival_target()
 	var rival_name: String = str(SaveStore.data.get("social_rival_name", "Rival"))
-	var next_mode: String = "OPEN" if mode_id == "PURE" else "PURE"
-	mode_button.text = "SWITCH TO %s" % next_mode
-	mode_meta.text = "%s lane // Tier %d" % [mode_id.capitalize(), week_tier]
+	mode_button.text = "OPEN ON POWERUP"
+	mode_button.disabled = true
+	mode_meta.text = "Starts Pure // Open after first power-up"
 	var daily_enabled: bool = SaveStore.get_daily_challenge_enabled()
 	daily_button.text = "DAILY %s" % ("ON" if daily_enabled else "OFF")
 	daily_meta.text = "Rival board %s" % ("armed" if daily_enabled else "muted")
@@ -400,8 +400,6 @@ func _sync_mode_buttons() -> void:
 	flow_meta.text = "%s %d" % [rival_name, rival_target]
 
 func _on_mode_toggle_pressed() -> void:
-	var next_mode: String = "OPEN" if RunManager.get_selected_mode() == "PURE" else "PURE"
-	RunManager.set_selected_mode(next_mode, "menu_toggle")
 	_sync_mode_buttons()
 	UiFx.pop(mode_button)
 

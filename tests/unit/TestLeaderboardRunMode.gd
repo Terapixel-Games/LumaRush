@@ -17,6 +17,13 @@ func test_run_mode_switches_to_open_after_powerup_usage() -> void:
 	assert_that(RunManager.last_run_powerups_used).is_equal(1)
 	assert_that(int(RunManager.last_run_powerup_breakdown.get("undo", 0))).is_equal(1)
 
+func test_new_runs_start_pure_even_after_open_preference() -> void:
+	RunManager.set_selected_mode("OPEN", "test")
+	RunManager.prepare_run_start()
+	assert_that(RunManager.last_run_selected_mode).is_equal("PURE")
+	assert_that(RunManager.last_run_leaderboard_mode).is_equal("PURE")
+	assert_that(RunManager.get_selected_mode()).is_equal("PURE")
+
 func test_tip_dismissal_hides_open_leaderboard_tip() -> void:
 	var tip_id := SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP
 	var original_show := SaveStore.should_show_tip(tip_id, true)

@@ -44,8 +44,6 @@ var _run_coins_spent: int = 0
 var _open_tip_shown_this_run: bool = false
 var _audio_overlay
 var _current_mode: String = "PURE"
-var _pure_mode_locked: bool = false
-var _pure_mode_notice_shown: bool = false
 var _combo_label: Label
 var _tutorial_overlay: Control
 var _tutorial_panel: Panel
@@ -98,7 +96,6 @@ func _ready() -> void:
 	$BoardView.modulate = Color(1, 1, 1, 1)
 	$UI.modulate = Color(1, 1, 1, 1)
 	_current_mode = RunManager.get_selected_mode()
-	_pure_mode_locked = _current_mode == "PURE"
 	Typography.style_game(self)
 	ThemeManager.apply_to_scene(self)
 	_apply_neon_run_deck()
@@ -224,12 +221,10 @@ func _on_quit() -> void:
 func _on_tutorial_requested() -> void:
 	get_tree().paused = false
 	SaveStore.set_tutorial_seen(false)
+	SaveStore.set_tip_dismissed(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, false)
 	_show_tutorial(true)
 
 func _on_undo_pressed() -> void:
-	if _pure_mode_locked:
-		_show_pure_mode_notice()
-		return
 	if _prism_selecting:
 		return
 	if _undo_charges <= 0:
@@ -258,9 +253,6 @@ func _on_undo_pressed() -> void:
 	_play_powerup_juice(Color(0.72, 0.9, 1.0, FeatureFlags.powerup_flash_alpha()))
 
 func _on_remove_color_pressed() -> void:
-	if _pure_mode_locked:
-		_show_pure_mode_notice()
-		return
 	if _prism_selecting:
 		_set_prism_selection(false)
 		_update_powerup_buttons()
@@ -304,9 +296,6 @@ func _on_prism_color_selected(color_idx: int) -> void:
 	_play_powerup_juice(Color(1.0, 0.92, 0.7, FeatureFlags.powerup_flash_alpha()))
 
 func _on_hint_pressed() -> void:
-	if _pure_mode_locked:
-		_show_pure_mode_notice()
-		return
 	if _prism_selecting:
 		return
 	if _hint_charges <= 0:
@@ -343,28 +332,12 @@ func _update_powerup_buttons() -> void:
 	var prism_hint: String = "Tap Color" if _prism_selecting else ""
 	_update_badge(prism_badge_panel, prism_badge, _remove_color_charges, _pending_powerup_refill_type == "prism", prism_hint)
 	_update_badge(hint_badge_panel, hint_badge, _hint_charges, _pending_powerup_refill_type == "hint")
-	if _pure_mode_locked:
-		if _is_teaching_powerups():
-			undo_button.disabled = false
-			remove_color_button.disabled = false
-			hint_button.disabled = false
-			undo_button.tooltip_text = "Undo"
-			remove_color_button.tooltip_text = "Prism"
-			hint_button.tooltip_text = "Hint"
-		else:
-			undo_button.disabled = true
-			remove_color_button.disabled = true
-			hint_button.disabled = true
-			undo_button.tooltip_text = "PURE mode disables powerups"
-			remove_color_button.tooltip_text = "PURE mode disables powerups"
-			hint_button.tooltip_text = "PURE mode disables powerups"
-	else:
-		undo_button.disabled = (_undo_charges > 0 and _undo_stack.is_empty()) or _is_other_refill_pending("undo") or _prism_selecting
-		remove_color_button.disabled = _is_other_refill_pending("prism")
-		hint_button.disabled = _is_other_refill_pending("hint") or _prism_selecting
-		undo_button.tooltip_text = "Undo"
-		remove_color_button.tooltip_text = "Tap a tile color to clear it" if _prism_selecting else "Prism"
-		hint_button.tooltip_text = "Hint"
+	undo_button.disabled = (_undo_charges > 0 and _undo_stack.is_empty()) or _is_other_refill_pending("undo") or _prism_selecting
+	remove_color_button.disabled = _is_other_refill_pending("prism")
+	hint_button.disabled = _is_other_refill_pending("hint") or _prism_selecting
+	undo_button.tooltip_text = "Undo"
+	remove_color_button.tooltip_text = "Tap a tile color to clear it" if _prism_selecting else "Prism"
+	hint_button.tooltip_text = "Hint"
 
 func _push_undo(snapshot: Array, score_snapshot: int, combo_snapshot: int) -> void:
 	_undo_stack.append({
@@ -464,6 +437,7 @@ func _record_powerup_use(powerup_type: String) -> void:
 		_powerup_usage[powerup_type] = 0
 	_powerup_usage[powerup_type] = int(_powerup_usage[powerup_type]) + 1
 	_run_powerups_used_total += 1
+	_current_mode = "OPEN"
 	Telemetry.mark_powerup_used(powerup_type, "OPEN", _remaining_powerup_charges(powerup_type))
 	_maybe_show_open_mode_tip()
 
@@ -477,9 +451,9 @@ func _maybe_show_open_mode_tip() -> void:
 	var modal := TUTORIAL_TIP_SCENE.instantiate()
 	if modal.has_method("configure"):
 		modal.configure({
-			"title": "Leaderboard Mode Update",
-			"message": "Using power-ups moves this run to the Open leaderboard. Only games without power-up usage are posted to the Pure leaderboard.",
-			"confirm_text": "Got it",
+			"title": "Open Run",
+			"message": "Using a power-up moves this run to the Open leaderboard. Future runs still start Pure until a power-up is used.",
+			"confirm_text": "Continue Open",
 			"checkbox_text": "Don't show this again",
 			"show_checkbox": true,
 		})
@@ -1226,9 +1200,6 @@ func _set_tutorial_focus_target(target: Control) -> void:
 func _is_tutorial_powerup_step() -> bool:
 	return _tutorial_step == TUTORIAL_STEP_UNDO or _tutorial_step == TUTORIAL_STEP_PRISM or _tutorial_step == TUTORIAL_STEP_HINT
 
-func _is_teaching_powerups() -> bool:
-	return _tutorial_overlay != null and is_instance_valid(_tutorial_overlay) and _is_tutorial_powerup_step()
-
 func _is_tutorial_click_to_continue_step() -> bool:
 	return _tutorial_step >= TUTORIAL_STEP_UNDO
 
@@ -1286,20 +1257,6 @@ func _clear_tutorial_highlights() -> void:
 		if node and is_instance_valid(node):
 			node.queue_free()
 	_tutorial_highlights.clear()
-
-func _show_pure_mode_notice() -> void:
-	if _pure_mode_notice_shown:
-		return
-	_pure_mode_notice_shown = true
-	var modal := TUTORIAL_TIP_SCENE.instantiate()
-	if modal and modal.has_method("configure"):
-		modal.configure({
-			"title": "PURE Mode Active",
-			"message": "Powerups are disabled in PURE mode. Switch to OPEN in the main menu to use them.",
-			"confirm_text": "Understood",
-			"show_checkbox": false,
-		})
-	add_child(modal)
 
 func _remaining_powerup_charges(powerup_type: String) -> int:
 	match powerup_type:

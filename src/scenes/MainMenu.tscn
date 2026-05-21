@@ -317,12 +317,13 @@ text = "LANE"
 
 [node name="ModeMeta" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox"]
 layout_mode = 2
-text = "PURE lane live // Tier 0"
+text = "Starts Pure // Open after first power-up"
 autowrap_mode = 3
 
 [node name="ModeToggle" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox" instance=ExtResource("7")]
 layout_mode = 2
-text = "Switch to OPEN"
+text = "OPEN ON POWERUP"
+disabled = true
 
 [node name="DailyCard" type="PanelContainer" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid"]
 layout_mode = 2
