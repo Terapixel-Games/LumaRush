@@ -10,29 +10,37 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 	await get_tree().process_frame
 
 	var board: BoardView = game.get_node_or_null("BoardView") as BoardView
+	var board_frame: Control = game.get_node_or_null("UI/BoardFrame") as Control
 	var top_bar_bg: Control = game.get_node_or_null("UI/TopBarBg") as Control
 	var top_bar: Control = game.get_node_or_null("UI/TopBar") as Control
+	var top_right_bar: Control = game.get_node_or_null("UI/TopRightBar") as Control
 	var score_box: Control = game.get_node_or_null("UI/TopBar/ScoreBox") as Control
 	var score_caption: Control = game.get_node_or_null("UI/TopBar/ScoreBox/ScoreCaption") as Control
 	var score_value: Control = game.get_node_or_null("UI/TopBar/ScoreBox/ScoreValue") as Control
 	var pause_button: Control = game.get_node_or_null("UI/TopBar/Pause") as Control
 	var pause_icon: Control = game.get_node_or_null("UI/TopBar/Pause/Center/PauseIcon") as Control
 	var top_bar_inner_highlight: Control = game.get_node_or_null("UI/TopBarBg/TopBarInnerHighlight") as Control
+	var audio_button: Control = game.get_node_or_null("UI/TopRightBar/Audio") as Control
 	var powerups_row: Control = game.get_node_or_null("UI/Powerups") as Control
 	var undo_button: Control = game.get_node_or_null("UI/Powerups/Undo") as Control
 	assert_that(board).is_not_null()
+	assert_that(board_frame).is_not_null()
 	assert_that(top_bar_bg).is_not_null()
 	assert_that(top_bar).is_not_null()
+	assert_that(top_right_bar).is_not_null()
 	assert_that(score_box).is_not_null()
 	assert_that(score_caption).is_not_null()
 	assert_that(score_value).is_not_null()
 	assert_that(pause_button).is_not_null()
 	assert_that(pause_icon).is_not_null()
 	assert_that(top_bar_inner_highlight).is_not_null()
+	assert_that(audio_button).is_not_null()
 	assert_that(powerups_row).is_not_null()
 	assert_that(undo_button).is_not_null()
 
 	var viewport_sizes: Array[Vector2] = [
+		Vector2(573.0, 967.0),
+		Vector2(1898.0, 967.0),
 		Vector2(1920.0, 1010.0),
 		Vector2(1920.0, 720.0),
 		Vector2(2560.0, 900.0),
@@ -47,6 +55,8 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		var viewport_rect := Rect2(Vector2.ZERO, game.get_viewport_rect().size)
 		var top_bg_rect: Rect2 = top_bar_bg.get_global_rect()
 		var top_rect: Rect2 = top_bar.get_global_rect()
+		var top_right_rect: Rect2 = top_right_bar.get_global_rect()
+		var audio_rect: Rect2 = audio_button.get_global_rect()
 		var score_box_rect: Rect2 = score_box.get_global_rect()
 		var score_caption_rect: Rect2 = score_caption.get_global_rect()
 		var score_value_rect: Rect2 = score_value.get_global_rect()
@@ -60,11 +70,15 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 			board.global_position,
 			Vector2(float(board.width) * board.tile_size, float(board.height) * board.tile_size)
 		)
+		var board_frame_rect: Rect2 = board_frame.get_global_rect()
 		_assert_rect_inside(top_bg_rect, viewport_rect)
 		_assert_rect_inside(top_rect, viewport_rect)
+		_assert_rect_inside(top_right_rect, viewport_rect)
 		_assert_rect_inside(top_rect, top_bg_rect)
 		assert_that(abs(top_rect.position.y - top_bg_rect.position.y)).is_less_equal(1.0)
 		assert_that(abs(top_rect.size.y - top_bg_rect.size.y)).is_less_equal(1.0)
+		assert_that(abs(_rect_center_x(top_bg_rect) - _rect_center_x(board_frame_rect))).is_less_equal(1.0)
+		assert_that(top_bg_rect.size.x).is_greater_equal(board_frame_rect.size.x - 1.0)
 		_assert_rect_inside(inner_highlight_rect, top_bg_rect)
 		assert_that(abs(_rect_center_y(inner_highlight_rect) - _rect_center_y(top_bg_rect))).is_less_equal(1.0)
 		_assert_rect_inside(score_box_rect, top_bg_rect)
@@ -72,6 +86,7 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		_assert_rect_inside(score_value_rect, top_bg_rect)
 		_assert_rect_inside(pause_rect, top_bg_rect)
 		_assert_rect_inside(pause_icon_rect, pause_rect)
+		_assert_rect_inside(audio_rect, top_right_rect)
 		_assert_rect_inside(powerups_rect, viewport_rect)
 		_assert_rect_inside(undo_rect, viewport_rect)
 		assert_that(score_caption_rect.position.y + score_caption_rect.size.y).is_less_equal(score_value_rect.position.y + 1.0)
@@ -83,6 +98,7 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		assert_that(abs(pause_center_y - expected_pause_center_y)).is_less_equal(2.0)
 		assert_that(abs(_rect_center_x(pause_icon_rect) - _rect_center_x(pause_rect))).is_less_equal(1.0)
 		assert_that(abs(_rect_center_y(pause_icon_rect) - _rect_center_y(pause_rect))).is_less_equal(1.0)
+		assert_that(abs(_rect_center_y(top_right_rect) - _rect_center_y(top_bg_rect))).is_less_equal(2.0)
 		if size.x / max(1.0, size.y) >= 1.45:
 			assert_that(top_rect.size.x).is_greater_equal(viewport_rect.size.x * 0.45)
 		assert_that(board_rect.position.x).is_greater_equal(0.0)

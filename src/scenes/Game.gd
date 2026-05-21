@@ -774,6 +774,12 @@ func _center_board() -> void:
 	var target_tile_size: float = clamp(min(fit_w, fit_h), 36.0, 188.0)
 	board.set_tile_size(target_tile_size)
 	var board_size: Vector2 = Vector2(board.width * board.tile_size, board.height * board.tile_size)
+	var frame_padding: float = clamp(board.tile_size * 0.18, 12.0, 24.0)
+	var final_hud_width: float = clamp(board_size.x + (frame_padding * 2.0), min_column_width, max_column_width)
+	var final_hud_left: float = (view_size.x - final_hud_width) * 0.5
+	_layout_top_bar(view_size, final_hud_left, final_hud_width)
+	_layout_top_right(view_size)
+	_apply_responsive_hud_typography(final_hud_width, top_bar_bg.size.y, powerup_row_height)
 	board.position = Vector2(
 		(view_size.x - board_size.x) * 0.5,
 		top_limit + ((available_height - board_size.y) * 0.5)
@@ -786,7 +792,6 @@ func _center_board() -> void:
 	_refresh_button_pivots()
 
 	if board_frame:
-		var frame_padding: float = clamp(board.tile_size * 0.18, 12.0, 24.0)
 		board_frame.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		board_frame.position = board.position - Vector2(frame_padding, frame_padding)
 		board_frame.size = board_size + Vector2(frame_padding * 2.0, frame_padding * 2.0)
@@ -840,8 +845,11 @@ func _layout_top_right(view_size: Vector2) -> void:
 		return
 	var margin: float = clamp(min(view_size.x, view_size.y) * 0.045, 12.0, 32.0)
 	var icon_size: float = clamp(min(view_size.x, view_size.y) * 0.12, 68.0, 92.0)
+	var y_position: float = margin
+	if top_bar_bg and top_bar_bg.size.y > 0.0:
+		y_position = top_bar_bg.position.y + ((top_bar_bg.size.y - icon_size) * 0.5)
 	top_right_bar.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	top_right_bar.position = Vector2(view_size.x - margin - icon_size, margin)
+	top_right_bar.position = Vector2(view_size.x - margin - icon_size, y_position)
 	top_right_bar.size = Vector2(icon_size, icon_size)
 	audio_button.custom_minimum_size = Vector2(icon_size, icon_size)
 
