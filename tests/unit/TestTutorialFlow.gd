@@ -32,6 +32,9 @@ func test_first_run_tutorial_teaches_board_music_and_powerups() -> void:
 	assert_that(next_button).is_not_null()
 	assert_that(skip_button).is_not_null()
 	assert_that(skip_button.text).is_equal("Skip Tutorial")
+	assert_that(skip_button.custom_minimum_size.x).is_greater_equal(160.0)
+	assert_that(next_button.custom_minimum_size.x).is_less(150.0)
+	assert_that(next_button.size_flags_horizontal & Control.SIZE_EXPAND).is_equal(0)
 
 	next_button.pressed.emit()
 	assert_that(title.text).is_equal("Keep The Beat")
@@ -45,10 +48,12 @@ func test_first_run_tutorial_teaches_board_music_and_powerups() -> void:
 
 	next_button.pressed.emit()
 	assert_that(title.text).is_equal("Prism")
+	assert_that(message.text).contains("star button")
 	assert_that(message.text).contains("rewarded ad")
 
 	next_button.pressed.emit()
 	assert_that(title.text).is_equal("Hint")
+	assert_that(message.text).contains("question mark")
 	assert_that(message.text).contains("points out")
 
 	next_button.pressed.emit()
