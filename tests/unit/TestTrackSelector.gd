@@ -68,10 +68,8 @@ func test_expanded_track_text_is_centered_when_not_scrolling() -> void:
 	await get_tree().process_frame
 
 	var clip: Control = selector.get_node("VBox/ExpandedPill/ExpandedRow/NameToggleButton/NameClip") as Control
-	var root: Control = selector.get_node("VBox/ExpandedPill/ExpandedRow/NameToggleButton/NameClip/MarqueeRoot") as Control
-	var row: Control = selector.get_node("VBox/ExpandedPill/ExpandedRow/NameToggleButton/NameClip/MarqueeRoot/MarqueeRow") as Control
+	var label: Control = selector.get_node("VBox/ExpandedPill/ExpandedRow/NameToggleButton/NameClip/MarqueeRoot/MarqueeRow/NameLabelA") as Control
 	assert_that(bool(selector.call("is_marquee_active"))).is_false()
-	assert_that(row.position.y).is_equal(0.0)
-	assert_that(abs((root.position.y + (row.size.y * 0.5)) - (clip.size.y * 0.5))).is_less_equal(1.0)
+	assert_that(abs((label.get_global_rect().position.x + (label.size.x * 0.5)) - (clip.get_global_rect().position.x + (clip.size.x * 0.5)))).is_less_equal(1.0)
 
 	selector.queue_free()

@@ -345,7 +345,8 @@ func _update_powerup_buttons() -> void:
 	var prism_hint: String = "Tap Color" if _prism_selecting else ""
 	_update_badge(prism_badge_panel, prism_badge, _remove_color_charges, _pending_powerup_refill_type == "prism", prism_hint)
 	_update_badge(hint_badge_panel, hint_badge, _hint_charges, _pending_powerup_refill_type == "hint")
-	undo_button.disabled = (_undo_charges > 0 and _undo_stack.is_empty()) or _is_other_refill_pending("undo") or _prism_selecting
+	var tutorial_unlocks_undo := _tutorial_overlay != null and is_instance_valid(_tutorial_overlay) and _tutorial_step == TUTORIAL_STEP_UNDO
+	undo_button.disabled = not tutorial_unlocks_undo and ((_undo_charges > 0 and _undo_stack.is_empty()) or _is_other_refill_pending("undo") or _prism_selecting)
 	remove_color_button.disabled = _is_other_refill_pending("prism")
 	hint_button.disabled = _is_other_refill_pending("hint") or _prism_selecting
 	undo_button.tooltip_text = "Undo"
@@ -776,7 +777,8 @@ func _center_board() -> void:
 	board.set_tile_size(target_tile_size)
 	var board_size: Vector2 = Vector2(board.width * board.tile_size, board.height * board.tile_size)
 	var frame_padding: float = clamp(board.tile_size * 0.18, 12.0, 24.0)
-	var final_hud_width: float = clamp(board_size.x + (frame_padding * 2.0), min_column_width, max_column_width)
+	var framed_board_width: float = board_size.x + (frame_padding * 2.0)
+	var final_hud_width: float = clamp(framed_board_width, min_column_width, max(view_size.x - 8.0, max_column_width))
 	var final_hud_left: float = (view_size.x - final_hud_width) * 0.5
 	_layout_top_bar(view_size, final_hud_left, final_hud_width)
 	_layout_top_right(view_size)
@@ -849,14 +851,18 @@ func _layout_top_right(view_size: Vector2) -> void:
 	var separation: float = clamp(icon_size * 0.13, 8.0, 12.0)
 	var button_count: int = 3
 	var cluster_width: float = (icon_size * float(button_count)) + (separation * float(button_count - 1))
+	var visual_padding: float = 8.0
 	var y_position: float = margin
 	if top_bar_bg and top_bar_bg.size.y > 0.0:
 		y_position = top_bar_bg.position.y + ((top_bar_bg.size.y - icon_size) * 0.5)
 	top_right_bar.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	top_right_bar.position = Vector2(view_size.x - margin - cluster_width, y_position)
-	top_right_bar.size = Vector2(cluster_width, icon_size)
+	top_right_bar.position = Vector2(view_size.x - margin - cluster_width - visual_padding, y_position - visual_padding)
+	top_right_bar.size = Vector2(cluster_width + (visual_padding * 2.0), icon_size + (visual_padding * 2.0))
+	top_right_bar.custom_minimum_size = top_right_bar.size
 	if top_right_bar is BoxContainer:
-		(top_right_bar as BoxContainer).add_theme_constant_override("separation", int(round(separation)))
+		var box := top_right_bar as BoxContainer
+		box.alignment = BoxContainer.ALIGNMENT_BEGIN
+		box.add_theme_constant_override("separation", int(round(separation)))
 	for button in [account_button, shop_button, audio_button]:
 		if button:
 			button.custom_minimum_size = Vector2(icon_size, icon_size)

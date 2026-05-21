@@ -183,15 +183,17 @@ func _recompute_marquee() -> void:
 	_gap.visible = run_marquee
 	_marquee_row.position = Vector2.ZERO
 	_marquee_row.size = _marquee_row.get_combined_minimum_size()
-	_marquee_y = floor((max(0.0, _name_clip.size.y - _marquee_row.size.y)) * 0.5)
+	_marquee_y = _centered_marquee_root_y()
 
 	if run_marquee:
 		_marquee_cycle_width = label_width + _marquee_gap_px
+		_marquee_row.position = Vector2.ZERO
 		_marquee_root.position = Vector2(0.0, _marquee_y)
 		_set_marquee_active(true)
 	else:
 		_set_marquee_active(false)
 		_reset_marquee_position()
+	call_deferred("_sync_marquee_vertical_center")
 
 func _measure_label_width(label: Label) -> float:
 	var font: Font = label.get_theme_font("font")
@@ -199,6 +201,15 @@ func _measure_label_width(label: Label) -> float:
 		return label.get_combined_minimum_size().x
 	var font_size: int = label.get_theme_font_size("font_size")
 	return font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+
+func _centered_marquee_root_y() -> float:
+	return floor((max(0.0, _name_clip.size.y - _marquee_row.size.y)) * 0.5) - _marquee_row.position.y
+
+func _sync_marquee_vertical_center() -> void:
+	if not _is_ready:
+		return
+	_marquee_y = _centered_marquee_root_y()
+	_marquee_root.position.y = _marquee_y
 
 func _set_marquee_active(active: bool) -> void:
 	if _marquee_active == active:
@@ -209,6 +220,7 @@ func _set_marquee_active(active: bool) -> void:
 func _reset_marquee_position() -> void:
 	var row_size: Vector2 = _marquee_row.get_combined_minimum_size()
 	var centered_x: float = floor(max(0.0, (_name_clip.size.x - row_size.x) * 0.5))
+	_marquee_row.position = Vector2.ZERO
 	_marquee_root.position = Vector2(centered_x, _marquee_y)
 
 func _apply_styles() -> void:
