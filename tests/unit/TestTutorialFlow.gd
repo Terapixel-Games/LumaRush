@@ -252,6 +252,25 @@ func test_playing_a_match_advances_the_early_tutorial_steps() -> void:
 
 	game.queue_free()
 
+func test_opening_modal_hides_tutorial_without_marking_seen() -> void:
+	SaveStore.set_tutorial_seen(false)
+	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
+	var game: Control = scene.instantiate() as Control
+	assert_that(game).is_not_null()
+	get_tree().root.add_child(game)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_that(game.get_node_or_null("UI/TutorialOverlay")).is_not_null()
+	game.call("_on_account_pressed")
+	await get_tree().process_frame
+
+	assert_that(game.get_node_or_null("UI/TutorialOverlay")).is_null()
+	assert_that(game.get_node_or_null("AccountModal")).is_not_null()
+	assert_that(SaveStore.is_tutorial_seen()).is_false()
+
+	game.queue_free()
+
 func test_pause_overlay_can_request_tutorial_reenable() -> void:
 	var scene: PackedScene = load("res://src/scenes/PauseOverlay.tscn") as PackedScene
 	var pause_overlay: Control = scene.instantiate() as Control

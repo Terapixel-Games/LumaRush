@@ -204,6 +204,7 @@ func _update_score() -> void:
 
 func _on_pause_pressed() -> void:
 	_close_audio_overlay()
+	_hide_tutorial_for_overlay()
 	_set_prism_selection(false)
 	_update_powerup_buttons()
 	var pause := preload("res://src/scenes/PauseOverlay.tscn").instantiate()
@@ -229,9 +230,11 @@ func _on_tutorial_requested() -> void:
 	_show_tutorial(true)
 
 func _on_account_pressed() -> void:
+	_hide_tutorial_for_overlay()
 	ModalManager.open_scene(ACCOUNT_MODAL_SCENE, self)
 
 func _on_shop_pressed() -> void:
+	_hide_tutorial_for_overlay()
 	ModalManager.open_scene(SHOP_MODAL_SCENE, self)
 
 func _on_undo_pressed() -> void:
@@ -458,6 +461,7 @@ func _maybe_show_open_mode_tip() -> void:
 		_open_tip_shown_this_run = true
 		return
 	_open_tip_shown_this_run = true
+	_hide_tutorial_for_overlay()
 	var modal := TUTORIAL_TIP_SCENE.instantiate()
 	if modal.has_method("configure"):
 		modal.configure({
@@ -482,6 +486,7 @@ func _on_audio_pressed() -> void:
 	var tracks: Array[Dictionary] = _music_tracks()
 	if tracks.is_empty():
 		return
+	_hide_tutorial_for_overlay()
 	var overlay := AUDIO_TRACK_OVERLAY_SCENE.instantiate()
 	if overlay == null:
 		return
@@ -1044,6 +1049,11 @@ func _advance_tutorial_step() -> void:
 
 func _on_tutorial_skip_pressed() -> void:
 	_close_tutorial(true)
+
+func _hide_tutorial_for_overlay() -> void:
+	if _tutorial_overlay == null or not is_instance_valid(_tutorial_overlay):
+		return
+	_close_tutorial(false)
 
 func _close_tutorial(mark_seen: bool) -> void:
 	_clear_tutorial_highlights()
