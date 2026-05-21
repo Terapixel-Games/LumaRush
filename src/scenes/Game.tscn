@@ -92,11 +92,25 @@ custom_minimum_size = Vector2(96, 96)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 60
-icon = ExtResource("7")
 icon_alignment = 1
-expand_icon = true
 script = ExtResource("5")
 corner_radius = 0.5
+
+[node name="Center" type="CenterContainer" parent="UI/TopBar/Pause"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PauseIcon" type="TextureRect" parent="UI/TopBar/Pause/Center"]
+custom_minimum_size = Vector2(38, 38)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("7")
+stretch_mode = 5
 
 [node name="TopRightBar" type="Control" parent="UI"]
 anchors_preset = 0

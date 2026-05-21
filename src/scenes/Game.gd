@@ -12,6 +12,7 @@ const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
 @onready var audio_button: Button = $UI/TopRightBar/Audio
 @onready var score_value_label: Label = $UI/TopBar/ScoreBox/ScoreValue
 @onready var pause_button: Button = $UI/TopBar/Pause
+@onready var pause_icon: TextureRect = $UI/TopBar/Pause/Center/PauseIcon
 @onready var undo_button: Button = $UI/Powerups/Undo
 @onready var remove_color_button: Button = $UI/Powerups/RemoveColor
 @onready var hint_button: Button = $UI/Powerups/Hint
@@ -828,6 +829,11 @@ func _layout_top_bar(view_size: Vector2, content_left: float, content_width: flo
 		pause_button.custom_minimum_size = Vector2(pause_size, pause_size)
 		pause_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		pause_button.size_flags_horizontal = Control.SIZE_SHRINK_END
+		pause_button.icon = null
+		pause_button.text = ""
+		if pause_icon:
+			var pause_icon_size: float = clamp(pause_size * 0.48, 28.0, 40.0)
+			pause_icon.custom_minimum_size = Vector2(pause_icon_size, pause_icon_size)
 
 func _layout_top_right(view_size: Vector2) -> void:
 	if top_right_bar == null or audio_button == null:
