@@ -78,6 +78,10 @@ func _process(delta: float) -> void:
 		_marquee_root.position.x = 0.0
 	_marquee_root.position.y = _marquee_y
 
+func _notification(what: int) -> void:
+	if what == Control.NOTIFICATION_RESIZED:
+		_queue_recompute_marquee()
+
 func _set_tracks(value: Array[String]) -> void:
 	_tracks = value.duplicate()
 	_set_current_index(_current_index, false)
@@ -180,7 +184,6 @@ func _recompute_marquee() -> void:
 	_marquee_row.position = Vector2.ZERO
 	_marquee_row.size = _marquee_row.get_combined_minimum_size()
 	_marquee_y = floor((max(0.0, _name_clip.size.y - _marquee_row.size.y)) * 0.5)
-	_marquee_row.position.y = _marquee_y
 
 	if run_marquee:
 		_marquee_cycle_width = label_width + _marquee_gap_px

@@ -52,3 +52,26 @@ func test_marquee_starts_only_when_expanded_and_overflowing() -> void:
 	assert_that(bool(selector.call("is_marquee_active"))).is_false()
 
 	selector.queue_free()
+
+func test_expanded_track_text_is_centered_when_not_scrolling() -> void:
+	var scene: PackedScene = load("res://ui/components/TrackSelector.tscn") as PackedScene
+	var selector: Control = scene.instantiate() as Control
+	assert_that(selector).is_not_null()
+	get_tree().root.add_child(selector)
+	selector.size = Vector2(420.0, 110.0)
+	await get_tree().process_frame
+
+	selector.set("tracks", ["Neon Drift"])
+	selector.set("current_index", 0)
+	selector.call("set_expanded", true)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var clip: Control = selector.get_node("VBox/ExpandedPill/ExpandedRow/NameToggleButton/NameClip") as Control
+	var root: Control = selector.get_node("VBox/ExpandedPill/ExpandedRow/NameToggleButton/NameClip/MarqueeRoot") as Control
+	var row: Control = selector.get_node("VBox/ExpandedPill/ExpandedRow/NameToggleButton/NameClip/MarqueeRoot/MarqueeRow") as Control
+	assert_that(bool(selector.call("is_marquee_active"))).is_false()
+	assert_that(row.position.y).is_equal(0.0)
+	assert_that(abs((root.position.y + (row.size.y * 0.5)) - (clip.size.y * 0.5))).is_less_equal(1.0)
+
+	selector.queue_free()

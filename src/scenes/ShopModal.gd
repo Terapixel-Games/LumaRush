@@ -7,6 +7,11 @@ const POWERUP_COSTS := {
 	"prism": 180,
 	"hint": 140,
 }
+const POWERUP_OWNED_ALIASES := {
+	"undo": ["undo"],
+	"prism": ["prism", "remove_color", "removeColor"],
+	"hint": ["hint", "shuffle"],
+}
 const COIN_PACKS := [
 	{"product_id": "coins_500_lumarush", "label": "500 - $0.99", "price_usd": 0.99},
 	{"product_id": "coins_1200_lumarush", "label": "1200 - $1.99", "price_usd": 1.99},
@@ -121,12 +126,38 @@ func _on_wallet_updated(wallet: Dictionary) -> void:
 	else:
 		push_warning("ShopModal: missing neon theme action button node.")
 	var powerups_var: Variant = shop.get("powerups", {})
-	var powerups: Dictionary = powerups_var if typeof(powerups_var) == TYPE_DICTIONARY else {}
-	undo_subtitle.text = "Owned: %d  |  %d coins" % [int(powerups.get("undo", 0)), int(POWERUP_COSTS["undo"])]
-	prism_subtitle.text = "Owned: %d  |  %d coins" % [int(powerups.get("prism", 0)), int(POWERUP_COSTS["prism"])]
-	var hint_owned: int = int(powerups.get("hint", powerups.get("shuffle", 0)))
-	shuffle_subtitle.text = "Owned: %d  |  %d coins" % [hint_owned, int(POWERUP_COSTS["hint"])]
+	var powerups: Dictionary = _normalized_powerup_counts(powerups_var)
+	undo_subtitle.text = _powerup_subtitle("undo", powerups)
+	prism_subtitle.text = _powerup_subtitle("prism", powerups)
+	shuffle_subtitle.text = _powerup_subtitle("hint", powerups)
 	_apply_powerup_typography()
+
+func _normalized_powerup_counts(raw_powerups: Variant) -> Dictionary:
+	var source: Dictionary = {}
+	if typeof(raw_powerups) == TYPE_DICTIONARY:
+		source = (raw_powerups as Dictionary).duplicate(true)
+	var stored: Dictionary = SaveStore.get_owned_powerups()
+	for key in stored.keys():
+		if not source.has(key):
+			source[key] = stored[key]
+	var out: Dictionary = {}
+	for powerup_type in POWERUP_COSTS.keys():
+		out[powerup_type] = _owned_powerup_count(powerup_type, source)
+	return out
+
+func _owned_powerup_count(powerup_type: String, powerups: Dictionary) -> int:
+	var aliases: Array = POWERUP_OWNED_ALIASES.get(powerup_type, [powerup_type])
+	var owned := 0
+	for alias_var in aliases:
+		var alias := str(alias_var)
+		owned = max(owned, int(powerups.get(alias, 0)))
+	return owned
+
+func _powerup_subtitle(powerup_type: String, powerups: Dictionary) -> String:
+	return "Owned: %d  |  %d coins" % [
+		int(powerups.get(powerup_type, 0)),
+		int(POWERUP_COSTS.get(powerup_type, 0)),
+	]
 
 func _bind_theme_action_nodes() -> void:
 	theme_neon_action = get_node_or_null(

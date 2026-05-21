@@ -189,6 +189,42 @@ func test_shop_modal_input_contract_and_close() -> void:
 	assert_that(is_instance_valid(modal)).is_false()
 	await _free_node(host)
 
+func test_shop_modal_uses_normalized_powerup_owned_counts() -> void:
+	var original_powerups: Dictionary = SaveStore.get_owned_powerups()
+	SaveStore.set_owned_powerups({
+		"undo": 2,
+		"remove_color": 4,
+		"shuffle": 3,
+	})
+
+	var host := _create_root_host()
+	var modal_scene: PackedScene = load("res://src/scenes/ShopModal.tscn")
+	var modal: Control = modal_scene.instantiate() as Control
+	assert_that(modal).is_not_null()
+	host.add_child(modal)
+	await get_tree().process_frame
+
+	var wallet := {
+		"coin_balance": 900,
+		"shop": {
+			"ownedThemes": ["default"],
+			"equippedTheme": "default",
+			"powerups": {},
+		},
+	}
+	modal.call("_on_wallet_updated", wallet)
+	await get_tree().process_frame
+
+	var undo_subtitle: Label = modal.get_node("Panel/VBox/Scroll/Content/Powerups/BuyUndo/Margin/Row/Texts/Subtitle") as Label
+	var prism_subtitle: Label = modal.get_node("Panel/VBox/Scroll/Content/Powerups/BuyPrism/Margin/Row/Texts/Subtitle") as Label
+	var hint_subtitle: Label = modal.get_node("Panel/VBox/Scroll/Content/Powerups/BuyShuffle/Margin/Row/Texts/Subtitle") as Label
+	assert_that(undo_subtitle.text).is_equal("Owned: 2  |  120 coins")
+	assert_that(prism_subtitle.text).is_equal("Owned: 4  |  180 coins")
+	assert_that(hint_subtitle.text).is_equal("Owned: 3  |  140 coins")
+
+	await _free_node(host)
+	SaveStore.set_owned_powerups(original_powerups)
+
 func test_account_and_shop_modals_match_game_space_width_on_desktop() -> void:
 	var host := _create_root_host()
 	var account_scene: PackedScene = load("res://src/scenes/AccountModal.tscn")
