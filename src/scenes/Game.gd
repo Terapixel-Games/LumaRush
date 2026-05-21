@@ -180,6 +180,8 @@ func _on_match_made(group: Array) -> void:
 	BackgroundMood.reset_starfield_emission_taper()
 	BackgroundMood.pulse_starfield()
 	_play_feedback_tier(group.size())
+	if _tutorial_overlay and is_instance_valid(_tutorial_overlay) and _tutorial_step <= 1:
+		_advance_tutorial_step()
 
 func _on_move_committed(_group: Array, snapshot: Array) -> void:
 	_push_undo(snapshot, score, combo)
@@ -1012,7 +1014,7 @@ func _show_tutorial(force: bool = false) -> void:
 	buttons.add_theme_constant_override("separation", 12)
 	box.add_child(buttons)
 	_tutorial_skip_button = Button.new()
-	_tutorial_skip_button.text = "Skip"
+	_tutorial_skip_button.text = "Skip Tutorial"
 	_tutorial_skip_button.custom_minimum_size = Vector2(120, 54)
 	_tutorial_skip_button.pressed.connect(Callable(self, "_on_tutorial_skip_pressed"))
 	buttons.add_child(_tutorial_skip_button)
@@ -1026,6 +1028,9 @@ func _show_tutorial(force: bool = false) -> void:
 	_layout_tutorial_overlay()
 
 func _on_tutorial_next_pressed() -> void:
+	_advance_tutorial_step()
+
+func _advance_tutorial_step() -> void:
 	if _tutorial_step >= TUTORIAL_STEP_COUNT - 1:
 		_close_tutorial(true)
 		return
@@ -1057,7 +1062,7 @@ func _update_tutorial_step() -> void:
 	match _tutorial_step:
 		0:
 			title = "Tap A Group"
-			message = "Start on the highlighted tiles. Click one connected color group to clear it, then pick the next group that drops in, then the next. Keep moving."
+			message = "Start on the highlighted tiles. Click one connected color group to clear it. The lesson advances when you make the move."
 		1:
 			title = "Keep The Beat"
 			message = "Every clear scores points. Fast chains build combo pressure, the board reacts harder, and the music grows as the run heats up."
@@ -1069,7 +1074,7 @@ func _update_tutorial_step() -> void:
 			message = "After the free charges, powerups can refill through earned coins, a rewarded ad, or shop purchases. Pause anytime to turn this tutorial back on."
 	_tutorial_title.text = title
 	_tutorial_message.text = message
-	_tutorial_next_button.text = "Start" if _tutorial_step >= TUTORIAL_STEP_COUNT - 1 else "Next"
+	_tutorial_next_button.text = "Start Run" if _tutorial_step >= TUTORIAL_STEP_COUNT - 1 else "Next"
 	_refresh_tutorial_highlights()
 
 func _layout_tutorial_overlay() -> void:
