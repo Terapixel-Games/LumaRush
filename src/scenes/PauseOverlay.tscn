@@ -50,9 +50,14 @@ theme_override_font_sizes/font_size = 48
 text = "Resume Run"
 custom_minimum_size = Vector2(0, 96)
 
+[node name="Tutorial" parent="VBox" instance=ExtResource("5")]
+text = "Enable Tutorial"
+custom_minimum_size = Vector2(0, 92)
+
 [node name="Quit" parent="VBox" instance=ExtResource("5")]
 text = "Leave Run"
 custom_minimum_size = Vector2(0, 92)
 
 [connection signal="pressed" from="VBox/Resume" to="." method="_on_resume_pressed"]
+[connection signal="pressed" from="VBox/Tutorial" to="." method="_on_tutorial_pressed"]
 [connection signal="pressed" from="VBox/Quit" to="." method="_on_quit_pressed"]

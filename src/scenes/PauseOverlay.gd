@@ -4,11 +4,13 @@ const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
 
 signal resume
 signal quit
+signal tutorial_requested
 
 @onready var panel: Control = $Panel
 @onready var vbox: VBoxContainer = $VBox
 @onready var title_label: Label = $VBox/Title
 @onready var resume_button: Button = $VBox/Resume
+@onready var tutorial_button: Button = $VBox/Tutorial
 @onready var quit_button: Button = $VBox/Quit
 
 func _ready() -> void:
@@ -64,7 +66,8 @@ func _layout_overlay_for_size(viewport_size: Vector2) -> void:
 	var inner_pad_x: float = clamp(panel_width * 0.07, 20.0, 56.0)
 	var inner_pad_y: float = clamp(viewport_size.y * 0.025, 14.0, 28.0)
 	var content_gap: float = clamp(button_height * 0.16, 12.0, 24.0)
-	var panel_height: float = title_height + (button_height * 2.0) + (inner_pad_y * 2.0) + (content_gap * 2.0)
+	var button_count: float = 3.0
+	var panel_height: float = title_height + (button_height * button_count) + (inner_pad_y * 2.0) + (content_gap * button_count)
 	if panel_height > usable_height:
 		var fit_scale: float = clamp(usable_height / panel_height, 0.72, 1.0)
 		button_height *= fit_scale
@@ -83,9 +86,11 @@ func _layout_overlay_for_size(viewport_size: Vector2) -> void:
 	vbox.add_theme_constant_override("separation", int(round(content_gap)))
 
 	resume_button.custom_minimum_size.y = button_height
+	tutorial_button.custom_minimum_size.y = button_height
 	quit_button.custom_minimum_size.y = button_height
 	title_label.add_theme_font_size_override("font_size", int(round(clamp(title_height * 0.66, 40.0, 88.0))))
 	resume_button.add_theme_font_size_override("font_size", int(round(clamp(button_height * 0.42, 22.0, 46.0))))
+	tutorial_button.add_theme_font_size_override("font_size", int(round(clamp(button_height * 0.38, 20.0, 42.0))))
 	quit_button.add_theme_font_size_override("font_size", int(round(clamp(button_height * 0.42, 22.0, 46.0))))
 
 func _set_control_rect(control: Control, rect: Rect2) -> void:
@@ -103,6 +108,10 @@ func _apply_neon_run_deck() -> void:
 
 func _on_resume_pressed() -> void:
 	emit_signal("resume")
+	queue_free()
+
+func _on_tutorial_pressed() -> void:
+	emit_signal("tutorial_requested")
 	queue_free()
 
 func _on_quit_pressed() -> void:

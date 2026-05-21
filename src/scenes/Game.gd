@@ -46,7 +46,14 @@ var _current_mode: String = "PURE"
 var _pure_mode_locked: bool = false
 var _pure_mode_notice_shown: bool = false
 var _combo_label: Label
-var _tutorial_overlay: CanvasItem
+var _tutorial_overlay: Control
+var _tutorial_panel: Panel
+var _tutorial_title: Label
+var _tutorial_message: Label
+var _tutorial_next_button: Button
+var _tutorial_skip_button: Button
+var _tutorial_highlights: Array[Control] = []
+var _tutorial_step: int = 0
 var _shake_strength: float = 0.0
 var _shake_time_left: float = 0.0
 var _board_anchor_pos: Vector2 = Vector2.ZERO
@@ -69,6 +76,7 @@ const POWERUPS_MAX_WIDTH: float = 700.0
 const POWERUPS_MAX_WIDTH_LANDSCAPE: float = 980.0
 const BADGE_BG_COLOR: Color = Color(0.96, 0.22, 0.24, 1.0)
 const BADGE_BORDER_COLOR: Color = Color(1.0, 0.9, 0.92, 0.96)
+const TUTORIAL_STEP_COUNT: int = 4
 
 func _ready() -> void:
 	var stale_overlay: Node = get_node_or_null("RunEndOverlay")
@@ -192,6 +200,7 @@ func _on_pause_pressed() -> void:
 	get_tree().paused = true
 	pause.connect("resume", Callable(self, "_on_resume"))
 	pause.connect("quit", Callable(self, "_on_quit"))
+	pause.connect("tutorial_requested", Callable(self, "_on_tutorial_requested"))
 
 func _on_resume() -> void:
 	get_tree().paused = false
@@ -200,6 +209,11 @@ func _on_quit() -> void:
 	_close_audio_overlay()
 	get_tree().paused = false
 	_finish_run(false)
+
+func _on_tutorial_requested() -> void:
+	get_tree().paused = false
+	SaveStore.set_tutorial_seen(false)
+	_show_tutorial(true)
 
 func _on_undo_pressed() -> void:
 	if _pure_mode_locked:
@@ -774,6 +788,8 @@ func _center_board() -> void:
 		board_glow.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		board_glow.position = board.position - Vector2(glow_padding, glow_padding)
 		board_glow.size = board_size + Vector2(glow_padding * 2.0, glow_padding * 2.0)
+	if _tutorial_overlay and is_instance_valid(_tutorial_overlay):
+		_layout_tutorial_overlay()
 
 func _layout_top_bar(view_size: Vector2, content_left: float, content_width: float) -> void:
 	if top_bar_bg == null or top_bar == null:
@@ -933,54 +949,228 @@ func _play_feedback_tier(group_size: int) -> void:
 func _maybe_show_micro_tutorial() -> void:
 	if SaveStore.is_tutorial_seen():
 		return
-	var panel := PanelContainer.new()
-	panel.name = "TutorialOverlay"
-	panel.anchor_left = 0.5
-	panel.anchor_right = 0.5
-	panel.anchor_top = 0.0
-	panel.anchor_bottom = 0.0
-	panel.offset_left = -220.0
-	panel.offset_right = 220.0
-	panel.offset_top = 18.0
-	panel.offset_bottom = 114.0
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	call_deferred("_show_tutorial", false)
+
+func _show_tutorial(force: bool = false) -> void:
+	if _tutorial_overlay and is_instance_valid(_tutorial_overlay):
+		_layout_tutorial_overlay()
+		return
+	if not force and SaveStore.is_tutorial_seen():
+		return
+	_close_tutorial(false)
+	_tutorial_step = 0
+	_tutorial_overlay = Control.new()
+	_tutorial_overlay.name = "TutorialOverlay"
+	_tutorial_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_tutorial_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tutorial_overlay.z_index = 60
+	$UI.add_child(_tutorial_overlay)
+
+	_tutorial_panel = Panel.new()
+	_tutorial_panel.name = "Panel"
+	_tutorial_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.07, 0.1, 0.18, 0.74)
+	style.bg_color = Color(0.045, 0.065, 0.12, 0.88)
 	style.border_color = Color(0.55, 0.9, 1.0, 0.6)
 	style.border_width_left = 1
 	style.border_width_top = 1
 	style.border_width_right = 1
 	style.border_width_bottom = 1
-	style.corner_radius_top_left = 18
-	style.corner_radius_top_right = 18
-	style.corner_radius_bottom_left = 18
-	style.corner_radius_bottom_right = 18
-	panel.add_theme_stylebox_override("panel", style)
-	var label := Label.new()
-	label.anchor_right = 1.0
-	label.anchor_bottom = 1.0
-	label.offset_left = 14.0
-	label.offset_top = 10.0
-	label.offset_right = -14.0
-	label.offset_bottom = -10.0
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.text = "Tip: Chain matches quickly to escalate combo multipliers."
-	label.add_theme_font_size_override("font_size", Typography.px(18.0))
-	label.add_theme_color_override("font_color", Color(0.93, 0.97, 1.0, 0.98))
-	panel.add_child(label)
-	$UI.add_child(panel)
-	_tutorial_overlay = panel
-	await get_tree().create_timer(5.0).timeout
+	style.corner_radius_top_left = 14
+	style.corner_radius_top_right = 14
+	style.corner_radius_bottom_left = 14
+	style.corner_radius_bottom_right = 14
+	_tutorial_panel.add_theme_stylebox_override("panel", style)
+	_tutorial_overlay.add_child(_tutorial_panel)
+
+	var margin := MarginContainer.new()
+	margin.name = "Margin"
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 18)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_bottom", 16)
+	_tutorial_panel.add_child(margin)
+	var box := VBoxContainer.new()
+	box.name = "VBox"
+	box.add_theme_constant_override("separation", 10)
+	margin.add_child(box)
+	_tutorial_title = Label.new()
+	_tutorial_title.name = "Title"
+	_tutorial_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_tutorial_title.add_theme_font_size_override("font_size", Typography.px(24.0))
+	_tutorial_title.add_theme_color_override("font_color", Color(1.0, 0.96, 0.76, 1.0))
+	box.add_child(_tutorial_title)
+	_tutorial_message = Label.new()
+	_tutorial_message.name = "Message"
+	_tutorial_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_tutorial_message.add_theme_font_size_override("font_size", Typography.px(20.0))
+	_tutorial_message.add_theme_color_override("font_color", Color(0.93, 0.97, 1.0, 0.98))
+	box.add_child(_tutorial_message)
+	var buttons := HBoxContainer.new()
+	buttons.name = "Buttons"
+	buttons.add_theme_constant_override("separation", 12)
+	box.add_child(buttons)
+	_tutorial_skip_button = Button.new()
+	_tutorial_skip_button.text = "Skip"
+	_tutorial_skip_button.custom_minimum_size = Vector2(120, 54)
+	_tutorial_skip_button.pressed.connect(Callable(self, "_on_tutorial_skip_pressed"))
+	buttons.add_child(_tutorial_skip_button)
+	_tutorial_next_button = Button.new()
+	_tutorial_next_button.text = "Next"
+	_tutorial_next_button.custom_minimum_size = Vector2(180, 54)
+	_tutorial_next_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tutorial_next_button.pressed.connect(Callable(self, "_on_tutorial_next_pressed"))
+	buttons.add_child(_tutorial_next_button)
+	_update_tutorial_step()
+	_layout_tutorial_overlay()
+
+func _on_tutorial_next_pressed() -> void:
+	if _tutorial_step >= TUTORIAL_STEP_COUNT - 1:
+		_close_tutorial(true)
+		return
+	_tutorial_step += 1
+	_update_tutorial_step()
+	_layout_tutorial_overlay()
+
+func _on_tutorial_skip_pressed() -> void:
+	_close_tutorial(true)
+
+func _close_tutorial(mark_seen: bool) -> void:
+	_clear_tutorial_highlights()
 	if _tutorial_overlay and is_instance_valid(_tutorial_overlay):
-		var tween := create_tween()
-		tween.tween_property(_tutorial_overlay, "modulate:a", 0.0, 0.35)
-		await tween.finished
-		if _tutorial_overlay and is_instance_valid(_tutorial_overlay):
-			_tutorial_overlay.queue_free()
+		_tutorial_overlay.queue_free()
 	_tutorial_overlay = null
-	SaveStore.set_tutorial_seen(true)
+	_tutorial_panel = null
+	_tutorial_title = null
+	_tutorial_message = null
+	_tutorial_next_button = null
+	_tutorial_skip_button = null
+	if mark_seen:
+		SaveStore.set_tutorial_seen(true)
+
+func _update_tutorial_step() -> void:
+	if _tutorial_title == null or _tutorial_message == null or _tutorial_next_button == null:
+		return
+	var title := ""
+	var message := ""
+	match _tutorial_step:
+		0:
+			title = "Tap A Group"
+			message = "Start on the highlighted tiles. Click one connected color group to clear it, then pick the next group that drops in, then the next. Keep moving."
+		1:
+			title = "Keep The Beat"
+			message = "Every clear scores points. Fast chains build combo pressure, the board reacts harder, and the music grows as the run heats up."
+		2:
+			title = "Powerups"
+			message = "The bottom buttons are safety tools: undo a move, clear a color, or reveal a match. You get starter charges for free."
+		3:
+			title = "Refills"
+			message = "After the free charges, powerups can refill through earned coins, a rewarded ad, or shop purchases. Pause anytime to turn this tutorial back on."
+	_tutorial_title.text = title
+	_tutorial_message.text = message
+	_tutorial_next_button.text = "Start" if _tutorial_step >= TUTORIAL_STEP_COUNT - 1 else "Next"
+	_refresh_tutorial_highlights()
+
+func _layout_tutorial_overlay() -> void:
+	if _tutorial_panel == null:
+		return
+	var view_size: Vector2 = get_viewport_rect().size
+	var panel_width: float = clamp(view_size.x * 0.62, 360.0, 620.0)
+	var panel_height: float = clamp(view_size.y * 0.22, 184.0, 260.0)
+	var panel_x: float = (view_size.x - panel_width) * 0.5
+	var panel_y: float = view_size.y - panel_height - clamp(view_size.y * 0.16, 120.0, 170.0)
+	if powerups_row:
+		var powerup_clearance: float = clamp(view_size.y * 0.04, 64.0, 110.0)
+		panel_y = min(panel_y, powerups_row.global_position.y - panel_height - powerup_clearance)
+	if board:
+		panel_y = max(panel_y, board.global_position.y + (float(board.height) * board.tile_size) + 16.0)
+	panel_y = max(18.0, panel_y)
+	_tutorial_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_tutorial_panel.position = Vector2(panel_x, panel_y)
+	_tutorial_panel.size = Vector2(panel_width, panel_height)
+	_refresh_tutorial_highlights()
+
+func _refresh_tutorial_highlights() -> void:
+	_clear_tutorial_highlights()
+	if _tutorial_overlay == null:
+		return
+	if _tutorial_step <= 1:
+		_add_board_group_highlights()
+	else:
+		for target in [undo_button, remove_color_button, hint_button]:
+			_add_control_highlight(target)
+	if _tutorial_panel and is_instance_valid(_tutorial_panel):
+		_tutorial_overlay.move_child(_tutorial_panel, _tutorial_overlay.get_child_count() - 1)
+
+func _add_board_group_highlights() -> void:
+	if board == null or board.board == null:
+		return
+	var group: Array = _tutorial_group()
+	var limit: int = min(group.size(), 4)
+	for i in range(limit):
+		var cell: Vector2i = group[i]
+		var origin: Vector2 = board.global_position + (Vector2(float(cell.x), float(cell.y)) * board.tile_size)
+		_add_highlight_rect(Rect2(origin + Vector2(2, 2), Vector2(board.tile_size - 4, board.tile_size - 4)), i + 1)
+
+func _tutorial_group() -> Array:
+	if board == null or board.board == null:
+		return []
+	var best: Array = []
+	for y in range(board.height):
+		for x in range(board.width):
+			var group: Array = board.board.find_group(Vector2i(x, y))
+			if group.size() > best.size():
+				best = group
+			if best.size() >= 4:
+				return best
+	return best
+
+func _add_control_highlight(control: Control) -> void:
+	if control == null:
+		return
+	_add_highlight_rect(control.get_global_rect().grow(6.0), 0)
+
+func _add_highlight_rect(rect: Rect2, index: int) -> void:
+	var highlight := Panel.new()
+	highlight.name = "Highlight"
+	highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(1.0, 0.58, 0.05, 0.10)
+	style.border_color = Color(1.0, 0.76, 0.18, 0.95)
+	style.border_width_left = 4
+	style.border_width_top = 4
+	style.border_width_right = 4
+	style.border_width_bottom = 4
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_left = 10
+	style.corner_radius_bottom_right = 10
+	highlight.add_theme_stylebox_override("panel", style)
+	highlight.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	highlight.global_position = rect.position
+	highlight.size = rect.size
+	_tutorial_overlay.add_child(highlight)
+	_tutorial_highlights.append(highlight)
+	if index <= 0:
+		return
+	var marker := Label.new()
+	marker.text = str(index)
+	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	marker.add_theme_font_size_override("font_size", Typography.px(22.0))
+	marker.add_theme_color_override("font_color", Color(0.06, 0.05, 0.03, 1.0))
+	marker.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	marker.global_position = rect.position + Vector2(6, 6)
+	marker.size = Vector2(34, 34)
+	_tutorial_overlay.add_child(marker)
+	_tutorial_highlights.append(marker)
+
+func _clear_tutorial_highlights() -> void:
+	for node in _tutorial_highlights:
+		if node and is_instance_valid(node):
+			node.queue_free()
+	_tutorial_highlights.clear()
 
 func _show_pure_mode_notice() -> void:
 	if _pure_mode_notice_shown:

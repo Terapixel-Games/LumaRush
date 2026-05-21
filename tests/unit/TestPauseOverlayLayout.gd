@@ -10,9 +10,11 @@ func test_pause_overlay_scales_for_wide_short_viewports() -> void:
 
 	var panel: Control = pause_overlay.get_node_or_null("Panel") as Control
 	var resume_button: Control = pause_overlay.get_node_or_null("VBox/Resume") as Control
+	var tutorial_button: Control = pause_overlay.get_node_or_null("VBox/Tutorial") as Control
 	var quit_button: Control = pause_overlay.get_node_or_null("VBox/Quit") as Control
 	assert_that(panel).is_not_null()
 	assert_that(resume_button).is_not_null()
+	assert_that(tutorial_button).is_not_null()
 	assert_that(quit_button).is_not_null()
 
 	var viewport_sizes: Array[Vector2] = [
@@ -30,9 +32,11 @@ func test_pause_overlay_scales_for_wide_short_viewports() -> void:
 		var viewport_rect := Rect2(Vector2.ZERO, pause_overlay.get_viewport_rect().size)
 		var panel_rect: Rect2 = panel.get_global_rect()
 		var resume_rect: Rect2 = resume_button.get_global_rect()
+		var tutorial_rect: Rect2 = tutorial_button.get_global_rect()
 		var quit_rect: Rect2 = quit_button.get_global_rect()
 		_assert_rect_inside(panel_rect, viewport_rect)
 		_assert_rect_inside(resume_rect, panel_rect)
+		_assert_rect_inside(tutorial_rect, panel_rect)
 		_assert_rect_inside(quit_rect, panel_rect)
 		var expected_center: Vector2 = pause_overlay.global_position + viewport_rect.get_center()
 		var panel_center: Vector2 = panel_rect.get_center()
