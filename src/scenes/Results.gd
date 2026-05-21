@@ -49,12 +49,14 @@ func _ready() -> void:
 	ThemeManager.apply_to_scene(self)
 	_apply_neon_run_deck()
 	_apply_results_copy()
-	_refresh_audio_icon()
-	_layout_results()
-	call_deferred("_layout_results")
+	_disable_menu_loop()
 	_ensure_dynamic_stats()
+	_apply_direct_loop_mode()
+	_refresh_audio_icon()
 	_refresh_intro_pivots()
 	_update_labels()
+	_layout_results()
+	call_deferred("_layout_results")
 	call_deferred("_reset_scroll_top")
 	_bind_online_signals()
 	_sync_online_results()
@@ -115,7 +117,7 @@ func _on_play_again_pressed() -> void:
 func _on_menu_pressed() -> void:
 	_close_audio_overlay()
 	AdManager.maybe_show_interstitial()
-	RunManager.goto_menu()
+	RunManager.start_game()
 
 func _play_intro() -> void:
 	var ui: CanvasItem = $UI
@@ -127,7 +129,8 @@ func _play_intro() -> void:
 	panel_item.scale = Vector2(0.9, 0.9)
 	box_item.scale = Vector2(0.95, 0.95)
 	play_again.modulate.a = 0.0
-	menu.modulate.a = 0.0
+	if menu_button and menu_button.visible:
+		menu.modulate.a = 0.0
 	if is_instance_valid(_intro_tween):
 		_intro_tween.kill()
 	_intro_tween = create_tween()
@@ -135,7 +138,8 @@ func _play_intro() -> void:
 	_intro_tween.parallel().tween_property(panel_item, "scale", Vector2.ONE, 0.38).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_intro_tween.parallel().tween_property(box_item, "scale", Vector2.ONE, 0.34).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_intro_tween.tween_property(play_again, "modulate:a", 1.0, 0.16)
-	_intro_tween.tween_property(menu, "modulate:a", 1.0, 0.16)
+	if menu_button and menu_button.visible:
+		_intro_tween.tween_property(menu, "modulate:a", 1.0, 0.16)
 
 func _stop_intro_animation() -> void:
 	if is_instance_valid(_intro_tween):
@@ -150,7 +154,7 @@ func _stop_intro_animation() -> void:
 		box.scale = Vector2.ONE
 	if play_again_button:
 		play_again_button.modulate.a = 1.0
-	if menu_button:
+	if menu_button and menu_button.visible:
 		menu_button.modulate.a = 1.0
 
 func _refresh_intro_pivots() -> void:
@@ -179,9 +183,10 @@ func _layout_results_for_size(viewport_size: Vector2) -> void:
 	var target_panel_width: float = viewport_size.x * ArcadeResponsiveLayout.results_panel_width_ratio(viewport_size)
 	var panel_width: float = clamp(target_panel_width, min_panel_width, min(1320.0, max_panel_width))
 	var max_panel_height: float = max(320.0, viewport_size.y - (outer_margin_y * 2.0))
-	var min_panel_height: float = min(460.0, max_panel_height)
-	var target_panel_height: float = viewport_size.y * (0.36 if is_wide else ArcadeResponsiveLayout.results_panel_height_ratio(viewport_size))
-	var panel_height_cap: float = max_panel_height if not is_wide else min(max_panel_height, viewport_size.y * 0.86)
+	var direct_loop_mode: bool = _is_direct_loop_mode()
+	var min_panel_height: float = min(300.0 if direct_loop_mode else 460.0, max_panel_height)
+	var target_panel_height: float = viewport_size.y * (0.34 if is_wide else 0.42) if direct_loop_mode else viewport_size.y * (0.36 if is_wide else ArcadeResponsiveLayout.results_panel_height_ratio(viewport_size))
+	var panel_height_cap: float = min(max_panel_height, viewport_size.y * (0.58 if direct_loop_mode else 0.86)) if is_wide or direct_loop_mode else max_panel_height
 	var panel_height: float = clamp(target_panel_height, min_panel_height, panel_height_cap)
 	var panel_size: Vector2 = Vector2(panel_width, panel_height)
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -212,10 +217,11 @@ func _layout_results_for_size(viewport_size: Vector2) -> void:
 		var primary_min: float = 44.0 if compact_mode else 40.0
 		var secondary_button_height: float = clamp(content_size.y * (0.052 if is_wide else 0.05) * compact_scale, secondary_min, 58.0)
 		var primary_button_height: float = clamp(content_size.y * (0.082 if is_wide else 0.074) * compact_scale, primary_min, 82.0)
-		double_reward_button.custom_minimum_size.y = secondary_button_height
+		if double_reward_button and double_reward_button.visible:
+			double_reward_button.custom_minimum_size.y = secondary_button_height
 		if play_again_button:
 			play_again_button.custom_minimum_size.y = primary_button_height
-		if menu_button:
+		if menu_button and menu_button.visible:
 			menu_button.custom_minimum_size.y = primary_button_height
 		if spacer:
 			var spacer_ratio: float = 0.003 if compact_mode else 0.008
@@ -352,7 +358,7 @@ func _apply_responsive_typography(
 		double_reward_button.add_theme_font_size_override("font_size", reward_button_size)
 	if play_again_button:
 		play_again_button.add_theme_font_size_override("font_size", primary_button_size)
-	if menu_button:
+	if menu_button and menu_button.visible:
 		menu_button.add_theme_font_size_override("font_size", primary_button_size)
 
 func _apply_results_copy() -> void:
@@ -361,9 +367,51 @@ func _apply_results_copy() -> void:
 	if play_again_button:
 		play_again_button.text = "NEXT RUN"
 	if menu_button:
-		menu_button.text = "RUN DECK"
+		menu_button.text = "NEXT RUN"
 	if double_reward_button:
 		double_reward_button.text = "DOUBLE BANK"
+
+func _disable_menu_loop() -> void:
+	if menu_button == null:
+		return
+	menu_button.visible = false
+	menu_button.disabled = true
+	menu_button.focus_mode = Control.FOCUS_NONE
+
+func _is_direct_loop_mode() -> bool:
+	return menu_button == null or not menu_button.visible
+
+func _apply_direct_loop_mode() -> void:
+	if kicker_label:
+		kicker_label.visible = false
+	if mode_badge_label:
+		mode_badge_label.visible = false
+	if streak_label:
+		streak_label.visible = false
+	if online_status_label:
+		online_status_label.visible = false
+	if leaderboard_label:
+		leaderboard_label.visible = false
+	if coins_earned_label:
+		coins_earned_label.visible = false
+	if coin_balance_label:
+		coin_balance_label.visible = false
+	if double_reward_button:
+		double_reward_button.visible = false
+		double_reward_button.disabled = true
+		double_reward_button.focus_mode = Control.FOCUS_NONE
+	if _powerups_label:
+		_powerups_label.visible = false
+	if _encouragement_label:
+		_encouragement_label.visible = false
+	if _unlock_progress:
+		_unlock_progress.visible = false
+	if _dual_leaderboard_label:
+		_dual_leaderboard_label.visible = false
+	if _weekly_ladder_label:
+		_weekly_ladder_label.visible = false
+	if _rival_target_label:
+		_rival_target_label.visible = false
 
 func _bind_online_signals() -> void:
 	if not NakamaService.online_state_changed.is_connected(_on_online_state_changed):
@@ -416,6 +464,8 @@ func _sync_wallet_rewards() -> void:
 	coin_balance_label.text = "VAULT %d" % NakamaService.get_coin_balance()
 	coins_earned_label.text = "BANK +%d" % _base_reward_amount
 	double_reward_button.disabled = not RunManager.last_run_completed_by_gameplay
+	if _is_direct_loop_mode():
+		_apply_direct_loop_mode()
 
 func _on_double_reward_pressed() -> void:
 	if not RunManager.last_run_completed_by_gameplay:
@@ -602,6 +652,9 @@ func _move_before_spacer(node: Control) -> void:
 	box.move_child(node, max(0, spacer_index))
 
 func _set_compact_optional_rows(compact_mode: bool) -> void:
+	if _is_direct_loop_mode():
+		_apply_direct_loop_mode()
+		return
 	if _encouragement_label:
 		_encouragement_label.visible = not compact_mode
 	if _unlock_progress:

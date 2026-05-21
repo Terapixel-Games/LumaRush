@@ -35,6 +35,8 @@ func test_results_actions_stay_inside_panel_on_wide_short_viewports() -> void:
 	assert_that(score).is_not_null()
 	assert_that(play_again).is_not_null()
 	assert_that(menu).is_not_null()
+	assert_that(menu.visible).is_false()
+	assert_that(menu.disabled).is_true()
 	assert_that(audio_button).is_not_null()
 
 	var viewport_sizes: Array[Vector2] = [
@@ -51,11 +53,9 @@ func test_results_actions_stay_inside_panel_on_wide_short_viewports() -> void:
 		await get_tree().process_frame
 		var panel_rect: Rect2 = panel.get_global_rect()
 		var play_rect: Rect2 = play_again.get_global_rect()
-		var menu_rect: Rect2 = menu.get_global_rect()
 		var audio_rect: Rect2 = audio_button.get_global_rect()
 		var viewport_rect := Rect2(Vector2.ZERO, results.get_viewport_rect().size)
 		_assert_rect_inside(play_rect, panel_rect)
-		_assert_rect_inside(menu_rect, panel_rect)
 		_assert_rect_inside(audio_rect, viewport_rect)
 		if viewport_rect.size.x / max(1.0, viewport_rect.size.y) >= 1.45:
 			assert_that(panel_rect.size.x).is_greater_equal(viewport_rect.size.x * 0.62)

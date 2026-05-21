@@ -15,13 +15,13 @@ func _ready() -> void:
 	_configure_window_for_display()
 	MusicManager.start_all_synced()
 	_play_logo_sting()
-	call_deferred("_go_menu")
+	call_deferred("_go_game")
 
-func _go_menu() -> void:
+func _go_game() -> void:
 	if not _is_headless_runtime():
 		await get_tree().create_timer(LOGO_STING_SECONDS).timeout
 	Telemetry.mark_scene_loaded("boot", _boot_started_msec)
-	RunManager.goto_menu()
+	RunManager.start_game()
 
 func _play_logo_sting() -> void:
 	var layer := CanvasLayer.new()

@@ -33,7 +33,7 @@ var _run_started_at_unix: int = 0
 var _pending_daily_seed: int = -1
 
 func goto_menu() -> void:
-	get_tree().change_scene_to_file(MENU_SCENE)
+	start_game()
 
 func start_game() -> void:
 	last_run_selected_mode = SaveStore.get_preferred_mode()
