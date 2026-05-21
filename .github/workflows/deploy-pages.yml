@@ -30,7 +30,7 @@ jobs:
         run: |
           set -euxo pipefail
           sudo apt-get update
-          sudo apt-get install -y unzip wget
+          sudo apt-get install -y unzip wget xvfb
           GODOT_BASE="Godot_v${GODOT_VERSION}-${GODOT_STATUS}"
           HEADLESS_ZIP="${GODOT_BASE}_linux.x86_64.zip"
           wget -O /tmp/godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_STATUS}/${HEADLESS_ZIP}"
@@ -42,7 +42,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          bash ./addons/gdUnit4/runtest.sh --godot_binary "$GODOT_BIN" -a tests --ignoreHeadlessMode
+          xvfb-run -a bash ./addons/gdUnit4/runtest.sh --godot_binary "$GODOT_BIN" -a tests --ignoreHeadlessMode
 
       - name: Run Nakama Module Tests
         shell: bash
