@@ -1,6 +1,5 @@
 extends Node
 
-const LOGO_STING_SECONDS := 0.75
 const VIEWPORT_WIDTH_SETTING := "display/window/size/viewport_width"
 const VIEWPORT_HEIGHT_SETTING := "display/window/size/viewport_height"
 const WindowSizing := preload("res://src/core/WindowSizing.gd")
@@ -14,36 +13,11 @@ func _ready() -> void:
 		return
 	_configure_window_for_display()
 	MusicManager.start_all_synced()
-	_play_logo_sting()
 	call_deferred("_go_game")
 
 func _go_game() -> void:
-	if not _is_headless_runtime():
-		await get_tree().create_timer(LOGO_STING_SECONDS).timeout
 	Telemetry.mark_scene_loaded("boot", _boot_started_msec)
 	RunManager.start_game()
-
-func _play_logo_sting() -> void:
-	var layer := CanvasLayer.new()
-	layer.name = "LogoStingLayer"
-	add_child(layer)
-	var label := Label.new()
-	label.text = "TeraPixel"
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.anchor_right = 1.0
-	label.anchor_bottom = 1.0
-	label.add_theme_font_size_override("font_size", 72)
-	label.add_theme_color_override("font_color", Color(0.92, 0.98, 1.0, 1.0))
-	label.modulate.a = 0.0
-	layer.add_child(label)
-	var tween := create_tween()
-	tween.tween_property(label, "modulate:a", 1.0, 0.2)
-	tween.tween_property(label, "modulate:a", 0.0, 0.4)
-	tween.finished.connect(func() -> void:
-		if is_instance_valid(layer):
-			layer.queue_free()
-	)
 
 func _is_headless_runtime() -> bool:
 	return DisplayServer.get_name() == "headless" or OS.has_feature("dedicated_server")

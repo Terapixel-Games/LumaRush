@@ -1,10 +1,14 @@
 extends GdUnitTestSuite
 
-func test_boot_routes_to_game_after_sting() -> void:
+func test_boot_routes_to_game_without_splash_delay() -> void:
 	var source := FileAccess.get_file_as_string("res://src/scenes/Boot.gd")
 	assert_that(source).contains('call_deferred("_go_game")')
 	assert_that(source).contains("RunManager.start_game()")
 	assert_that(source).not_contains("RunManager.goto_menu()")
+	assert_that(source).not_contains("LOGO_STING_SECONDS")
+	assert_that(source).not_contains("_play_logo_sting")
+	assert_that(source).not_contains("TeraPixel")
+	assert_that(source).not_contains("create_timer")
 
 func test_legacy_menu_route_starts_game() -> void:
 	var source := FileAccess.get_file_as_string("res://src/core/RunManager.gd")
