@@ -820,6 +820,7 @@ func _layout_top_bar(view_size: Vector2, content_left: float, content_width: flo
 	top_bar.add_theme_constant_override("separation", int(round(clamp(content_width * 0.016, 10.0, 20.0))))
 	if score_box:
 		score_box.custom_minimum_size.y = content_height
+		score_box.alignment = BoxContainer.ALIGNMENT_CENTER
 		score_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		score_box.add_theme_constant_override("separation", int(round(clamp(content_height * 0.02, 2.0, 5.0))))
 	if pause_button:
