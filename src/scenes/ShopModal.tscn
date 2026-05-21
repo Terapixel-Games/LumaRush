@@ -180,13 +180,13 @@ text = "Close"
 custom_minimum_size = Vector2(0, 0)
 mouse_filter = 2
 
-[node name="Label" type="Label" parent="Panel/VBox/Scroll/Content/CoinPacksHeader"]
+[node name="Label" parent="Panel/VBox/Scroll/Content/CoinPacksHeader" index="1"]
 text = "Coin Packs"
 
-[node name="Label" type="Label" parent="Panel/VBox/Scroll/Content/ThemesHeader"]
+[node name="Label" parent="Panel/VBox/Scroll/Content/ThemesHeader" index="1"]
 text = "Visual Themes"
 
-[node name="Label" type="Label" parent="Panel/VBox/Scroll/Content/PowerupsHeader"]
+[node name="Label" parent="Panel/VBox/Scroll/Content/PowerupsHeader" index="1"]
 text = "Run Tools"
 
 [node name="Icon" parent="Panel/VBox/Scroll/Content/CoinPacks/Pack0/Margin/Row" index="0"]
