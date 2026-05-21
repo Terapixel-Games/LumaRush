@@ -74,6 +74,7 @@ const AUDIO_TRACK_OVERLAY_SCENE := preload("res://src/scenes/AudioTrackOverlay.t
 const ICON_MUSIC_ON: Texture2D = preload("res://assets/ui/icons/atlas/music_on.tres")
 const ICON_MUSIC_OFF: Texture2D = preload("res://assets/ui/icons/atlas/music_off.tres")
 const TUTORIAL_TIP_SCENE := preload("res://addons/arcade_core/ui/TutorialTipModal.tscn")
+const TUTORIAL_TEMPLATE := preload("res://addons/arcade_core/ui/ArcadeTutorialTemplate.gd")
 const HUD_MAX_WIDTH: float = 760.0
 const HUD_MAX_WIDTH_LANDSCAPE: float = 1100.0
 const POWERUPS_MAX_WIDTH: float = 700.0
@@ -85,7 +86,6 @@ const TUTORIAL_STEP_UNDO: int = 2
 const TUTORIAL_STEP_PRISM: int = 3
 const TUTORIAL_STEP_HINT: int = 4
 const TUTORIAL_STEP_DONE: int = 5
-const TUTORIAL_BUTTON_HEIGHT: float = 56.0
 
 func _ready() -> void:
 	var stale_overlay: Node = get_node_or_null("RunEndOverlay")
@@ -979,30 +979,13 @@ func _show_tutorial(force: bool = false) -> void:
 	_tutorial_panel.name = "Panel"
 	_tutorial_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	_tutorial_panel.gui_input.connect(Callable(self, "_on_tutorial_gui_input"))
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.045, 0.065, 0.14, 0.94)
-	style.border_color = Color(0.68, 0.95, 1.0, 0.82)
-	style.border_width_left = 2
-	style.border_width_top = 2
-	style.border_width_right = 2
-	style.border_width_bottom = 2
-	style.corner_radius_top_left = 18
-	style.corner_radius_top_right = 18
-	style.corner_radius_bottom_left = 18
-	style.corner_radius_bottom_right = 18
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.38)
-	style.shadow_size = 14
-	style.shadow_offset = Vector2(0, 8)
-	_tutorial_panel.add_theme_stylebox_override("panel", style)
+	TUTORIAL_TEMPLATE.style_panel(_tutorial_panel)
 	_tutorial_overlay.add_child(_tutorial_panel)
 
 	var margin := MarginContainer.new()
 	margin.name = "Margin"
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 22)
-	margin.add_theme_constant_override("margin_top", 18)
-	margin.add_theme_constant_override("margin_right", 22)
-	margin.add_theme_constant_override("margin_bottom", 18)
+	TUTORIAL_TEMPLATE.apply_margins(margin)
 	_tutorial_panel.add_child(margin)
 	var box := VBoxContainer.new()
 	box.name = "VBox"
@@ -1010,18 +993,11 @@ func _show_tutorial(force: bool = false) -> void:
 	margin.add_child(box)
 	_tutorial_title = Label.new()
 	_tutorial_title.name = "Title"
-	_tutorial_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_tutorial_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_tutorial_title.add_theme_font_size_override("font_size", Typography.px(24.0))
-	_tutorial_title.add_theme_color_override("font_color", Color(1.0, 0.96, 0.76, 1.0))
+	TUTORIAL_TEMPLATE.style_label(_tutorial_title, true)
 	box.add_child(_tutorial_title)
 	_tutorial_message = Label.new()
 	_tutorial_message.name = "Message"
-	_tutorial_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_tutorial_message.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_tutorial_message.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_tutorial_message.add_theme_font_size_override("font_size", Typography.px(20.0))
-	_tutorial_message.add_theme_color_override("font_color", Color(0.93, 0.97, 1.0, 0.98))
+	TUTORIAL_TEMPLATE.style_label(_tutorial_message, false)
 	box.add_child(_tutorial_message)
 	var buttons := HBoxContainer.new()
 	buttons.name = "Buttons"
@@ -1030,48 +1006,18 @@ func _show_tutorial(force: bool = false) -> void:
 	_tutorial_skip_button = Button.new()
 	_tutorial_skip_button.name = "Skip"
 	_tutorial_skip_button.text = "Skip Tutorial"
-	_tutorial_skip_button.custom_minimum_size = Vector2(166, TUTORIAL_BUTTON_HEIGHT)
-	_tutorial_skip_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_style_tutorial_button(_tutorial_skip_button, false)
+	TUTORIAL_TEMPLATE.style_button(_tutorial_skip_button, false)
 	_tutorial_skip_button.pressed.connect(Callable(self, "_on_tutorial_skip_pressed"))
 	buttons.add_child(_tutorial_skip_button)
 	_tutorial_next_button = Button.new()
 	_tutorial_next_button.name = "Next"
 	_tutorial_next_button.text = "Next"
-	_tutorial_next_button.custom_minimum_size = Vector2(136, TUTORIAL_BUTTON_HEIGHT)
-	_tutorial_next_button.size_flags_horizontal = Control.SIZE_SHRINK_END
-	_style_tutorial_button(_tutorial_next_button, true)
+	TUTORIAL_TEMPLATE.style_button(_tutorial_next_button, true)
 	_tutorial_next_button.pressed.connect(Callable(self, "_on_tutorial_next_pressed"))
 	buttons.add_child(_tutorial_next_button)
 	_update_tutorial_step()
 	_layout_tutorial_overlay()
 	_play_tutorial_step_motion()
-
-func _style_tutorial_button(button: Button, primary: bool) -> void:
-	button.focus_mode = Control.FOCUS_NONE
-	button.clip_text = false
-	button.add_theme_font_size_override("font_size", Typography.px(15.0 if primary else 14.0))
-	button.add_theme_color_override("font_color", Color(0.06, 0.08, 0.12, 1.0) if primary else Color(0.88, 0.96, 1.0, 1.0))
-	button.add_theme_color_override("font_hover_color", Color(0.03, 0.05, 0.08, 1.0) if primary else Color(1.0, 1.0, 1.0, 1.0))
-	button.add_theme_color_override("font_pressed_color", Color(0.02, 0.03, 0.05, 1.0) if primary else Color(0.95, 0.98, 1.0, 1.0))
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(1.0, 0.82, 0.22, 0.96) if primary else Color(0.08, 0.13, 0.22, 0.82)
-	normal.border_color = Color(1.0, 0.94, 0.54, 0.95) if primary else Color(0.45, 0.83, 1.0, 0.55)
-	normal.border_width_left = 2
-	normal.border_width_top = 2
-	normal.border_width_right = 2
-	normal.border_width_bottom = 2
-	normal.corner_radius_top_left = 14
-	normal.corner_radius_top_right = 14
-	normal.corner_radius_bottom_left = 14
-	normal.corner_radius_bottom_right = 14
-	button.add_theme_stylebox_override("normal", normal)
-	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = Color(1.0, 0.9, 0.34, 1.0) if primary else Color(0.11, 0.18, 0.3, 0.92)
-	button.add_theme_stylebox_override("hover", hover)
-	var pressed := normal.duplicate() as StyleBoxFlat
-	pressed.bg_color = Color(0.95, 0.68, 0.16, 1.0) if primary else Color(0.05, 0.1, 0.18, 0.92)
-	button.add_theme_stylebox_override("pressed", pressed)
 
 func _on_tutorial_next_pressed() -> void:
 	_advance_tutorial_step()
@@ -1159,51 +1105,28 @@ func _layout_tutorial_overlay() -> void:
 	if _tutorial_panel == null:
 		return
 	var view_size: Vector2 = get_viewport_rect().size
-	var early_step: bool = _tutorial_step <= 1
-	var panel_width: float = clamp(view_size.x * (0.68 if early_step else 0.62), 380.0, 680.0)
-	var panel_height: float = clamp(view_size.y * (0.25 if early_step else 0.22), 208.0 if early_step else 184.0, 292.0 if early_step else 260.0)
-	var panel_x: float = (view_size.x - panel_width) * 0.5
-	var panel_y: float = view_size.y - panel_height - clamp(view_size.y * 0.16, 120.0, 170.0)
 	var top_limit: float = _tutorial_top_limit()
 	var bottom_limit: float = view_size.y - 18.0
 	if powerups_row and _is_tutorial_powerup_step():
 		bottom_limit = min(bottom_limit, powerups_row.global_position.y - 18.0)
-	if early_step and board:
-		panel_height = _tutorial_panel_height_for_width(panel_width, panel_height, view_size)
-		var board_top: float = board.global_position.y
-		panel_y = board_top - panel_height - clamp(view_size.y * 0.025, 18.0, 34.0)
-		if panel_y < top_limit:
-			panel_y = min(
-				view_size.y - panel_height - 24.0,
-				board_top + (float(board.height) * board.tile_size) + 18.0
-			)
-	elif _is_tutorial_powerup_step() and board:
-		var board_right: float = board.global_position.x + (float(board.width) * board.tile_size)
-		var side_gap: float = clamp(view_size.x * 0.035, 32.0, 72.0)
-		var side_margin: float = 18.0
-		var right_space: float = view_size.x - board_right - side_gap - side_margin
-		var left_space: float = board.global_position.x - side_gap - side_margin
-		var can_place_right: bool = right_space >= 300.0
-		var can_place_left: bool = left_space >= 300.0
-		if can_place_right or can_place_left:
-			panel_width = min(560.0, max(300.0, right_space if can_place_right else left_space))
-			panel_x = board_right + side_gap if can_place_right else board.global_position.x - side_gap - panel_width
-		else:
-			panel_width = clamp(view_size.x * 0.76, 360.0, 680.0)
-			panel_x = (view_size.x - panel_width) * 0.5
-		panel_height = _tutorial_panel_height_for_width(panel_width, clamp(view_size.y * 0.26, 240.0, 330.0), view_size)
-		panel_y = clamp(
-			bottom_limit - panel_height,
-			top_limit,
-			max(top_limit, view_size.y - panel_height - 18.0)
+	var board_rect := Rect2()
+	if board:
+		board_rect = Rect2(
+			board.global_position,
+			Vector2(float(board.width) * board.tile_size, float(board.height) * board.tile_size)
 		)
-	else:
-		panel_height = _tutorial_panel_height_for_width(panel_width, panel_height, view_size)
-	panel_x = clamp(panel_x, 18.0, max(18.0, view_size.x - panel_width - 18.0))
-	panel_y = clamp(panel_y, top_limit, max(top_limit, view_size.y - panel_height - 18.0))
+	var layout: Dictionary = TUTORIAL_TEMPLATE.layout_panel({
+		"view_size": view_size,
+		"board_rect": board_rect,
+		"top_limit": top_limit,
+		"bottom_limit": bottom_limit,
+		"early_step": _tutorial_step <= 1,
+		"powerup_step": _is_tutorial_powerup_step(),
+		"message": _tutorial_message.text if _tutorial_message else "",
+	})
 	_tutorial_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_tutorial_panel.position = Vector2(panel_x, panel_y)
-	_tutorial_panel.size = Vector2(panel_width, panel_height)
+	_tutorial_panel.position = layout["position"]
+	_tutorial_panel.size = layout["size"]
 	_tutorial_panel.pivot_offset = _tutorial_panel.size * 0.5
 	if _tutorial_next_button:
 		_tutorial_next_button.pivot_offset = _tutorial_next_button.size * 0.5
@@ -1216,18 +1139,6 @@ func _tutorial_top_limit() -> float:
 	if top_bar_bg:
 		top_limit = max(top_limit, top_bar_bg.global_position.y + top_bar_bg.size.y + 14.0)
 	return top_limit
-
-func _tutorial_panel_height_for_width(panel_width: float, base_height: float, view_size: Vector2) -> float:
-	if _tutorial_message == null:
-		return base_height
-	var inner_width: float = max(180.0, panel_width - 44.0)
-	var message_size: float = float(Typography.px(20.0))
-	var chars_per_line: int = max(20, int(floor(inner_width / max(8.0, message_size * 0.52))))
-	var line_count: int = max(1, int(ceil(float(_tutorial_message.text.length()) / float(chars_per_line))))
-	var title_height: float = float(Typography.px(30.0))
-	var message_height: float = float(line_count) * float(Typography.px(26.0))
-	var required_height: float = 36.0 + title_height + 24.0 + message_height + TUTORIAL_BUTTON_HEIGHT
-	return clamp(max(base_height, required_height), 190.0, max(190.0, view_size.y - _tutorial_top_limit() - 36.0))
 
 func _refresh_tutorial_highlights() -> void:
 	_clear_tutorial_highlights()
@@ -1322,18 +1233,7 @@ func _add_highlight_rect(rect: Rect2, index: int) -> void:
 	var highlight := Panel.new()
 	highlight.name = "Highlight"
 	highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(1.0, 0.58, 0.05, 0.10)
-	style.border_color = Color(1.0, 0.76, 0.18, 0.95)
-	style.border_width_left = 4
-	style.border_width_top = 4
-	style.border_width_right = 4
-	style.border_width_bottom = 4
-	style.corner_radius_top_left = 10
-	style.corner_radius_top_right = 10
-	style.corner_radius_bottom_left = 10
-	style.corner_radius_bottom_right = 10
-	highlight.add_theme_stylebox_override("panel", style)
+	TUTORIAL_TEMPLATE.style_highlight(highlight)
 	highlight.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	highlight.global_position = rect.position
 	highlight.size = rect.size
