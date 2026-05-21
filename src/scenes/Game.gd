@@ -344,12 +344,20 @@ func _update_powerup_buttons() -> void:
 	_update_badge(prism_badge_panel, prism_badge, _remove_color_charges, _pending_powerup_refill_type == "prism", prism_hint)
 	_update_badge(hint_badge_panel, hint_badge, _hint_charges, _pending_powerup_refill_type == "hint")
 	if _pure_mode_locked:
-		undo_button.disabled = true
-		remove_color_button.disabled = true
-		hint_button.disabled = true
-		undo_button.tooltip_text = "PURE mode disables powerups"
-		remove_color_button.tooltip_text = "PURE mode disables powerups"
-		hint_button.tooltip_text = "PURE mode disables powerups"
+		if _is_teaching_powerups():
+			undo_button.disabled = false
+			remove_color_button.disabled = false
+			hint_button.disabled = false
+			undo_button.tooltip_text = "Undo"
+			remove_color_button.tooltip_text = "Prism"
+			hint_button.tooltip_text = "Hint"
+		else:
+			undo_button.disabled = true
+			remove_color_button.disabled = true
+			hint_button.disabled = true
+			undo_button.tooltip_text = "PURE mode disables powerups"
+			remove_color_button.tooltip_text = "PURE mode disables powerups"
+			hint_button.tooltip_text = "PURE mode disables powerups"
 	else:
 		undo_button.disabled = (_undo_charges > 0 and _undo_stack.is_empty()) or _is_other_refill_pending("undo") or _prism_selecting
 		remove_color_button.disabled = _is_other_refill_pending("prism")
@@ -1063,6 +1071,7 @@ func _close_tutorial(mark_seen: bool) -> void:
 	_tutorial_message = null
 	_tutorial_next_button = null
 	_tutorial_skip_button = null
+	_update_powerup_buttons()
 	if mark_seen:
 		SaveStore.set_tutorial_seen(true)
 
@@ -1099,6 +1108,7 @@ func _update_tutorial_step() -> void:
 	else:
 		_tutorial_next_button.text = "Next"
 	_tutorial_overlay.mouse_filter = Control.MOUSE_FILTER_STOP if _is_tutorial_click_to_continue_step() else Control.MOUSE_FILTER_IGNORE
+	_update_powerup_buttons()
 	_refresh_tutorial_highlights()
 
 func _layout_tutorial_overlay() -> void:
@@ -1215,6 +1225,9 @@ func _set_tutorial_focus_target(target: Control) -> void:
 
 func _is_tutorial_powerup_step() -> bool:
 	return _tutorial_step == TUTORIAL_STEP_UNDO or _tutorial_step == TUTORIAL_STEP_PRISM or _tutorial_step == TUTORIAL_STEP_HINT
+
+func _is_teaching_powerups() -> bool:
+	return _tutorial_overlay != null and is_instance_valid(_tutorial_overlay) and _is_tutorial_powerup_step()
 
 func _is_tutorial_click_to_continue_step() -> bool:
 	return _tutorial_step >= TUTORIAL_STEP_UNDO

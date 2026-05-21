@@ -1,12 +1,15 @@
 extends GdUnitTestSuite
 
 var _original_tutorial_seen: bool = false
+var _original_mode: String = "PURE"
 
 func before_test() -> void:
 	_original_tutorial_seen = SaveStore.is_tutorial_seen()
+	_original_mode = RunManager.get_selected_mode()
 
 func after_test() -> void:
 	SaveStore.set_tutorial_seen(_original_tutorial_seen)
+	RunManager.set_selected_mode(_original_mode, "test")
 
 func test_first_run_tutorial_teaches_board_music_and_powerups() -> void:
 	SaveStore.set_tutorial_seen(false)
@@ -91,6 +94,41 @@ func test_powerup_tutorial_highlights_one_button_at_a_time() -> void:
 	next_button.pressed.emit()
 	assert_that(title.text).is_equal("Hint")
 	assert_that(_highlight_count(overlay)).is_equal(1)
+	game.queue_free()
+
+func test_powerup_tutorial_does_not_show_disabled_buttons_in_pure_mode() -> void:
+	RunManager.set_selected_mode("PURE", "test")
+	SaveStore.set_tutorial_seen(false)
+	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
+	var game: Control = scene.instantiate() as Control
+	assert_that(game).is_not_null()
+	get_tree().root.add_child(game)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var overlay: Control = game.get_node_or_null("UI/TutorialOverlay") as Control
+	var title: Label = overlay.get_node_or_null("Panel/Margin/VBox/Title") as Label
+	var next_button: Button = overlay.get_node_or_null("Panel/Margin/VBox/Buttons/Next") as Button
+	var undo_button: Button = game.get_node_or_null("UI/Powerups/Undo") as Button
+	var prism_button: Button = game.get_node_or_null("UI/Powerups/RemoveColor") as Button
+	var hint_button: Button = game.get_node_or_null("UI/Powerups/Hint") as Button
+	assert_that(undo_button.disabled).is_true()
+	next_button.pressed.emit()
+	next_button.pressed.emit()
+	assert_that(title.text).is_equal("Undo")
+	assert_that(undo_button.disabled).is_false()
+	assert_that(prism_button.disabled).is_false()
+	assert_that(hint_button.disabled).is_false()
+	assert_that(undo_button.tooltip_text).is_equal("Undo")
+
+	next_button.pressed.emit()
+	next_button.pressed.emit()
+	next_button.pressed.emit()
+	next_button.pressed.emit()
+	await get_tree().process_frame
+	assert_that(game.get_node_or_null("UI/TutorialOverlay")).is_null()
+	assert_that(undo_button.disabled).is_true()
+	assert_that(undo_button.tooltip_text).is_equal("PURE mode disables powerups")
 	game.queue_free()
 
 func test_powerup_tutorial_panel_keeps_text_and_buttons_in_bounds() -> void:
