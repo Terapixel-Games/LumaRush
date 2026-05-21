@@ -175,6 +175,65 @@ func test_shop_modal_input_contract_and_close() -> void:
 	assert_that(is_instance_valid(modal)).is_false()
 	await _free_node(host)
 
+func test_account_and_shop_modals_match_game_space_width_on_desktop() -> void:
+	var host := _create_root_host()
+	var account_scene: PackedScene = load("res://src/scenes/AccountModal.tscn")
+	var account_modal: Control = account_scene.instantiate() as Control
+	var shop_scene: PackedScene = load("res://src/scenes/ShopModal.tscn")
+	var shop_modal: Control = shop_scene.instantiate() as Control
+	assert_that(account_modal).is_not_null()
+	assert_that(shop_modal).is_not_null()
+	host.add_child(account_modal)
+	host.add_child(shop_modal)
+	await get_tree().process_frame
+
+	var desktop_size := Vector2(1920.0, 1080.0)
+	account_modal.call("_layout_modal_for_size", desktop_size)
+	shop_modal.call("_layout_modal_for_size", desktop_size)
+	await get_tree().process_frame
+
+	var account_panel: Control = account_modal.get_node("Panel") as Control
+	var shop_panel: Control = shop_modal.get_node("Panel") as Control
+	assert_that(account_panel.size.x).is_less_equal(1100.0)
+	assert_that(shop_panel.size.x).is_less_equal(1100.0)
+	assert_that(account_panel.size.x).is_greater(700.0)
+	assert_that(shop_panel.size.x).is_greater(700.0)
+	assert_that(account_panel.position.x).is_greater_equal(0.0)
+	assert_that(shop_panel.position.x).is_greater_equal(0.0)
+	assert_that(account_panel.position.x + account_panel.size.x).is_less_equal(desktop_size.x)
+	assert_that(shop_panel.position.x + shop_panel.size.x).is_less_equal(desktop_size.x)
+
+	await _free_node(host)
+
+func test_account_modal_expands_to_visible_content_without_desktop_scroll() -> void:
+	var original_user_id: String = SaveStore.get_terapixel_user_id()
+	var original_name: String = SaveStore.get_terapixel_display_name()
+	var original_email: String = SaveStore.get_terapixel_email()
+	SaveStore.set_terapixel_identity("profile_layout_1", "Layout", "layout@example.com")
+
+	var host := _create_root_host()
+	var modal_scene: PackedScene = load("res://src/scenes/AccountModal.tscn")
+	var modal: Control = modal_scene.instantiate() as Control
+	assert_that(modal).is_not_null()
+	host.add_child(modal)
+	await get_tree().process_frame
+
+	var desktop_size := Vector2(1920.0, 1080.0)
+	modal.call("_layout_modal_for_size", desktop_size)
+	await get_tree().process_frame
+
+	var panel: Control = modal.get_node("Panel") as Control
+	var scroll: ScrollContainer = modal.get_node("Panel/VBox/Scroll") as ScrollContainer
+	var content: Control = modal.get_node("Panel/VBox/Scroll/Content") as Control
+	var close_button: Button = modal.get_node("Panel/VBox/Footer/Close") as Button
+	assert_that(scroll.size.y).is_greater_equal(content.get_combined_minimum_size().y - 1.0)
+	assert_that(close_button.get_global_rect().position.y + close_button.get_global_rect().size.y).is_less_equal(panel.position.y + panel.size.y + 1.0)
+	assert_that(panel.position.y).is_greater_equal(0.0)
+	assert_that(panel.position.y + panel.size.y).is_less_equal(desktop_size.y)
+
+	await _free_node(host)
+	SaveStore.set_terapixel_identity(original_user_id, original_name, original_email)
+
 func test_account_modal_uses_username_label_not_bonus() -> void:
 	var host := _create_root_host()
 	var modal_scene: PackedScene = load("res://src/scenes/AccountModal.tscn")

@@ -20,6 +20,8 @@ const ICON_REGION_PRISM := Rect2(100, 1000, 100, 100)
 const ICON_REGION_UNDO := Rect2(200, 500, 100, 100)
 const ICON_REGION_HINT := Rect2(200, 600, 100, 100)
 const ICON_REGION_AD_VIDEO := Rect2(0, 1900, 100, 100)
+const GAME_SPACE_MAX_WIDTH := 760.0
+const GAME_SPACE_MAX_WIDTH_LANDSCAPE := 1100.0
 
 @onready var status_label: Label = $Panel/VBox/Status
 @onready var backdrop: ColorRect = $Backdrop
@@ -593,13 +595,8 @@ func _layout_modal_for_size(viewport_size: Vector2) -> void:
 	var is_wide: bool = viewport_aspect >= 1.5
 	var outer_margin_x: float = clamp(viewport_size.x * (0.03 if is_wide else 0.04), 18.0, 48.0)
 	var outer_margin_y: float = clamp(viewport_size.y * 0.04, 14.0, 30.0)
-	var panel_max_width_cap: float = 1460.0 if is_wide else viewport_size.x - 12.0
-	var panel_width: float = clamp(
-		viewport_size.x - (outer_margin_x * 2.0),
-		420.0,
-		min(panel_max_width_cap, viewport_size.x - 12.0)
-	)
-	var max_panel_height: float = clamp(viewport_size.y - (outer_margin_y * 2.0), 520.0, viewport_size.y - 12.0)
+	var panel_width: float = _game_space_panel_width(viewport_size, outer_margin_x)
+	var max_panel_height: float = min(max(360.0, viewport_size.y - (outer_margin_y * 2.0)), viewport_size.y - 12.0)
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	panel.size = Vector2(panel_width, max_panel_height)
 	panel.position = (viewport_size - panel.size) * 0.5
@@ -726,14 +723,29 @@ func _layout_modal_for_size(viewport_size: Vector2) -> void:
 	var scroll_content_height: float = 0.0
 	if scroll_content != null:
 		scroll_content_height = scroll_content.get_combined_minimum_size().y
-	if scroll_container != null:
-		scroll_container.custom_minimum_size.y = 0.0
 
 	var gap_count: int = max(0, visible_vbox_children - 1)
-	var inner_height_target: float = non_scroll_height + scroll_content_height + (vbox_separation * float(gap_count))
-	var target_panel_height: float = inner_height_target
+	var gaps_height: float = vbox_separation * float(gap_count)
+	var available_scroll_height: float = max(0.0, max_panel_height - non_scroll_height - gaps_height)
+	var scroll_view_height: float = min(scroll_content_height, available_scroll_height)
+	if scroll_container != null:
+		scroll_container.custom_minimum_size.y = scroll_view_height
+
+	var target_panel_height: float = non_scroll_height + scroll_view_height + gaps_height
 	panel.size = Vector2(panel_width, min(target_panel_height, max_panel_height))
 	panel.position = (viewport_size - panel.size) * 0.5
+
+func _game_space_panel_width(viewport_size: Vector2, outer_margin_x: float) -> float:
+	var available_width: float = max(0.0, viewport_size.x - (outer_margin_x * 2.0))
+	var target_content_width: float = viewport_size.x * ArcadeResponsiveLayout.gameplay_content_ratio(viewport_size)
+	var width_cap: float = ArcadeResponsiveLayout.gameplay_hud_max_width(
+		viewport_size,
+		GAME_SPACE_MAX_WIDTH,
+		GAME_SPACE_MAX_WIDTH_LANDSCAPE
+	)
+	var max_width: float = max(280.0, min(min(width_cap, viewport_size.x - 12.0), target_content_width))
+	var min_width: float = min(420.0, max_width)
+	return clamp(available_width, min_width, max_width)
 
 func _refresh_panel_pivot() -> void:
 	if panel == null:

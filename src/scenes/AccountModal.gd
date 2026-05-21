@@ -4,6 +4,8 @@ const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
 
 const EMAIL_MAX_LENGTH := 320
 const MERGE_CODE_MAX_LENGTH := 64
+const GAME_SPACE_MAX_WIDTH := 760.0
+const GAME_SPACE_MAX_WIDTH_LANDSCAPE := 1100.0
 
 @onready var status_label: Label = $Panel/VBox/Status
 @onready var backdrop: ColorRect = $Backdrop
@@ -419,12 +421,19 @@ func _layout_modal() -> void:
 	if panel == null or panel_vbox == null:
 		return
 	var viewport_size: Vector2 = get_viewport_rect().size
+	_layout_modal_for_size(viewport_size)
+
+func _layout_modal_for_size(viewport_size: Vector2) -> void:
+	if panel == null or panel_vbox == null:
+		return
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return
 
-	var outer_margin: float = clamp(viewport_size.x * 0.04, 18.0, 28.0)
-	var panel_width: float = clamp(viewport_size.x - (outer_margin * 2.0), 420.0, viewport_size.x - 12.0)
-	var max_panel_height: float = clamp(viewport_size.y - (outer_margin * 2.0), 520.0, viewport_size.y - 12.0)
+	var is_wide := ArcadeResponsiveLayout.is_wide(viewport_size)
+	var outer_margin_x: float = clamp(viewport_size.x * (0.03 if is_wide else 0.04), 18.0, 48.0)
+	var outer_margin_y: float = clamp(viewport_size.y * 0.04, 14.0, 30.0)
+	var panel_width: float = _game_space_panel_width(viewport_size, outer_margin_x)
+	var max_panel_height: float = min(max(280.0, viewport_size.y - (outer_margin_y * 2.0)), viewport_size.y - 12.0)
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	panel.size = Vector2(panel_width, max_panel_height)
 	panel.position = (viewport_size - panel.size) * 0.5
@@ -477,14 +486,29 @@ func _layout_modal() -> void:
 	var scroll_content_height: float = 0.0
 	if scroll_content != null:
 		scroll_content_height = scroll_content.get_combined_minimum_size().y
-	if scroll_container != null:
-		scroll_container.custom_minimum_size.y = 0.0
 
 	var gap_count: int = max(0, visible_vbox_children - 1)
-	var inner_height_target: float = non_scroll_height + scroll_content_height + (vbox_separation * float(gap_count))
-	var target_panel_height: float = inner_height_target
+	var gaps_height: float = vbox_separation * float(gap_count)
+	var available_scroll_height: float = max(0.0, max_panel_height - non_scroll_height - gaps_height)
+	var scroll_view_height: float = min(scroll_content_height, available_scroll_height)
+	if scroll_container != null:
+		scroll_container.custom_minimum_size.y = scroll_view_height
+
+	var target_panel_height: float = non_scroll_height + scroll_view_height + gaps_height
 	panel.size = Vector2(panel_width, min(target_panel_height, max_panel_height))
 	panel.position = (viewport_size - panel.size) * 0.5
+
+func _game_space_panel_width(viewport_size: Vector2, outer_margin_x: float) -> float:
+	var available_width: float = max(0.0, viewport_size.x - (outer_margin_x * 2.0))
+	var target_content_width: float = viewport_size.x * ArcadeResponsiveLayout.gameplay_content_ratio(viewport_size)
+	var width_cap: float = ArcadeResponsiveLayout.gameplay_hud_max_width(
+		viewport_size,
+		GAME_SPACE_MAX_WIDTH,
+		GAME_SPACE_MAX_WIDTH_LANDSCAPE
+	)
+	var max_width: float = max(280.0, min(min(width_cap, viewport_size.x - 12.0), target_content_width))
+	var min_width: float = min(420.0, max_width)
+	return clamp(available_width, min_width, max_width)
 
 func _apply_centered_content_width(path: String, width: float) -> void:
 	var control := get_node_or_null(path) as Control
