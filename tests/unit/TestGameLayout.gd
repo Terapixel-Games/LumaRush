@@ -20,6 +20,8 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 	var pause_button: Control = game.get_node_or_null("UI/TopBar/Pause") as Control
 	var pause_icon: Control = game.get_node_or_null("UI/TopBar/Pause/Center/PauseIcon") as Control
 	var top_bar_inner_highlight: Control = game.get_node_or_null("UI/TopBarBg/TopBarInnerHighlight") as Control
+	var account_button: Control = game.get_node_or_null("UI/TopRightBar/Account") as Control
+	var shop_button: Control = game.get_node_or_null("UI/TopRightBar/Shop") as Control
 	var audio_button: Control = game.get_node_or_null("UI/TopRightBar/Audio") as Control
 	var powerups_row: Control = game.get_node_or_null("UI/Powerups") as Control
 	var undo_button: Control = game.get_node_or_null("UI/Powerups/Undo") as Control
@@ -34,6 +36,8 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 	assert_that(pause_button).is_not_null()
 	assert_that(pause_icon).is_not_null()
 	assert_that(top_bar_inner_highlight).is_not_null()
+	assert_that(account_button).is_not_null()
+	assert_that(shop_button).is_not_null()
 	assert_that(audio_button).is_not_null()
 	assert_that(powerups_row).is_not_null()
 	assert_that(undo_button).is_not_null()
@@ -56,6 +60,8 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		var top_bg_rect: Rect2 = top_bar_bg.get_global_rect()
 		var top_rect: Rect2 = top_bar.get_global_rect()
 		var top_right_rect: Rect2 = top_right_bar.get_global_rect()
+		var account_rect: Rect2 = account_button.get_global_rect()
+		var shop_rect: Rect2 = shop_button.get_global_rect()
 		var audio_rect: Rect2 = audio_button.get_global_rect()
 		var score_box_rect: Rect2 = score_box.get_global_rect()
 		var score_caption_rect: Rect2 = score_caption.get_global_rect()
@@ -86,7 +92,11 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		_assert_rect_inside(score_value_rect, top_bg_rect)
 		_assert_rect_inside(pause_rect, top_bg_rect)
 		_assert_rect_inside(pause_icon_rect, pause_rect)
+		_assert_rect_inside(account_rect, top_right_rect)
+		_assert_rect_inside(shop_rect, top_right_rect)
 		_assert_rect_inside(audio_rect, top_right_rect)
+		assert_that(account_rect.position.x + account_rect.size.x).is_less_equal(shop_rect.position.x + 1.0)
+		assert_that(shop_rect.position.x + shop_rect.size.x).is_less_equal(audio_rect.position.x + 1.0)
 		_assert_rect_inside(powerups_rect, viewport_rect)
 		_assert_rect_inside(undo_rect, viewport_rect)
 		assert_that(score_caption_rect.position.y + score_caption_rect.size.y).is_less_equal(score_value_rect.position.y + 1.0)
@@ -107,6 +117,34 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		assert_that(board_rect.position.y + board_rect.size.y).is_less_equal(powerups_rect.position.y + 1.0)
 
 	DisplayServer.window_set_size(original_window_size)
+	game.queue_free()
+
+func test_gameplay_top_right_opens_account_and_shop_modals() -> void:
+	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
+	var game: Control = scene.instantiate() as Control
+	assert_that(game).is_not_null()
+	get_tree().root.add_child(game)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var account_button: Button = game.get_node_or_null("UI/TopRightBar/Account") as Button
+	var shop_button: Button = game.get_node_or_null("UI/TopRightBar/Shop") as Button
+	assert_that(account_button).is_not_null()
+	assert_that(shop_button).is_not_null()
+	assert_that(account_button.tooltip_text).is_equal("Account")
+	assert_that(shop_button.tooltip_text).is_equal("Shop")
+
+	account_button.pressed.emit()
+	await get_tree().process_frame
+	var account_modal: Control = game.get_node_or_null("AccountModal") as Control
+	assert_that(account_modal).is_not_null()
+	account_modal.queue_free()
+	await get_tree().process_frame
+
+	shop_button.pressed.emit()
+	await get_tree().process_frame
+	var shop_modal: Control = game.get_node_or_null("ShopModal") as Control
+	assert_that(shop_modal).is_not_null()
 	game.queue_free()
 
 func _assert_rect_inside(inner: Rect2, outer: Rect2, epsilon: float = 1.0) -> void:

@@ -51,7 +51,7 @@ static func apply_game(scene: Node) -> void:
 	_style_color_rect(scene.get_node_or_null("UI/BoardFrame"), Color(0.20, 0.92, 1.0, 0.15))
 	_style_color_rect(scene.get_node_or_null("UI/BoardGlow"), Color(0.9, 0.20, 1.0, 0.08))
 	_style_panels(scene, _find_paths_containing(scene, "Badge"), "hot_badge")
-	_style_buttons(scene, ["UI/TopBar/Pause", "UI/TopRightBar/Audio"], "icon")
+	_style_buttons(scene, ["UI/TopBar/Pause", "UI/TopRightBar/Account", "UI/TopRightBar/Shop", "UI/TopRightBar/Audio"], "icon")
 	_style_buttons(scene, ["UI/Powerups/Undo", "UI/Powerups/RemoveColor", "UI/Powerups/Hint", "UI/Powerups/Shuffle"], "powerup")
 	_style_glass_surfaces(scene)
 	_tint_labels(scene)

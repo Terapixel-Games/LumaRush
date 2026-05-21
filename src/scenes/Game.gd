@@ -9,6 +9,8 @@ const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
 @onready var powerups_row: Control = $UI/Powerups
 @onready var score_box: VBoxContainer = $UI/TopBar/ScoreBox
 @onready var score_caption_label: Label = $UI/TopBar/ScoreBox/ScoreCaption
+@onready var account_button: Button = $UI/TopRightBar/Account
+@onready var shop_button: Button = $UI/TopRightBar/Shop
 @onready var audio_button: Button = $UI/TopRightBar/Audio
 @onready var score_value_label: Label = $UI/TopBar/ScoreBox/ScoreValue
 @onready var pause_button: Button = $UI/TopBar/Pause
@@ -73,6 +75,8 @@ const ICON_MUSIC_ON: Texture2D = preload("res://assets/ui/icons/atlas/music_on.t
 const ICON_MUSIC_OFF: Texture2D = preload("res://assets/ui/icons/atlas/music_off.tres")
 const TUTORIAL_TIP_SCENE := preload("res://addons/arcade_core/ui/TutorialTipModal.tscn")
 const TUTORIAL_TEMPLATE := preload("res://addons/arcade_core/ui/ArcadeTutorialTemplate.gd")
+const ACCOUNT_MODAL_SCENE := preload("res://src/scenes/AccountModal.tscn")
+const SHOP_MODAL_SCENE := preload("res://src/scenes/ShopModal.tscn")
 const HUD_MAX_WIDTH: float = 760.0
 const HUD_MAX_WIDTH_LANDSCAPE: float = 1100.0
 const POWERUPS_MAX_WIDTH: float = 700.0
@@ -223,6 +227,12 @@ func _on_tutorial_requested() -> void:
 	SaveStore.set_tutorial_seen(false)
 	SaveStore.set_tip_dismissed(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, false)
 	_show_tutorial(true)
+
+func _on_account_pressed() -> void:
+	ModalManager.open_scene(ACCOUNT_MODAL_SCENE, self)
+
+func _on_shop_pressed() -> void:
+	ModalManager.open_scene(SHOP_MODAL_SCENE, self)
 
 func _on_undo_pressed() -> void:
 	if _prism_selecting:
@@ -830,14 +840,23 @@ func _layout_top_right(view_size: Vector2) -> void:
 	if top_right_bar == null or audio_button == null:
 		return
 	var margin: float = clamp(min(view_size.x, view_size.y) * 0.045, 12.0, 32.0)
-	var icon_size: float = clamp(min(view_size.x, view_size.y) * 0.12, 68.0, 92.0)
+	var icon_size: float = clamp(min(view_size.x, view_size.y) * 0.105, 54.0, 82.0)
+	var separation: float = clamp(icon_size * 0.13, 8.0, 12.0)
+	var button_count: int = 3
+	var cluster_width: float = (icon_size * float(button_count)) + (separation * float(button_count - 1))
 	var y_position: float = margin
 	if top_bar_bg and top_bar_bg.size.y > 0.0:
 		y_position = top_bar_bg.position.y + ((top_bar_bg.size.y - icon_size) * 0.5)
 	top_right_bar.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	top_right_bar.position = Vector2(view_size.x - margin - icon_size, y_position)
-	top_right_bar.size = Vector2(icon_size, icon_size)
-	audio_button.custom_minimum_size = Vector2(icon_size, icon_size)
+	top_right_bar.position = Vector2(view_size.x - margin - cluster_width, y_position)
+	top_right_bar.size = Vector2(cluster_width, icon_size)
+	if top_right_bar is BoxContainer:
+		(top_right_bar as BoxContainer).add_theme_constant_override("separation", int(round(separation)))
+	for button in [account_button, shop_button, audio_button]:
+		if button:
+			button.custom_minimum_size = Vector2(icon_size, icon_size)
+			button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 func _apply_responsive_hud_typography(content_width: float, bar_height: float, powerup_row_height: float) -> void:
 	var content_inset_y: float = clamp(bar_height * 0.09, 8.0, 14.0)
@@ -876,7 +895,7 @@ func _layout_powerups(view_size: Vector2, row_width: float, row_height: float) -
 			button.custom_minimum_size = Vector2(0.0, row_height)
 
 func _refresh_button_pivots() -> void:
-	for button_variant in [pause_button, audio_button, undo_button, remove_color_button, hint_button]:
+	for button_variant in [pause_button, account_button, shop_button, audio_button, undo_button, remove_color_button, hint_button]:
 		var button: Control = button_variant as Control
 		if button == null:
 			continue
