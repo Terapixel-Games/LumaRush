@@ -1164,10 +1164,12 @@ func _layout_tutorial_overlay() -> void:
 	var panel_height: float = clamp(view_size.y * (0.25 if early_step else 0.22), 208.0 if early_step else 184.0, 292.0 if early_step else 260.0)
 	var panel_x: float = (view_size.x - panel_width) * 0.5
 	var panel_y: float = view_size.y - panel_height - clamp(view_size.y * 0.16, 120.0, 170.0)
+	var top_limit: float = _tutorial_top_limit()
+	var bottom_limit: float = view_size.y - 18.0
+	if powerups_row and _is_tutorial_powerup_step():
+		bottom_limit = min(bottom_limit, powerups_row.global_position.y - 18.0)
 	if early_step and board:
-		var top_limit: float = 18.0
-		if top_bar_bg:
-			top_limit = max(top_limit, top_bar_bg.global_position.y + top_bar_bg.size.y + 14.0)
+		panel_height = _tutorial_panel_height_for_width(panel_width, panel_height, view_size)
 		var board_top: float = board.global_position.y
 		panel_y = board_top - panel_height - clamp(view_size.y * 0.025, 18.0, 34.0)
 		if panel_y < top_limit:
@@ -1175,24 +1177,30 @@ func _layout_tutorial_overlay() -> void:
 				view_size.y - panel_height - 24.0,
 				board_top + (float(board.height) * board.tile_size) + 18.0
 			)
-	elif _is_tutorial_powerup_step() and board and view_size.x / max(1.0, view_size.y) >= 1.45:
-		panel_width = clamp(view_size.x * 0.26, 420.0, 560.0)
+	elif _is_tutorial_powerup_step() and board:
 		var board_right: float = board.global_position.x + (float(board.width) * board.tile_size)
 		var side_gap: float = clamp(view_size.x * 0.035, 32.0, 72.0)
-		panel_x = board_right + side_gap
-		if panel_x + panel_width > view_size.x - side_gap:
-			panel_x = board.global_position.x - side_gap - panel_width
+		var side_margin: float = 18.0
+		var right_space: float = view_size.x - board_right - side_gap - side_margin
+		var left_space: float = board.global_position.x - side_gap - side_margin
+		var can_place_right: bool = right_space >= 300.0
+		var can_place_left: bool = left_space >= 300.0
+		if can_place_right or can_place_left:
+			panel_width = min(560.0, max(300.0, right_space if can_place_right else left_space))
+			panel_x = board_right + side_gap if can_place_right else board.global_position.x - side_gap - panel_width
+		else:
+			panel_width = clamp(view_size.x * 0.76, 360.0, 680.0)
+			panel_x = (view_size.x - panel_width) * 0.5
+		panel_height = _tutorial_panel_height_for_width(panel_width, clamp(view_size.y * 0.26, 240.0, 330.0), view_size)
 		panel_y = clamp(
-			powerups_row.global_position.y - (panel_height * 0.72) if powerups_row else board.global_position.y + (float(board.height) * board.tile_size * 0.62),
-			24.0,
-			max(24.0, view_size.y - panel_height - 24.0)
+			bottom_limit - panel_height,
+			top_limit,
+			max(top_limit, view_size.y - panel_height - 18.0)
 		)
-	elif powerups_row and _is_tutorial_powerup_step():
-		var powerup_clearance: float = clamp(view_size.y * 0.04, 64.0, 110.0)
-		panel_y = min(panel_y, powerups_row.global_position.y - panel_height - powerup_clearance)
-	if board and _is_tutorial_powerup_step() and view_size.x / max(1.0, view_size.y) < 1.45:
-		panel_y = max(panel_y, board.global_position.y + (float(board.height) * board.tile_size) + 16.0)
-	panel_y = max(18.0, panel_y)
+	else:
+		panel_height = _tutorial_panel_height_for_width(panel_width, panel_height, view_size)
+	panel_x = clamp(panel_x, 18.0, max(18.0, view_size.x - panel_width - 18.0))
+	panel_y = clamp(panel_y, top_limit, max(top_limit, view_size.y - panel_height - 18.0))
 	_tutorial_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_tutorial_panel.position = Vector2(panel_x, panel_y)
 	_tutorial_panel.size = Vector2(panel_width, panel_height)
@@ -1202,6 +1210,24 @@ func _layout_tutorial_overlay() -> void:
 	if _tutorial_skip_button:
 		_tutorial_skip_button.pivot_offset = _tutorial_skip_button.size * 0.5
 	_refresh_tutorial_highlights()
+
+func _tutorial_top_limit() -> float:
+	var top_limit: float = 18.0
+	if top_bar_bg:
+		top_limit = max(top_limit, top_bar_bg.global_position.y + top_bar_bg.size.y + 14.0)
+	return top_limit
+
+func _tutorial_panel_height_for_width(panel_width: float, base_height: float, view_size: Vector2) -> float:
+	if _tutorial_message == null:
+		return base_height
+	var inner_width: float = max(180.0, panel_width - 44.0)
+	var message_size: float = float(Typography.px(20.0))
+	var chars_per_line: int = max(20, int(floor(inner_width / max(8.0, message_size * 0.52))))
+	var line_count: int = max(1, int(ceil(float(_tutorial_message.text.length()) / float(chars_per_line))))
+	var title_height: float = float(Typography.px(30.0))
+	var message_height: float = float(line_count) * float(Typography.px(26.0))
+	var required_height: float = 36.0 + title_height + 24.0 + message_height + TUTORIAL_BUTTON_HEIGHT
+	return clamp(max(base_height, required_height), 190.0, max(190.0, view_size.y - _tutorial_top_limit() - 36.0))
 
 func _refresh_tutorial_highlights() -> void:
 	_clear_tutorial_highlights()

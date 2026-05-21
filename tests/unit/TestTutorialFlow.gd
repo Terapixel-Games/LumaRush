@@ -93,6 +93,52 @@ func test_powerup_tutorial_highlights_one_button_at_a_time() -> void:
 	assert_that(_highlight_count(overlay)).is_equal(1)
 	game.queue_free()
 
+func test_powerup_tutorial_panel_keeps_text_and_buttons_in_bounds() -> void:
+	var original_window_size: Vector2i = DisplayServer.window_get_size()
+	DisplayServer.window_set_size(Vector2i(1065, 969))
+	SaveStore.set_tutorial_seen(false)
+	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
+	var game: Control = scene.instantiate() as Control
+	assert_that(game).is_not_null()
+	get_tree().root.add_child(game)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var overlay: Control = game.get_node_or_null("UI/TutorialOverlay") as Control
+	var title: Label = overlay.get_node_or_null("Panel/Margin/VBox/Title") as Label
+	var next_button: Button = overlay.get_node_or_null("Panel/Margin/VBox/Buttons/Next") as Button
+	next_button.pressed.emit()
+	next_button.pressed.emit()
+	next_button.pressed.emit()
+	next_button.pressed.emit()
+	await get_tree().process_frame
+	game.call("_layout_tutorial_overlay")
+	for i in range(24):
+		await get_tree().process_frame
+
+	var panel: Control = overlay.get_node_or_null("Panel") as Control
+	var message: Control = overlay.get_node_or_null("Panel/Margin/VBox/Message") as Control
+	var buttons: Control = overlay.get_node_or_null("Panel/Margin/VBox/Buttons") as Control
+	var powerups: Control = game.get_node_or_null("UI/Powerups") as Control
+	assert_that(title.text).is_equal("Hint")
+	assert_that(panel).is_not_null()
+	assert_that(message).is_not_null()
+	assert_that(buttons).is_not_null()
+	assert_that(powerups).is_not_null()
+	var viewport_rect := Rect2(Vector2.ZERO, game.get_viewport_rect().size)
+	var panel_rect: Rect2 = panel.get_global_rect()
+	var message_rect: Rect2 = message.get_global_rect()
+	var buttons_rect: Rect2 = buttons.get_global_rect()
+	var powerups_rect: Rect2 = powerups.get_global_rect()
+	_assert_rect_inside(panel_rect, viewport_rect)
+	_assert_rect_inside(message_rect, panel_rect)
+	_assert_rect_inside(buttons_rect, panel_rect)
+	assert_that(message_rect.position.y + message_rect.size.y).is_less_equal(buttons_rect.position.y + 1.0)
+	assert_that(panel_rect.position.y + panel_rect.size.y).is_less_equal(powerups_rect.position.y - 8.0)
+
+	DisplayServer.window_set_size(original_window_size)
+	game.queue_free()
+
 func test_powerup_tutorial_can_advance_from_anywhere_click() -> void:
 	SaveStore.set_tutorial_seen(false)
 	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
@@ -150,3 +196,9 @@ func _highlight_count(overlay: Control) -> int:
 		if child is Panel and child.name == "Highlight":
 			count += 1
 	return count
+
+func _assert_rect_inside(inner: Rect2, outer: Rect2, epsilon: float = 1.0) -> void:
+	assert_that(inner.position.x).is_greater_equal(outer.position.x - epsilon)
+	assert_that(inner.position.y).is_greater_equal(outer.position.y - epsilon)
+	assert_that(inner.position.x + inner.size.x).is_less_equal(outer.position.x + outer.size.x + epsilon)
+	assert_that(inner.position.y + inner.size.y).is_less_equal(outer.position.y + outer.size.y + epsilon)
