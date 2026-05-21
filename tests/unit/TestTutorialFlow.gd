@@ -38,18 +38,75 @@ func test_first_run_tutorial_teaches_board_music_and_powerups() -> void:
 	assert_that(message.text).contains("music grows")
 
 	next_button.pressed.emit()
-	assert_that(title.text).is_equal("Powerups")
-	assert_that(message.text).contains("starter charges")
+	assert_that(title.text).is_equal("Undo")
+	assert_that(message.text).contains("rewinds your last move")
+	assert_that(message.text).contains("Tap anywhere")
+	assert_that(next_button.text).is_equal("Tap Anywhere")
 
 	next_button.pressed.emit()
-	assert_that(title.text).is_equal("Refills")
+	assert_that(title.text).is_equal("Prism")
 	assert_that(message.text).contains("rewarded ad")
-	assert_that(next_button.text).is_equal("Start Run")
+
+	next_button.pressed.emit()
+	assert_that(title.text).is_equal("Hint")
+	assert_that(message.text).contains("points out")
+
+	next_button.pressed.emit()
+	assert_that(title.text).is_equal("That's It")
+	assert_that(message.text).contains("Tap anywhere to play")
+	assert_that(next_button.text).is_equal("Done")
 
 	next_button.pressed.emit()
 	await get_tree().process_frame
 	assert_that(SaveStore.is_tutorial_seen()).is_true()
 	assert_that(game.get_node_or_null("UI/TutorialOverlay")).is_null()
+	game.queue_free()
+
+func test_powerup_tutorial_highlights_one_button_at_a_time() -> void:
+	SaveStore.set_tutorial_seen(false)
+	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
+	var game: Control = scene.instantiate() as Control
+	assert_that(game).is_not_null()
+	get_tree().root.add_child(game)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var overlay: Control = game.get_node_or_null("UI/TutorialOverlay") as Control
+	var title: Label = overlay.get_node_or_null("Panel/Margin/VBox/Title") as Label
+	var next_button: Button = overlay.get_node_or_null("Panel/Margin/VBox/Buttons/Next") as Button
+	next_button.pressed.emit()
+	next_button.pressed.emit()
+	assert_that(title.text).is_equal("Undo")
+	assert_that(_highlight_count(overlay)).is_equal(1)
+
+	next_button.pressed.emit()
+	assert_that(title.text).is_equal("Prism")
+	assert_that(_highlight_count(overlay)).is_equal(1)
+
+	next_button.pressed.emit()
+	assert_that(title.text).is_equal("Hint")
+	assert_that(_highlight_count(overlay)).is_equal(1)
+	game.queue_free()
+
+func test_powerup_tutorial_can_advance_from_anywhere_click() -> void:
+	SaveStore.set_tutorial_seen(false)
+	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
+	var game: Control = scene.instantiate() as Control
+	assert_that(game).is_not_null()
+	get_tree().root.add_child(game)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var overlay: Control = game.get_node_or_null("UI/TutorialOverlay") as Control
+	var title: Label = overlay.get_node_or_null("Panel/Margin/VBox/Title") as Label
+	game.call("_advance_tutorial_step")
+	game.call("_advance_tutorial_step")
+	assert_that(title.text).is_equal("Undo")
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	overlay.emit_signal("gui_input", click)
+	assert_that(title.text).is_equal("Prism")
 	game.queue_free()
 
 func test_playing_a_match_advances_the_early_tutorial_steps() -> void:
@@ -81,3 +138,10 @@ func test_pause_overlay_can_request_tutorial_reenable() -> void:
 	assert_that(tutorial_button).is_not_null()
 	assert_that(tutorial_button.text).is_equal("Enable Tutorial")
 	pause_overlay.queue_free()
+
+func _highlight_count(overlay: Control) -> int:
+	var count := 0
+	for child in overlay.get_children():
+		if child is Panel and child.name == "Highlight":
+			count += 1
+	return count

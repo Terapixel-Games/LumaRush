@@ -76,7 +76,11 @@ const POWERUPS_MAX_WIDTH: float = 700.0
 const POWERUPS_MAX_WIDTH_LANDSCAPE: float = 980.0
 const BADGE_BG_COLOR: Color = Color(0.96, 0.22, 0.24, 1.0)
 const BADGE_BORDER_COLOR: Color = Color(1.0, 0.9, 0.92, 0.96)
-const TUTORIAL_STEP_COUNT: int = 4
+const TUTORIAL_STEP_COUNT: int = 6
+const TUTORIAL_STEP_UNDO: int = 2
+const TUTORIAL_STEP_PRISM: int = 3
+const TUTORIAL_STEP_HINT: int = 4
+const TUTORIAL_STEP_DONE: int = 5
 
 func _ready() -> void:
 	var stale_overlay: Node = get_node_or_null("RunEndOverlay")
@@ -966,11 +970,13 @@ func _show_tutorial(force: bool = false) -> void:
 	_tutorial_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_tutorial_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_tutorial_overlay.z_index = 60
+	_tutorial_overlay.gui_input.connect(Callable(self, "_on_tutorial_gui_input"))
 	$UI.add_child(_tutorial_overlay)
 
 	_tutorial_panel = Panel.new()
 	_tutorial_panel.name = "Panel"
 	_tutorial_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	_tutorial_panel.gui_input.connect(Callable(self, "_on_tutorial_gui_input"))
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.045, 0.065, 0.12, 0.88)
 	style.border_color = Color(0.55, 0.9, 1.0, 0.6)
@@ -1030,6 +1036,16 @@ func _show_tutorial(force: bool = false) -> void:
 func _on_tutorial_next_pressed() -> void:
 	_advance_tutorial_step()
 
+func _on_tutorial_gui_input(event: InputEvent) -> void:
+	if not _is_tutorial_click_to_continue_step():
+		return
+	var click: bool = event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT
+	var touch: bool = event is InputEventScreenTouch and event.pressed
+	if not click and not touch:
+		return
+	get_viewport().set_input_as_handled()
+	_advance_tutorial_step()
+
 func _advance_tutorial_step() -> void:
 	if _tutorial_step >= TUTORIAL_STEP_COUNT - 1:
 		_close_tutorial(true)
@@ -1066,15 +1082,27 @@ func _update_tutorial_step() -> void:
 		1:
 			title = "Keep The Beat"
 			message = "Every clear scores points. Fast chains build combo pressure, the board reacts harder, and the music grows as the run heats up."
-		2:
-			title = "Powerups"
-			message = "The bottom buttons are safety tools: undo a move, clear a color, or reveal a match. You get starter charges for free."
-		3:
-			title = "Refills"
-			message = "After the free charges, powerups can refill through earned coins, a rewarded ad, or shop purchases. Pause anytime to turn this tutorial back on."
+		TUTORIAL_STEP_UNDO:
+			title = "Undo"
+			message = "This rewinds your last move. You get starter charges for free. Tap anywhere for the next powerup."
+		TUTORIAL_STEP_PRISM:
+			title = "Prism"
+			message = "This clears one color from the board. After free charges, refills can use coins, a rewarded ad, or a shop purchase."
+		TUTORIAL_STEP_HINT:
+			title = "Hint"
+			message = "This points out a playable group when the board gets noisy. Tap anywhere once more and you are in the run."
+		TUTORIAL_STEP_DONE:
+			title = "That's It"
+			message = "Clear connected groups, keep the music climbing, and use powerups when you need a save. Tap anywhere to play."
 	_tutorial_title.text = title
 	_tutorial_message.text = message
-	_tutorial_next_button.text = "Start Run" if _tutorial_step >= TUTORIAL_STEP_COUNT - 1 else "Next"
+	if _tutorial_step >= TUTORIAL_STEP_COUNT - 1:
+		_tutorial_next_button.text = "Done"
+	elif _is_tutorial_click_to_continue_step():
+		_tutorial_next_button.text = "Tap Anywhere"
+	else:
+		_tutorial_next_button.text = "Next"
+	_tutorial_overlay.mouse_filter = Control.MOUSE_FILTER_STOP if _is_tutorial_click_to_continue_step() else Control.MOUSE_FILTER_IGNORE
 	_refresh_tutorial_highlights()
 
 func _layout_tutorial_overlay() -> void:
@@ -1085,10 +1113,22 @@ func _layout_tutorial_overlay() -> void:
 	var panel_height: float = clamp(view_size.y * 0.22, 184.0, 260.0)
 	var panel_x: float = (view_size.x - panel_width) * 0.5
 	var panel_y: float = view_size.y - panel_height - clamp(view_size.y * 0.16, 120.0, 170.0)
-	if powerups_row:
+	if _is_tutorial_powerup_step() and board and view_size.x / max(1.0, view_size.y) >= 1.45:
+		panel_width = clamp(view_size.x * 0.26, 420.0, 560.0)
+		var board_right: float = board.global_position.x + (float(board.width) * board.tile_size)
+		var side_gap: float = clamp(view_size.x * 0.035, 32.0, 72.0)
+		panel_x = board_right + side_gap
+		if panel_x + panel_width > view_size.x - side_gap:
+			panel_x = board.global_position.x - side_gap - panel_width
+		panel_y = clamp(
+			powerups_row.global_position.y - (panel_height * 0.72) if powerups_row else board.global_position.y + (float(board.height) * board.tile_size * 0.62),
+			24.0,
+			max(24.0, view_size.y - panel_height - 24.0)
+		)
+	elif powerups_row and _is_tutorial_powerup_step():
 		var powerup_clearance: float = clamp(view_size.y * 0.04, 64.0, 110.0)
 		panel_y = min(panel_y, powerups_row.global_position.y - panel_height - powerup_clearance)
-	if board:
+	if board and _is_tutorial_powerup_step() and view_size.x / max(1.0, view_size.y) < 1.45:
 		panel_y = max(panel_y, board.global_position.y + (float(board.height) * board.tile_size) + 16.0)
 	panel_y = max(18.0, panel_y)
 	_tutorial_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -1103,7 +1143,8 @@ func _refresh_tutorial_highlights() -> void:
 	if _tutorial_step <= 1:
 		_add_board_group_highlights()
 	else:
-		for target in [undo_button, remove_color_button, hint_button]:
+		var target: Control = _tutorial_powerup_target()
+		if target:
 			_add_control_highlight(target)
 	if _tutorial_panel and is_instance_valid(_tutorial_panel):
 		_tutorial_overlay.move_child(_tutorial_panel, _tutorial_overlay.get_child_count() - 1)
@@ -1135,6 +1176,22 @@ func _add_control_highlight(control: Control) -> void:
 	if control == null:
 		return
 	_add_highlight_rect(control.get_global_rect().grow(6.0), 0)
+
+func _is_tutorial_powerup_step() -> bool:
+	return _tutorial_step == TUTORIAL_STEP_UNDO or _tutorial_step == TUTORIAL_STEP_PRISM or _tutorial_step == TUTORIAL_STEP_HINT
+
+func _is_tutorial_click_to_continue_step() -> bool:
+	return _tutorial_step >= TUTORIAL_STEP_UNDO
+
+func _tutorial_powerup_target() -> Control:
+	match _tutorial_step:
+		TUTORIAL_STEP_UNDO:
+			return undo_button
+		TUTORIAL_STEP_PRISM:
+			return remove_color_button
+		TUTORIAL_STEP_HINT:
+			return hint_button
+	return null
 
 func _add_highlight_rect(rect: Rect2, index: int) -> void:
 	var highlight := Panel.new()
