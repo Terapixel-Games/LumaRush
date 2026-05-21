@@ -31,6 +31,7 @@ const GAME_SPACE_MAX_WIDTH_LANDSCAPE := 1100.0
 @onready var footer_panel: PanelContainer = $Panel/VBox/Footer
 @onready var bottom_inset: Control = $Panel/VBox/BottomInset
 @onready var header_bar: Control = $Panel/VBox/Header
+@onready var header_back_button: Button = $Panel/VBox/Header/Back
 @onready var header_divider: Control = $Panel/VBox/HeaderDivider
 @onready var scroll_container: ScrollContainer = $Panel/VBox/Scroll
 @onready var scroll_content: Control = $Panel/VBox/Scroll/Content
@@ -61,6 +62,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_reap_detached_labels()
 	Typography.style_save_streak(self)
+	if header_back_button != null:
+		header_back_button.visible = false
 	_apply_header_hierarchy()
 	_apply_static_shop_styling()
 	_apply_neon_run_deck()
@@ -615,6 +618,8 @@ func _layout_modal_for_size(viewport_size: Vector2) -> void:
 		)
 	if header_bar != null:
 		header_bar.custom_minimum_size.y = clamp(max_panel_height * (0.105 if is_wide else 0.12), 68.0, 90.0)
+	if header_divider != null:
+		header_divider.modulate = Color(1.0, 0.84, 0.42, 0.32)
 	if top_inset != null:
 		top_inset.custom_minimum_size.y = inside_edge_padding
 	if bottom_inset != null:
@@ -644,8 +649,10 @@ func _layout_modal_for_size(viewport_size: Vector2) -> void:
 	# Keep theme item rows tall enough for title/subtitle + action controls.
 	if theme_default_card != null:
 		theme_default_card.custom_minimum_size.y = clamp(max_panel_height * (0.082 if is_wide else 0.092), 78.0, 96.0)
+		_apply_shop_card_style(theme_default_card, "theme")
 	if theme_neon_card != null:
 		theme_neon_card.custom_minimum_size.y = clamp(max_panel_height * (0.086 if is_wide else 0.096), 82.0, 100.0)
+		_apply_shop_card_style(theme_neon_card, "featured")
 
 	var row_inner_width: float = max(320.0, content_width - 12.0)
 	var action_gap: int = 10
@@ -675,6 +682,7 @@ func _layout_modal_for_size(viewport_size: Vector2) -> void:
 		var coin_card := get_node_or_null("Panel/VBox/Scroll/Content/CoinPacks/Pack%d" % index) as Control
 		if coin_card != null:
 			coin_card.custom_minimum_size.y = clamp(max_panel_height * (0.074 if is_wide else 0.082), 68.0, 84.0)
+			_apply_shop_card_style(coin_card, "coin")
 		var coin_button := get_node_or_null("Panel/VBox/Scroll/Content/CoinPacks/Pack%d/Margin/Row/ActionButton" % index) as Button
 		if coin_button != null:
 			coin_button.custom_minimum_size = Vector2(clamp(primary_action_width, 106.0, 136.0), clamp(action_height, 44.0, 52.0))
@@ -689,6 +697,7 @@ func _layout_modal_for_size(viewport_size: Vector2) -> void:
 		var card := get_node_or_null(path) as Control
 		if card != null:
 			card.custom_minimum_size.y = clamp(max_panel_height * (0.067 if is_wide else 0.074), 62.0, 74.0)
+			_apply_shop_card_style(card, "powerup")
 
 	for button in [
 		get_node_or_null("Panel/VBox/Scroll/Content/Powerups/BuyUndo/Margin/Row/ActionButton") as Button,
@@ -854,6 +863,7 @@ func _apply_header_hierarchy() -> void:
 	Typography.style_label(coins_label, 18.0, Typography.WEIGHT_BOLD)
 
 func _apply_static_shop_styling() -> void:
+	status_label.text = "Stock up before the next run."
 	status_label.add_theme_color_override("font_color", Color(0.94, 0.97, 1.0, 0.9))
 	status_label.add_theme_color_override("font_outline_color", Color(0.08, 0.14, 0.28, 0.92))
 	status_label.add_theme_constant_override("outline_size", 2)
@@ -865,7 +875,50 @@ func _apply_static_shop_styling() -> void:
 	]:
 		var label := get_node_or_null(header_path) as Label
 		if label != null:
+			match header_path:
+				"Panel/VBox/Scroll/Content/ThemesHeader/Label":
+					label.text = "Visual Themes"
+				"Panel/VBox/Scroll/Content/PowerupsHeader/Label":
+					label.text = "Run Tools"
 			Typography.style_label(label, 18.0, Typography.WEIGHT_SEMIBOLD)
+
+func _apply_shop_card_style(card: Control, variant: String) -> void:
+	var panel_card := card as PanelContainer
+	if panel_card == null:
+		return
+	var base := Color(0.045, 0.08, 0.16, 0.76)
+	var edge := Color(0.86, 0.94, 1.0, 0.24)
+	var shadow := Color(0.03, 0.05, 0.12, 0.32)
+	match variant:
+		"coin":
+			base = Color(0.06, 0.095, 0.17, 0.76)
+			edge = Color(1.0, 0.84, 0.36, 0.28)
+		"theme":
+			base = Color(0.045, 0.09, 0.2, 0.76)
+			edge = Color(0.64, 0.92, 1.0, 0.28)
+		"featured":
+			base = Color(0.095, 0.08, 0.24, 0.82)
+			edge = Color(1.0, 0.62, 1.0, 0.42)
+			shadow = Color(0.09, 0.02, 0.16, 0.36)
+		"powerup":
+			base = Color(0.055, 0.075, 0.145, 0.74)
+			edge = Color(0.82, 0.96, 1.0, 0.22)
+	var style := StyleBoxFlat.new()
+	style.bg_color = base
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = edge
+	style.corner_radius_top_left = 16
+	style.corner_radius_top_right = 16
+	style.corner_radius_bottom_right = 16
+	style.corner_radius_bottom_left = 16
+	style.shadow_color = shadow
+	style.shadow_size = 5
+	style.anti_aliasing = true
+	style.anti_aliasing_size = 1.1
+	panel_card.add_theme_stylebox_override("panel", style)
 
 func _apply_powerup_typography() -> void:
 	for path in [

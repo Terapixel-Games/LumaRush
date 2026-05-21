@@ -63,6 +63,7 @@ mouse_filter = 2
 [node name="Header" parent="Panel/VBox" instance=ExtResource("4")]
 
 [node name="Back" parent="Panel/VBox/Header" index="0"]
+visible = false
 custom_minimum_size = Vector2(104, 64)
 icon_alignment = 1
 
@@ -74,12 +75,12 @@ visible = false
 mouse_filter = 2
 
 [node name="Status" type="Label" parent="Panel/VBox"]
-text = "Buy themes, powerups, and coins"
+text = "Stock up before the next run."
 horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="HeaderDivider" type="HSeparator" parent="Panel/VBox"]
-modulate = Color(1, 1, 1, 0.28)
+modulate = Color(1, 0.84, 0.42, 0.32)
 mouse_filter = 2
 
 [node name="Scroll" type="ScrollContainer" parent="Panel/VBox"]
@@ -183,10 +184,10 @@ mouse_filter = 2
 text = "Coin Packs"
 
 [node name="Label" type="Label" parent="Panel/VBox/Scroll/Content/ThemesHeader"]
-text = "Themes"
+text = "Visual Themes"
 
 [node name="Label" type="Label" parent="Panel/VBox/Scroll/Content/PowerupsHeader"]
-text = "Powerups"
+text = "Run Tools"
 
 [node name="Icon" parent="Panel/VBox/Scroll/Content/CoinPacks/Pack0/Margin/Row" index="0"]
 texture = ExtResource("15")

@@ -33,12 +33,14 @@ func test_account_modal_input_contract_and_close() -> void:
 	await get_tree().process_frame
 
 	var backdrop: Control = modal.get_node("Backdrop") as Control
+	var back_button: Button = modal.get_node("Panel/VBox/Header/Back") as Button
 	var scroll: ScrollContainer = modal.get_node("Panel/VBox/Scroll") as ScrollContainer
 	var close_button: Button = modal.get_node("Panel/VBox/Footer/Close") as Button
 
 	assert_that(modal.process_mode).is_equal(Node.PROCESS_MODE_ALWAYS)
 	assert_that(modal.mouse_filter).is_equal(Control.MOUSE_FILTER_PASS)
 	assert_that(backdrop.mouse_filter).is_equal(Control.MOUSE_FILTER_STOP)
+	assert_that(back_button.visible).is_false()
 	assert_that(scroll).is_not_null()
 	assert_that(close_button.mouse_filter).is_equal(Control.MOUSE_FILTER_STOP)
 
@@ -106,6 +108,8 @@ func test_account_modal_hides_username_and_merge_for_guest() -> void:
 	var merge_input: LineEdit = modal.get_node("Panel/VBox/Scroll/Content/MergeCode") as LineEdit
 	var merge_create_button: Button = modal.get_node("Panel/VBox/Scroll/Content/CreateMergeCode") as Button
 	var merge_redeem_button: Button = modal.get_node("Panel/VBox/Scroll/Content/RedeemMergeCode") as Button
+	var status_label: Label = modal.get_node("Panel/VBox/Status") as Label
+	var link_header_label: Label = modal.get_node("Panel/VBox/Scroll/Content/LinkHeader/Label") as Label
 
 	assert_that(username_header.visible).is_false()
 	assert_that(username_input.visible).is_false()
@@ -114,6 +118,8 @@ func test_account_modal_hides_username_and_merge_for_guest() -> void:
 	assert_that(merge_input.visible).is_false()
 	assert_that(merge_create_button.visible).is_false()
 	assert_that(merge_redeem_button.visible).is_false()
+	assert_that(status_label.text).is_equal("Enter your email below to get a magic link.")
+	assert_that(link_header_label.text).is_equal("Magic Link")
 
 	await _free_node(host)
 	SaveStore.set_terapixel_identity(original_user_id, original_name, original_email)
@@ -127,19 +133,27 @@ func test_shop_modal_input_contract_and_close() -> void:
 	await get_tree().process_frame
 
 	var backdrop: Control = modal.get_node("Backdrop") as Control
+	var back_button: Button = modal.get_node("Panel/VBox/Header/Back") as Button
 	var scroll: ScrollContainer = modal.get_node("Panel/VBox/Scroll") as ScrollContainer
 	var powerups_box: VBoxContainer = modal.get_node("Panel/VBox/Scroll/Content/Powerups") as VBoxContainer
 	var refresh_button: Button = modal.get_node("Panel/VBox/Footer/Actions/RefreshWallet") as Button
 	var close_button: Button = modal.get_node("Panel/VBox/Footer/Actions/Close") as Button
+	var status_label: Label = modal.get_node("Panel/VBox/Status") as Label
+	var themes_label: Label = modal.get_node("Panel/VBox/Scroll/Content/ThemesHeader/Label") as Label
+	var powerups_label: Label = modal.get_node("Panel/VBox/Scroll/Content/PowerupsHeader/Label") as Label
 
 	assert_that(modal.process_mode).is_equal(Node.PROCESS_MODE_ALWAYS)
 	assert_that(modal.mouse_filter).is_equal(Control.MOUSE_FILTER_PASS)
 	assert_that(backdrop.mouse_filter).is_equal(Control.MOUSE_FILTER_STOP)
+	assert_that(back_button.visible).is_false()
 	assert_that(scroll).is_not_null()
 	assert_that(powerups_box).is_not_null()
 	assert_that(refresh_button).is_not_null()
 	assert_that(refresh_button.size.y).is_greater_equal(40.0)
 	assert_that(close_button.mouse_filter).is_equal(Control.MOUSE_FILTER_STOP)
+	assert_that(status_label.text).is_equal("Stock up before the next run.")
+	assert_that(themes_label.text).is_equal("Visual Themes")
+	assert_that(powerups_label.text).is_equal("Run Tools")
 
 	# Force a 720x1280 layout pass without SubViewport to avoid headless crashes.
 	modal.call("_layout_modal_for_size", Vector2(720.0, 1280.0))
@@ -225,8 +239,11 @@ func test_account_modal_expands_to_visible_content_without_desktop_scroll() -> v
 	var panel: Control = modal.get_node("Panel") as Control
 	var scroll: ScrollContainer = modal.get_node("Panel/VBox/Scroll") as ScrollContainer
 	var content: Control = modal.get_node("Panel/VBox/Scroll/Content") as Control
+	var email_input: LineEdit = modal.get_node("Panel/VBox/Scroll/Content/Email") as LineEdit
 	var close_button: Button = modal.get_node("Panel/VBox/Footer/Close") as Button
 	assert_that(scroll.size.y).is_greater_equal(content.get_combined_minimum_size().y - 1.0)
+	assert_that(email_input.size.x).is_less_equal(540.0)
+	assert_that(abs((email_input.get_global_rect().get_center().x) - (panel.get_global_rect().get_center().x))).is_less(2.0)
 	assert_that(close_button.get_global_rect().position.y + close_button.get_global_rect().size.y).is_less_equal(panel.position.y + panel.size.y + 1.0)
 	assert_that(panel.position.y).is_greater_equal(0.0)
 	assert_that(panel.position.y + panel.size.y).is_less_equal(desktop_size.y)

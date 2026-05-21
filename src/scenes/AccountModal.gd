@@ -14,6 +14,7 @@ const GAME_SPACE_MAX_WIDTH_LANDSCAPE := 1100.0
 @onready var top_inset: Control = $Panel/VBox/TopInset
 @onready var header_title: Label = $Panel/VBox/Header/Title
 @onready var header_bar: Control = $Panel/VBox/Header
+@onready var header_back_button: Button = $Panel/VBox/Header/Back
 @onready var scroll_container: ScrollContainer = $Panel/VBox/Scroll
 @onready var scroll_content: Control = $Panel/VBox/Scroll/Content
 @onready var footer_panel: PanelContainer = $Panel/VBox/Footer
@@ -40,6 +41,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Typography.style_save_streak(self)
 	header_title.text = "Account"
+	if header_back_button != null:
+		header_back_button.visible = false
 	_apply_neon_run_deck()
 	_layout_modal()
 	call_deferred("_layout_modal")
@@ -234,7 +237,7 @@ func _refresh_account_controls() -> void:
 		_username_cost = 0
 		username_button.text = "Set Username (Free)"
 		if status_label.text.begins_with("Logged in as:"):
-			status_label.text = "Link account with magic link"
+			status_label.text = "Enter your email below to get a magic link."
 	call_deferred("_layout_modal")
 
 func _set_username_section_visible(visible: bool) -> void:
@@ -457,6 +460,21 @@ func _layout_modal_for_size(viewport_size: Vector2) -> void:
 		"Panel/VBox/Footer",
 	]:
 		_apply_centered_content_width(path, content_width)
+
+	var form_width: float = min(content_width, 540.0)
+	for path in [
+		"Panel/VBox/Scroll/Content/LinkHeader",
+		"Panel/VBox/Scroll/Content/Email",
+		"Panel/VBox/Scroll/Content/SendMagicLink",
+		"Panel/VBox/Scroll/Content/UsernameHeader",
+		"Panel/VBox/Scroll/Content/Username",
+		"Panel/VBox/Scroll/Content/UpdateUsername",
+		"Panel/VBox/Scroll/Content/MergeHeader",
+		"Panel/VBox/Scroll/Content/MergeCode",
+		"Panel/VBox/Scroll/Content/CreateMergeCode",
+		"Panel/VBox/Scroll/Content/RedeemMergeCode",
+	]:
+		_apply_centered_content_width(path, form_width)
 
 	if footer_panel != null:
 		footer_panel.custom_minimum_size.y = 66.0

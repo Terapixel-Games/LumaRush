@@ -65,7 +65,7 @@ mouse_filter = 2
 [node name="Header" parent="Panel/VBox" instance=ExtResource("4")]
 
 [node name="Status" type="Label" parent="Panel/VBox"]
-text = "Link account with magic link"
+text = "Enter your email below to get a magic link."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -144,12 +144,15 @@ mouse_filter = 2
 [node name="Title" parent="Panel/VBox/Header" index="1"]
 text = "Account"
 
+[node name="Back" parent="Panel/VBox/Header" index="0"]
+visible = false
+
 [node name="RightSlot" parent="Panel/VBox/Header" index="2"]
 visible = false
 
 [node name="Label" parent="Panel/VBox/Scroll/Content/LinkHeader"]
 size_flags_horizontal = 3
-text = "Link account with magic link"
+text = "Magic Link"
 horizontal_alignment = 1
 
 [node name="Line" parent="Panel/VBox/Scroll/Content/LinkHeader" index="2"]
