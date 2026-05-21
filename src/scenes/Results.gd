@@ -1,6 +1,8 @@
 extends Control
 
 const AUDIO_TRACK_OVERLAY_SCENE := preload("res://src/scenes/AudioTrackOverlay.tscn")
+const ACCOUNT_MODAL_SCENE := preload("res://src/scenes/AccountModal.tscn")
+const SHOP_MODAL_SCENE := preload("res://src/scenes/ShopModal.tscn")
 const ICON_MUSIC_ON: Texture2D = preload("res://assets/ui/icons/atlas/music_on.tres")
 const ICON_MUSIC_OFF: Texture2D = preload("res://assets/ui/icons/atlas/music_off.tres")
 const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
@@ -8,6 +10,8 @@ const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
 @onready var kicker_label: Label = $UI/Panel/Scroll/VBox/Kicker
 @onready var title_label: Label = $UI/Panel/Scroll/VBox/Title
 @onready var top_right_bar: Control = $UI/TopRightBar
+@onready var account_button: Button = $UI/TopRightBar/Account
+@onready var shop_button: Button = $UI/TopRightBar/Shop
 @onready var audio_button: Button = $UI/TopRightBar/Audio
 @onready var stats_split: GridContainer = $UI/Panel/Scroll/VBox/StatsSplit
 @onready var stats_left_column: VBoxContainer = $UI/Panel/Scroll/VBox/StatsSplit/LeftColumn
@@ -261,10 +265,18 @@ func _layout_top_right(viewport_size: Vector2) -> void:
 	var safe_right: float = float(insets.get("right", 0.0))
 	var margin: float = clamp(min(viewport_size.x, viewport_size.y) * 0.045, 12.0, 32.0)
 	var icon_size: float = clamp(min(viewport_size.x, viewport_size.y) * 0.12, 68.0, 92.0)
+	var separation: float = clamp(icon_size * 0.14, 8.0, 14.0)
+	var cluster_width: float = (icon_size * 3.0) + (separation * 2.0)
 	top_right_bar.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	top_right_bar.position = Vector2(viewport_size.x - safe_right - margin - icon_size, safe_top + margin)
-	top_right_bar.size = Vector2(icon_size, icon_size)
-	audio_button.custom_minimum_size = Vector2(icon_size, icon_size)
+	top_right_bar.position = Vector2(viewport_size.x - safe_right - margin - cluster_width, safe_top + margin)
+	top_right_bar.size = Vector2(cluster_width, icon_size)
+	if top_right_bar is BoxContainer:
+		(top_right_bar as BoxContainer).add_theme_constant_override("separation", int(round(separation)))
+	for button in [account_button, shop_button, audio_button]:
+		if button == null:
+			continue
+		button.custom_minimum_size = Vector2(icon_size, icon_size)
+		button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 func _configure_stats_split(content_size: Vector2, use_split: bool) -> void:
 	if stats_split == null:
@@ -577,6 +589,14 @@ func _apply_audio_track_index(index: int) -> void:
 	MusicManager.set_track(track_id, true)
 	_sync_audio_overlay_selection()
 	_refresh_audio_icon()
+
+func _on_account_pressed() -> void:
+	_close_audio_overlay()
+	ModalManager.open_scene(ACCOUNT_MODAL_SCENE, self)
+
+func _on_shop_pressed() -> void:
+	_close_audio_overlay()
+	ModalManager.open_scene(SHOP_MODAL_SCENE, self)
 
 func _sync_audio_overlay_selection() -> void:
 	if not is_instance_valid(_audio_overlay):

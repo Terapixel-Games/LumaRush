@@ -29,6 +29,8 @@ func test_results_actions_stay_inside_panel_on_wide_short_viewports() -> void:
 	var score: Label = results.get_node("UI/Panel/Scroll/VBox/StatsSplit/LeftColumn/Score") as Label
 	var play_again: Button = results.get_node("UI/Panel/Scroll/VBox/PlayAgain") as Button
 	var menu: Button = results.get_node("UI/Panel/Scroll/VBox/Menu") as Button
+	var account_button: Button = results.get_node_or_null("UI/TopRightBar/Account") as Button
+	var shop_button: Button = results.get_node_or_null("UI/TopRightBar/Shop") as Button
 	var audio_button: Control = results.get_node_or_null("UI/TopRightBar/Audio") as Control
 	assert_that(panel).is_not_null()
 	assert_that(title).is_not_null()
@@ -37,7 +39,11 @@ func test_results_actions_stay_inside_panel_on_wide_short_viewports() -> void:
 	assert_that(menu).is_not_null()
 	assert_that(menu.visible).is_false()
 	assert_that(menu.disabled).is_true()
+	assert_that(account_button).is_not_null()
+	assert_that(shop_button).is_not_null()
 	assert_that(audio_button).is_not_null()
+	assert_that(account_button.tooltip_text).is_equal("Account")
+	assert_that(shop_button.tooltip_text).is_equal("Shop")
 
 	var viewport_sizes: Array[Vector2] = [
 		Vector2(1920.0, 1010.0),
@@ -53,16 +59,49 @@ func test_results_actions_stay_inside_panel_on_wide_short_viewports() -> void:
 		await get_tree().process_frame
 		var panel_rect: Rect2 = panel.get_global_rect()
 		var play_rect: Rect2 = play_again.get_global_rect()
+		var account_rect: Rect2 = account_button.get_global_rect()
+		var shop_rect: Rect2 = shop_button.get_global_rect()
 		var audio_rect: Rect2 = audio_button.get_global_rect()
 		var viewport_rect := Rect2(Vector2.ZERO, results.get_viewport_rect().size)
 		_assert_rect_inside(play_rect, panel_rect)
+		_assert_rect_inside(account_rect, viewport_rect)
+		_assert_rect_inside(shop_rect, viewport_rect)
 		_assert_rect_inside(audio_rect, viewport_rect)
+		assert_that(account_rect.position.x + account_rect.size.x).is_less_equal(shop_rect.position.x + 1.0)
+		assert_that(shop_rect.position.x + shop_rect.size.x).is_less_equal(audio_rect.position.x + 1.0)
 		if viewport_rect.size.x / max(1.0, viewport_rect.size.y) >= 1.45:
 			assert_that(panel_rect.size.x).is_greater_equal(viewport_rect.size.x * 0.62)
 			assert_that(score.get_theme_font_size("font_size")).is_greater_equal(40)
 			assert_that(title.get_theme_font_size("font_size")).is_greater_equal(32)
 
 	DisplayServer.window_set_size(original_window_size)
+	results.queue_free()
+
+func test_results_top_right_opens_account_and_shop_modals() -> void:
+	var scene: PackedScene = load("res://src/scenes/Results.tscn") as PackedScene
+	var results: Control = scene.instantiate() as Control
+	assert_that(results).is_not_null()
+	get_tree().root.add_child(results)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var account_button: Button = results.get_node_or_null("UI/TopRightBar/Account") as Button
+	var shop_button: Button = results.get_node_or_null("UI/TopRightBar/Shop") as Button
+	assert_that(account_button).is_not_null()
+	assert_that(shop_button).is_not_null()
+
+	account_button.pressed.emit()
+	await get_tree().process_frame
+	var account_modal: Control = results.get_node_or_null("AccountModal") as Control
+	assert_that(account_modal).is_not_null()
+	account_modal.queue_free()
+	await get_tree().process_frame
+
+	shop_button.pressed.emit()
+	await get_tree().process_frame
+	var shop_modal: Control = results.get_node_or_null("ShopModal") as Control
+	assert_that(shop_modal).is_not_null()
+
 	results.queue_free()
 
 func _assert_rect_inside(inner: Rect2, outer: Rect2, epsilon: float = 1.0) -> void:

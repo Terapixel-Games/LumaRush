@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/Results.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/visual/BackgroundController.tscn" id="2"]
@@ -8,6 +8,8 @@
 [ext_resource type="PackedScene" path="res://addons/arcade_core/ui/components/SecondaryButton.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://addons/arcade_core/ui/components/IconButton.tscn" id="7"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/atlas/music_on.tres" id="8"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/atlas/person.tres" id="9"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/atlas/cart.tres" id="10"]
 
 [node name="Results" type="Control"]
 anchor_right = 1.0
@@ -21,23 +23,30 @@ theme = ExtResource("3")
 anchor_right = 1.0
 anchor_bottom = 1.0
 
-[node name="TopRightBar" type="Control" parent="UI"]
+[node name="TopRightBar" type="HBoxContainer" parent="UI"]
 anchors_preset = -1
 anchor_left = 1.0
 anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 0.0
-offset_left = -86.0
+offset_left = -258.0
 offset_top = 18.0
 offset_right = -18.0
 offset_bottom = 86.0
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="Account" parent="UI/TopRightBar" instance=ExtResource("7")]
+icon_texture = ExtResource("9")
+tooltip_text_override = "Account"
+accessibility_name_override = "Account"
+
+[node name="Shop" parent="UI/TopRightBar" instance=ExtResource("7")]
+icon_texture = ExtResource("10")
+tooltip_text_override = "Shop"
+accessibility_name_override = "Shop"
 
 [node name="Audio" parent="UI/TopRightBar" instance=ExtResource("7")]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 icon_texture = ExtResource("8")
 tooltip_text_override = "Audio"
 accessibility_name_override = "Audio"
@@ -146,4 +155,6 @@ custom_minimum_size = Vector2(0, 96)
 [connection signal="pressed" from="UI/Panel/Scroll/VBox/PlayAgain" to="." method="_on_play_again_pressed"]
 [connection signal="pressed" from="UI/Panel/Scroll/VBox/Menu" to="." method="_on_menu_pressed"]
 [connection signal="pressed" from="UI/Panel/Scroll/VBox/DoubleReward" to="." method="_on_double_reward_pressed"]
+[connection signal="pressed" from="UI/TopRightBar/Account" to="." method="_on_account_pressed"]
+[connection signal="pressed" from="UI/TopRightBar/Shop" to="." method="_on_shop_pressed"]
 [connection signal="pressed" from="UI/TopRightBar/Audio" to="." method="_on_audio_pressed"]
