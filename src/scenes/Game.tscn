@@ -57,10 +57,10 @@ chromatic_strength = 0.14
 [node name="TopBarInnerHighlight" type="ColorRect" parent="UI/TopBarBg"]
 layout_mode = 0
 anchor_left = 0.02
-anchor_top = 0.07
+anchor_top = 0.14
 anchor_right = 0.98
-anchor_bottom = 0.48
-color = Color(0.94, 0.98, 1, 0.1)
+anchor_bottom = 0.86
+color = Color(0.94, 0.98, 1, 0.07)
 
 [node name="TopBar" type="HBoxContainer" parent="UI"]
 layout_mode = 0
