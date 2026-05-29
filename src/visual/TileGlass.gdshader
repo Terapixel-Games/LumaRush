@@ -12,6 +12,7 @@ uniform float saturation_boost : hint_range(0.8, 1.6) = 1.22;
 uniform float bg_luma_mix : hint_range(0.0, 1.0) = 0.22;
 uniform float specular_strength : hint_range(0.0, 1.0) = 0.34;
 uniform float inner_shadow_strength : hint_range(0.0, 1.0) = 0.26;
+uniform float facet_strength : hint_range(0.0, 1.0) = 0.34;
 
 float rounded_rect_sdf(vec2 p, vec2 b, float r) {
 	vec2 q = abs(p) - b + vec2(r);
@@ -47,8 +48,12 @@ void fragment() {
 	glass.rgb = mix(glass.rgb, edge_color.rgb, edge * edge_color.a);
 	float top_sheen = smoothstep(0.58, 0.08, UV.y) * inside;
 	float diagonal_sheen = smoothstep(0.74, 0.2, UV.x + UV.y) * inside;
+	float facet_a = smoothstep(0.08, 0.48, UV.x) * smoothstep(0.92, 0.50, UV.y) * inside;
+	float facet_b = smoothstep(0.92, 0.52, UV.x) * smoothstep(0.08, 0.48, UV.y) * inside;
+	float center_cut = 1.0 - smoothstep(0.18, 0.42, length(UV - vec2(0.5)));
 	glass.rgb += vec3(0.34, 0.40, 0.50) * top_sheen * specular_strength;
 	glass.rgb += vec3(0.20, 0.30, 0.42) * diagonal_sheen * specular_strength * 0.34;
+	glass.rgb += edge_color.rgb * (facet_a + facet_b + center_cut) * facet_strength * 0.18;
 	glass.rgb *= 1.0 - (inner_edge * inner_shadow_strength * 0.34);
 	glass.rgb = mix(glass.rgb * 0.68, glass.rgb, bevel);
 	glass.a *= inside;

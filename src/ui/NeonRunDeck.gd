@@ -2,8 +2,9 @@ extends RefCounted
 class_name NeonRunDeck
 
 const NEON_CABINET := preload("res://src/ui/NeonCabinet.gd")
-const SURFACE_PANEL: Color = Color(0.055, 0.075, 0.17, 0.90)
-const SURFACE_CARD: Color = Color(0.075, 0.10, 0.22, 0.82)
+const ARCADE_CHROME_SHADER := preload("res://src/visual/ArcadeChrome.gdshader")
+const SURFACE_PANEL: Color = Color(0.010, 0.018, 0.060, 0.94)
+const SURFACE_CARD: Color = Color(0.020, 0.026, 0.090, 0.88)
 const TEXT_MAIN: Color = Color(0.94, 0.985, 1.0, 1.0)
 const TEXT_SOFT: Color = Color(0.68, 0.80, 1.0, 0.94)
 const TEXT_DIM: Color = Color(0.42, 0.55, 0.78, 0.88)
@@ -23,8 +24,8 @@ static func apply_main_menu(scene: Node) -> void:
 		)
 	_style_color_rect(scene.get_node_or_null("BackgroundController/ColorRect"), Color(0.01, 0.02, 0.06, 1.0))
 	_style_color_rect(scene.get_node_or_null("BackgroundController/CenterGlow"), Color(0.55, 0.10, 1.0, 0.18))
-	_style_color_rect(scene.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel"), Color(0.018, 0.028, 0.08, 0.18))
-	_style_panels(scene, _find_paths_containing(scene, "Card"), "card")
+	_style_color_rect(scene.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel"), Color(0.018, 0.006, 0.060, 0.60))
+	_style_panels(scene, _find_paths_containing(scene, "Card"), "machine_slot")
 	_style_panels(scene, [
 		"UI/RootMargin/Layout/Center/PanelShell",
 	], "gate_shell")
@@ -45,7 +46,7 @@ static func apply_main_menu(scene: Node) -> void:
 	], "icon")
 	_style_buttons(scene, _find_button_paths(scene, "Toggle") + _find_button_paths(scene, "Info") + _find_button_paths(scene, "Promo"), "secondary")
 	_style_panels(scene, ["UI/RootMargin/Layout/TopBar/Shop/CoinBadge"], "badge")
-	_style_glass_surfaces(scene)
+	_style_arcade_surfaces(scene)
 	_tint_labels(scene)
 
 static func apply_game(scene: Node) -> void:
@@ -59,13 +60,13 @@ static func apply_game(scene: Node) -> void:
 			Color(0.0, 0.10, 0.24, 1.0),
 			Color(0.52, 0.0, 0.72, 1.0)
 		)
-	_style_color_rect(scene.get_node_or_null("UI/TopBarBg"), Color(0.018, 0.026, 0.082, 0.92))
-	_style_color_rect(scene.get_node_or_null("UI/BoardFrame"), Color(0.05, 0.14, 0.34, 0.18))
-	_style_color_rect(scene.get_node_or_null("UI/BoardGlow"), Color(0.10, 0.86, 1.0, 0.10))
+	_style_color_rect(scene.get_node_or_null("UI/TopBarBg"), Color(0.012, 0.018, 0.060, 0.96))
+	_style_color_rect(scene.get_node_or_null("UI/BoardFrame"), Color(0.028, 0.038, 0.105, 0.58))
+	_style_color_rect(scene.get_node_or_null("UI/BoardGlow"), Color(0.10, 0.86, 1.0, 0.18))
 	_style_panels(scene, _find_paths_containing(scene, "Badge"), "hot_badge")
 	_style_buttons(scene, ["UI/TopBar/Pause", "UI/TopRightBar/Account", "UI/TopRightBar/Shop", "UI/TopRightBar/Audio"], "icon")
 	_style_buttons(scene, ["UI/Powerups/Undo", "UI/Powerups/RemoveColor", "UI/Powerups/Hint", "UI/Powerups/Shuffle"], "powerup")
-	_style_glass_surfaces(scene)
+	_style_arcade_surfaces(scene)
 	_tint_labels(scene)
 
 static func apply_results(scene: Node) -> void:
@@ -81,19 +82,19 @@ static func apply_results(scene: Node) -> void:
 		)
 	_style_color_rect(scene.get_node_or_null("BackgroundController/ColorRect"), Color(0.01, 0.02, 0.06, 1.0))
 	_style_color_rect(scene.get_node_or_null("BackgroundController/CenterGlow"), Color(0.10, 0.75, 1.0, 0.12))
-	_style_color_rect(scene.get_node_or_null("UI/Panel"), Color(0.018, 0.026, 0.082, 0.92))
+	_style_color_rect(scene.get_node_or_null("UI/Panel"), Color(0.012, 0.018, 0.060, 0.94))
 	_style_panels(scene, ["UI/Panel"], "panel")
 	_style_buttons(scene, ["UI/Panel/Scroll/VBox/PlayAgain"], "primary")
 	_style_buttons(scene, ["UI/Panel/Scroll/VBox/DoubleReward"], "reward")
 	_style_buttons(scene, ["UI/Panel/Scroll/VBox/Menu", "UI/TopRightBar/Audio"], "secondary")
-	_style_glass_surfaces(scene)
+	_style_arcade_surfaces(scene)
 	_tint_labels(scene)
 
 static func apply_pause(scene: Node) -> void:
 	_style_panels(scene, ["Panel"], "panel")
 	_style_buttons(scene, ["VBox/Resume", "Panel/VBox/Resume"], "primary")
 	_style_buttons(scene, ["VBox/Quit", "Panel/VBox/Quit"], "secondary")
-	_style_glass_surfaces(scene)
+	_style_arcade_surfaces(scene)
 	_tint_labels(scene)
 
 static func apply_modal(scene: Node) -> void:
@@ -112,78 +113,83 @@ static func apply_modal(scene: Node) -> void:
 	]:
 		_style_button(scene.get_node_or_null(path), "primary")
 	_style_line_edits(scene)
-	_style_glass_surfaces(scene)
+	_style_arcade_surfaces(scene)
 	_tint_labels(scene)
 
 static func make_style(kind: String) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = SURFACE_CARD
-	style.border_color = Color(0.45, 0.86, 1.0, 0.34)
-	style.border_width_left = 1
-	style.border_width_top = 1
-	style.border_width_right = 1
-	style.border_width_bottom = 1
-	style.corner_radius_top_left = 18
-	style.corner_radius_top_right = 18
-	style.corner_radius_bottom_left = 18
-	style.corner_radius_bottom_right = 18
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.28)
-	style.shadow_size = 5
+	style.border_color = Color(0.18, 0.92, 1.0, 0.76)
+	style.border_width_left = 3
+	style.border_width_top = 3
+	style.border_width_right = 3
+	style.border_width_bottom = 3
+	style.corner_radius_top_left = 5
+	style.corner_radius_top_right = 5
+	style.corner_radius_bottom_left = 5
+	style.corner_radius_bottom_right = 5
+	style.shadow_color = Color(0.00, 0.76, 1.0, 0.20)
+	style.shadow_size = 10
 	style.anti_aliasing = true
 	style.anti_aliasing_size = 1.2
 	match kind:
 		"panel":
-			style.bg_color = Color(0.018, 0.028, 0.085, 0.90)
-			style.border_color = Color(0.12, 0.90, 1.0, 0.70)
-			style.corner_radius_top_left = 10
-			style.corner_radius_top_right = 10
-			style.corner_radius_bottom_left = 10
-			style.corner_radius_bottom_right = 10
-			style.shadow_color = Color(0.0, 0.75, 1.0, 0.24)
-			style.shadow_size = 15
+			style.bg_color = Color(0.010, 0.018, 0.060, 0.94)
+			style.border_color = Color(0.10, 0.92, 1.0, 0.88)
+			style.shadow_color = Color(0.0, 0.78, 1.0, 0.34)
+			style.shadow_size = 18
 		"primary":
-			style.bg_color = Color(1.0, 0.08, 0.36, 0.98)
-			style.border_color = Color(1.0, 0.72, 0.18, 0.98)
-			style.shadow_color = Color(1.0, 0.12, 0.58, 0.48)
-			style.shadow_size = 16
-			style.corner_radius_top_left = 8
-			style.corner_radius_top_right = 8
-			style.corner_radius_bottom_left = 8
-			style.corner_radius_bottom_right = 8
+			style.bg_color = Color(1.0, 0.04, 0.28, 0.98)
+			style.border_color = Color(1.0, 0.88, 0.20, 1.0)
+			style.shadow_color = Color(1.0, 0.06, 0.46, 0.64)
+			style.shadow_size = 24
+			style.border_width_left = 5
+			style.border_width_top = 5
+			style.border_width_right = 5
+			style.border_width_bottom = 5
 		"reward":
 			style.bg_color = Color(0.04, 0.12, 0.23, 0.78)
 			style.border_color = Color(0.08, 0.88, 1.0, 0.92)
 			style.shadow_color = Color(0.02, 0.8, 1.0, 0.18)
 		"secondary":
-			style.bg_color = Color(0.018, 0.026, 0.085, 0.86)
-			style.border_color = Color(0.20, 0.86, 1.0, 0.86)
+			style.bg_color = Color(0.006, 0.010, 0.038, 0.92)
+			style.border_color = Color(0.20, 0.86, 1.0, 0.92)
 		"icon":
-			style.bg_color = Color(0.06, 0.10, 0.22, 0.82)
-			style.border_color = Color(0.82, 0.95, 1.0, 0.84)
+			style.bg_color = Color(0.018, 0.028, 0.085, 0.92)
+			style.border_color = Color(0.82, 0.95, 1.0, 0.92)
+			style.corner_radius_top_left = 10
+			style.corner_radius_top_right = 10
+			style.corner_radius_bottom_left = 10
+			style.corner_radius_bottom_right = 10
 		"powerup":
-			style.bg_color = Color(0.018, 0.026, 0.085, 0.90)
-			style.border_color = Color(0.22, 0.88, 1.0, 0.96)
-			style.shadow_color = Color(0.95, 0.12, 1.0, 0.34)
-			style.shadow_size = 14
+			style.bg_color = Color(0.018, 0.012, 0.050, 0.96)
+			style.border_color = Color(0.98, 0.18, 1.0, 0.98)
+			style.shadow_color = Color(0.95, 0.12, 1.0, 0.54)
+			style.shadow_size = 22
+			style.border_width_left = 4
+			style.border_width_top = 4
+			style.border_width_right = 4
+			style.border_width_bottom = 4
 		"gate_shell":
-			style.bg_color = Color(0.005, 0.012, 0.035, 0.18)
-			style.border_color = Color(0.08, 0.90, 1.0, 0.54)
-			style.corner_radius_top_left = 28
-			style.corner_radius_top_right = 28
-			style.corner_radius_bottom_left = 28
-			style.corner_radius_bottom_right = 28
-			style.shadow_color = Color(0.05, 0.78, 1.0, 0.22)
-			style.shadow_size = 14
+			style.bg_color = Color(0.002, 0.006, 0.024, 0.54)
+			style.border_color = Color(0.08, 0.90, 1.0, 0.82)
+			style.shadow_color = Color(0.05, 0.78, 1.0, 0.36)
+			style.shadow_size = 24
 		"gate_panel":
-			style.bg_color = Color(0.014, 0.022, 0.070, 0.54)
-			style.border_color = Color(0.10, 0.94, 1.0, 0.82)
-			style.shadow_color = Color(0.82, 0.12, 1.0, 0.30)
-			style.shadow_size = 18
+			style.bg_color = Color(0.045, 0.006, 0.085, 0.78)
+			style.border_color = Color(1.0, 0.16, 0.86, 0.90)
+			style.shadow_color = Color(0.82, 0.12, 1.0, 0.46)
+			style.shadow_size = 26
 		"gate_rail":
-			style.bg_color = Color(0.015, 0.026, 0.085, 0.66)
-			style.border_color = Color(0.14, 0.86, 1.0, 0.54)
-			style.shadow_color = Color(0.0, 0.0, 0.0, 0.22)
-			style.shadow_size = 4
+			style.bg_color = Color(0.006, 0.012, 0.044, 0.84)
+			style.border_color = Color(0.14, 0.86, 1.0, 0.84)
+			style.shadow_color = Color(0.0, 0.78, 1.0, 0.20)
+			style.shadow_size = 14
+		"machine_slot":
+			style.bg_color = Color(0.018, 0.024, 0.074, 0.90)
+			style.border_color = Color(0.10, 0.82, 1.0, 0.70)
+			style.shadow_color = Color(0.0, 0.0, 0.0, 0.36)
+			style.shadow_size = 5
 		"badge", "hot_badge":
 			style.bg_color = Color(1.0, 0.22, 0.34, 0.98)
 			style.border_color = Color(1.0, 0.88, 0.92, 0.98)
@@ -252,8 +258,8 @@ static func _style_button(node: Node, kind: String) -> void:
 	button.add_theme_color_override("font_focus_color", TEXT_MAIN)
 	button.add_theme_color_override("font_disabled_color", TEXT_SOFT)
 	button.add_theme_color_override("font_outline_color", SHADOW)
-	button.add_theme_constant_override("outline_size", 2)
-	_apply_glass_node(button, kind)
+	button.add_theme_constant_override("outline_size", 4 if kind == "primary" else 2)
+	_apply_arcade_node(button, kind)
 	if button.has_method("_sync_glass_state"):
 		button.call_deferred("_sync_glass_state")
 
@@ -280,11 +286,25 @@ static func _style_line_edits(scene: Node) -> void:
 		edit.add_theme_font_size_override("font_size", 26)
 		edit.custom_minimum_size.y = max(edit.custom_minimum_size.y, 64.0)
 
-static func _style_glass_surfaces(scene: Node) -> void:
+static func _style_arcade_surfaces(scene: Node) -> void:
 	for node in scene.find_children("*", "ColorRect", true, false):
-		_apply_glass_node(node, "panel")
+		if _is_under_background_controller(node):
+			continue
+		_apply_arcade_node(node, "panel")
+	for node in scene.find_children("*", "PanelContainer", true, false):
+		if _is_under_background_controller(node):
+			continue
+		_apply_arcade_node(node, "panel")
 
-static func _apply_glass_node(node: Node, kind: String) -> void:
+static func _is_under_background_controller(node: Node) -> bool:
+	var cursor := node
+	while cursor != null:
+		if cursor.name == "BackgroundController":
+			return true
+		cursor = cursor.get_parent()
+	return false
+
+static func _apply_arcade_node(node: Node, kind: String) -> void:
 	if node == null:
 		return
 	var tint := Color(0.04, 0.07, 0.16, 0.72)
@@ -305,11 +325,15 @@ static func _apply_glass_node(node: Node, kind: String) -> void:
 		node.set("corner_radius", 0.08 if kind == "panel" else 0.32)
 	if node is CanvasItem:
 		var canvas := node as CanvasItem
-		if canvas.material is ShaderMaterial:
-			var material := canvas.material as ShaderMaterial
-			material.set_shader_parameter("tint", tint)
-			material.set_shader_parameter("edge_highlight", edge)
-		if node is ColorRect and _has_property(node, "tint"):
+		var material := ShaderMaterial.new()
+		material.shader = ARCADE_CHROME_SHADER
+		material.set_shader_parameter("edge_color", edge)
+		material.set_shader_parameter("hot_color", Color(1.0, 0.10, 0.62, 1.0) if kind == "primary" else Color(1.0, 0.20, 0.95, 1.0))
+		material.set_shader_parameter("scanline_strength", 0.12 if kind != "primary" else 0.06)
+		material.set_shader_parameter("edge_strength", 0.38 if kind != "panel" else 0.22)
+		material.set_shader_parameter("diagonal_strength", 0.18 if kind != "panel" else 0.10)
+		canvas.material = material
+		if node is ColorRect:
 			(node as ColorRect).color = tint
 
 static func _has_property(node: Node, property_name: String) -> bool:

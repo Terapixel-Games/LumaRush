@@ -124,9 +124,7 @@ func _update_labels() -> void:
 
 func _results_title(best_value: int) -> String:
 	if RunManager.last_score > 0 and RunManager.last_score >= best_value:
-		return "NEW BEST"
-	if RunManager.last_run_completed_by_gameplay:
-		return "RUN BANKED"
+		return "RUN COMPLETE"
 	return "RUN COMPLETE"
 
 func _on_play_again_pressed() -> void:
@@ -205,13 +203,13 @@ func _layout_results_for_size(viewport_size: Vector2) -> void:
 	var max_panel_height: float = max(320.0, viewport_size.y - (outer_margin_y * 2.0))
 	var direct_loop_mode: bool = _is_direct_loop_mode()
 	var min_panel_height: float = min(300.0 if direct_loop_mode else 460.0, max_panel_height)
-	var target_panel_height: float = viewport_size.y * (0.74 if is_wide else 0.78) if direct_loop_mode else viewport_size.y * (0.36 if is_wide else ArcadeResponsiveLayout.results_panel_height_ratio(viewport_size))
+	var target_panel_height: float = viewport_size.y * (0.56 if is_wide else 0.52) if direct_loop_mode else viewport_size.y * (0.36 if is_wide else ArcadeResponsiveLayout.results_panel_height_ratio(viewport_size))
 	var panel_height_cap: float = min(max_panel_height, viewport_size.y * (0.86 if direct_loop_mode else 0.86)) if is_wide or direct_loop_mode else max_panel_height
 	var panel_height: float = clamp(target_panel_height, min_panel_height, panel_height_cap)
 	var panel_size: Vector2 = Vector2(panel_width, panel_height)
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	var panel_x: float = (viewport_size.x - panel_size.x) * 0.5
-	var panel_y: float = (viewport_size.y - panel_size.y) * (0.50 if is_wide else 0.48)
+	var panel_y: float = (viewport_size.y - panel_size.y) * (0.48 if is_wide else 0.42)
 	panel.position = Vector2(panel_x, panel_y)
 	panel.size = panel_size
 	_layout_top_right(viewport_size)
@@ -768,6 +766,20 @@ func _make_reward_card(node_name: String, accent: Color) -> Label:
 	label.add_theme_color_override("font_color", accent)
 	label.add_theme_color_override("font_outline_color", Color(0.02, 0.01, 0.08, 0.98))
 	label.add_theme_constant_override("outline_size", 4)
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.012, 0.018, 0.060, 0.92)
+	normal.border_color = accent
+	normal.border_width_left = 3
+	normal.border_width_top = 3
+	normal.border_width_right = 3
+	normal.border_width_bottom = 3
+	normal.corner_radius_top_left = 5
+	normal.corner_radius_top_right = 5
+	normal.corner_radius_bottom_left = 5
+	normal.corner_radius_bottom_right = 5
+	normal.shadow_color = Color(accent.r, accent.g, accent.b, 0.28)
+	normal.shadow_size = 14
+	label.add_theme_stylebox_override("normal", normal)
 	return label
 
 func _reset_scroll_top() -> void:

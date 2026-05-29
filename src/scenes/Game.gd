@@ -831,9 +831,10 @@ func _center_board() -> void:
 	_layout_top_right(view_size)
 	_layout_pressure_hud(view_size, final_hud_left, final_hud_width)
 	_apply_responsive_hud_typography(final_hud_width, top_bar_bg.size.y, powerup_row_height)
+	var board_bias: float = 0.42 if not is_wide else 0.48
 	board.position = Vector2(
 		(view_size.x - board_size.x) * 0.5,
-		top_limit + ((available_height - board_size.y) * 0.5)
+		top_limit + ((available_height - board_size.y) * board_bias)
 	)
 	_board_anchor_pos = board.position
 
@@ -1034,6 +1035,20 @@ func _make_hud_pod(node_name: String, color: Color) -> Label:
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_outline_color", Color(0.02, 0.01, 0.08, 0.98))
 	label.add_theme_constant_override("outline_size", 4)
+	var backing := StyleBoxFlat.new()
+	backing.bg_color = Color(0.010, 0.016, 0.054, 0.72)
+	backing.border_color = color
+	backing.border_width_left = 3
+	backing.border_width_top = 3
+	backing.border_width_right = 3
+	backing.border_width_bottom = 3
+	backing.corner_radius_top_left = 5
+	backing.corner_radius_top_right = 5
+	backing.corner_radius_bottom_left = 5
+	backing.corner_radius_bottom_right = 5
+	backing.shadow_color = Color(color.r, color.g, color.b, 0.30)
+	backing.shadow_size = 14
+	label.add_theme_stylebox_override("normal", backing)
 	return label
 
 func _cabinet_title_height(view_size: Vector2) -> float:
