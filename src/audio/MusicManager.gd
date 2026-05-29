@@ -51,6 +51,7 @@ func _ready() -> void:
 	_register_builtin_tracks()
 	_load_tracks_from_manifest(FeatureFlags.audio_track_manifest_path())
 	set_track(_initial_track_id(), false)
+	set_process_input(true)
 
 func _exit_tree() -> void:
 	if is_instance_valid(_drums_fade_tween):
@@ -78,6 +79,23 @@ func start_all_synced() -> void:
 		if not p.playing:
 			p.play()
 	set_calm()
+
+func resume_after_user_gesture() -> bool:
+	if synth == null or bass == null or drums == null or fx == null:
+		return false
+	if _current_track_id == "off":
+		return false
+	_set_music_bus_muted(false)
+	var should_restart_synced := false
+	for p in [synth, bass, drums, fx]:
+		p.stream_paused = false
+		if not p.playing or p.get_playback_position() <= 0.02:
+			should_restart_synced = true
+	if should_restart_synced:
+		for p in [synth, bass, drums, fx]:
+			p.stop()
+			p.play()
+	return true
 
 func set_calm() -> void:
 	if synth == null or bass == null or drums == null or fx == null:
@@ -237,6 +255,11 @@ func set_track(id: String, restart_if_playing: bool = true) -> bool:
 	SaveStore.set_selected_track_id(id)
 	return true
 
+func _input(event: InputEvent) -> void:
+	if not _is_audio_unlock_event(event):
+		return
+	resume_after_user_gesture()
+
 func _register_builtin_tracks() -> void:
 	_register_track_from_paths(
 		"default",
@@ -349,6 +372,16 @@ func _load_stream(path: String) -> AudioStream:
 	if resource is AudioStream:
 		return resource as AudioStream
 	return null
+
+func _is_audio_unlock_event(event: InputEvent) -> bool:
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		return mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT
+	if event is InputEventScreenTouch:
+		return (event as InputEventScreenTouch).pressed
+	if event is InputEventKey:
+		return (event as InputEventKey).pressed
+	return false
 
 func _is_headless_singleton() -> bool:
 	if DisplayServer.get_name() != "headless":
