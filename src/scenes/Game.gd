@@ -1020,7 +1020,7 @@ func _setup_cabinet_hud() -> void:
 		top_bar.add_child(_combo_pod_label)
 		top_bar.move_child(_combo_pod_label, min(1, top_bar.get_child_count() - 1))
 	if _rival_pod_label == null:
-		_rival_pod_label = _make_hud_pod("RivalPod", Color(1.0, 0.48, 0.96, 1.0))
+		_rival_pod_label = _make_hud_pod("RivalPod", Color(0.55, 0.24, 1.0, 1.0))
 		top_bar.add_child(_rival_pod_label)
 		top_bar.move_child(_rival_pod_label, min(2, top_bar.get_child_count() - 1))
 	score_caption_label.text = "SCORE"
@@ -1181,7 +1181,7 @@ func _update_pressure_hud() -> void:
 	var heat_text: String = "HEAT x%d" % max(1, combo)
 	if combo >= HIGH_COMBO_THRESHOLD:
 		heat_text = "OVERDRIVE x%d" % combo
-		_pressure_heat_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.98, 1.0))
+		_pressure_heat_label.add_theme_color_override("font_color", Color(1.0, 0.42, 0.50, 1.0))
 	else:
 		_pressure_heat_label.add_theme_color_override("font_color", Color(0.86, 0.96, 1.0, 0.96))
 	_pressure_heat_label.text = heat_text
@@ -1195,7 +1195,7 @@ func _update_pressure_hud() -> void:
 	if progress >= 1.0:
 		_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(1.0, 0.82, 0.28, 0.95)))
 	elif combo >= HIGH_COMBO_THRESHOLD:
-		_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(0.95, 0.28, 1.0, 0.92)))
+		_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(0.50, 0.20, 1.0, 0.92)))
 	else:
 		_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(0.18, 0.86, 1.0, 0.92)))
 

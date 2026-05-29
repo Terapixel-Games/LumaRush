@@ -20,10 +20,10 @@ static func apply_main_menu(scene: Node) -> void:
 			Color(0.01, 0.025, 0.075, 1.0),
 			Color(0.035, 0.07, 0.18, 1.0),
 			Color(0.08, 0.04, 0.22, 1.0),
-			Color(0.55, 0.10, 0.95, 1.0)
+			Color(0.30, 0.08, 0.92, 1.0)
 		)
 	_style_color_rect(scene.get_node_or_null("BackgroundController/ColorRect"), Color(0.01, 0.02, 0.06, 1.0))
-	_style_color_rect(scene.get_node_or_null("BackgroundController/CenterGlow"), Color(0.55, 0.10, 1.0, 0.18))
+	_style_color_rect(scene.get_node_or_null("BackgroundController/CenterGlow"), Color(0.30, 0.08, 1.0, 0.18))
 	_style_color_rect(scene.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel"), Color(0.018, 0.006, 0.060, 0.60))
 	_style_panels(scene, _find_paths_containing(scene, "Card"), "machine_slot")
 	_style_panels(scene, [
@@ -58,7 +58,7 @@ static func apply_game(scene: Node) -> void:
 			Color(0.005, 0.012, 0.035, 1.0),
 			Color(0.015, 0.032, 0.090, 1.0),
 			Color(0.0, 0.10, 0.24, 1.0),
-			Color(0.52, 0.0, 0.72, 1.0)
+			Color(0.25, 0.0, 0.66, 1.0)
 		)
 	_style_color_rect(scene.get_node_or_null("UI/TopBarBg"), Color(0.012, 0.018, 0.060, 0.96))
 	_style_color_rect(scene.get_node_or_null("UI/BoardFrame"), Color(0.028, 0.038, 0.105, 0.58))
@@ -139,9 +139,9 @@ static func make_style(kind: String) -> StyleBoxFlat:
 			style.shadow_color = Color(0.0, 0.78, 1.0, 0.34)
 			style.shadow_size = 18
 		"primary":
-			style.bg_color = Color(1.0, 0.04, 0.28, 0.98)
+			style.bg_color = Color(1.0, 0.06, 0.22, 0.98)
 			style.border_color = Color(1.0, 0.88, 0.20, 1.0)
-			style.shadow_color = Color(1.0, 0.06, 0.46, 0.64)
+			style.shadow_color = Color(1.0, 0.04, 0.24, 0.64)
 			style.shadow_size = 24
 			style.border_width_left = 5
 			style.border_width_top = 5
@@ -163,8 +163,8 @@ static func make_style(kind: String) -> StyleBoxFlat:
 			style.corner_radius_bottom_right = 10
 		"powerup":
 			style.bg_color = Color(0.018, 0.012, 0.050, 0.96)
-			style.border_color = Color(0.98, 0.18, 1.0, 0.98)
-			style.shadow_color = Color(0.95, 0.12, 1.0, 0.54)
+			style.border_color = Color(0.48, 0.22, 1.0, 0.98)
+			style.shadow_color = Color(0.40, 0.12, 1.0, 0.54)
 			style.shadow_size = 22
 			style.border_width_left = 4
 			style.border_width_top = 4
@@ -177,8 +177,8 @@ static func make_style(kind: String) -> StyleBoxFlat:
 			style.shadow_size = 24
 		"gate_panel":
 			style.bg_color = Color(0.045, 0.006, 0.085, 0.78)
-			style.border_color = Color(1.0, 0.16, 0.86, 0.90)
-			style.shadow_color = Color(0.82, 0.12, 1.0, 0.46)
+			style.border_color = Color(0.52, 0.18, 1.0, 0.90)
+			style.shadow_color = Color(0.36, 0.10, 1.0, 0.46)
 			style.shadow_size = 26
 		"gate_rail":
 			style.bg_color = Color(0.006, 0.012, 0.044, 0.84)
@@ -191,8 +191,8 @@ static func make_style(kind: String) -> StyleBoxFlat:
 			style.shadow_color = Color(0.0, 0.0, 0.0, 0.36)
 			style.shadow_size = 5
 		"badge", "hot_badge":
-			style.bg_color = Color(1.0, 0.22, 0.34, 0.98)
-			style.border_color = Color(1.0, 0.88, 0.92, 0.98)
+			style.bg_color = Color(1.0, 0.10, 0.24, 0.98)
+			style.border_color = Color(1.0, 0.84, 0.78, 0.98)
 			style.corner_radius_top_left = 999
 			style.corner_radius_top_right = 999
 			style.corner_radius_bottom_left = 999
@@ -328,7 +328,7 @@ static func _apply_arcade_node(node: Node, kind: String) -> void:
 		var material := ShaderMaterial.new()
 		material.shader = ARCADE_CHROME_SHADER
 		material.set_shader_parameter("edge_color", edge)
-		material.set_shader_parameter("hot_color", Color(1.0, 0.10, 0.62, 1.0) if kind == "primary" else Color(1.0, 0.20, 0.95, 1.0))
+		material.set_shader_parameter("hot_color", Color(1.0, 0.08, 0.24, 1.0) if kind == "primary" else Color(0.42, 0.16, 1.0, 1.0))
 		material.set_shader_parameter("scanline_strength", 0.12 if kind != "primary" else 0.06)
 		material.set_shader_parameter("edge_strength", 0.38 if kind != "panel" else 0.22)
 		material.set_shader_parameter("diagonal_strength", 0.18 if kind != "panel" else 0.10)

@@ -2,7 +2,7 @@ shader_type canvas_item;
 render_mode unshaded, blend_mix;
 
 uniform vec4 edge_color : source_color = vec4(0.10, 0.90, 1.0, 1.0);
-uniform vec4 hot_color : source_color = vec4(1.0, 0.12, 0.62, 1.0);
+uniform vec4 hot_color : source_color = vec4(1.0, 0.08, 0.24, 1.0);
 uniform float scanline_strength : hint_range(0.0, 0.35) = 0.10;
 uniform float edge_strength : hint_range(0.0, 1.0) = 0.42;
 uniform float diagonal_strength : hint_range(0.0, 0.8) = 0.28;

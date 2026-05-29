@@ -40,7 +40,7 @@ const PROMO_URL := "https://terapixel.games/color-crunch"
 
 var _title_t: float = 0.0
 var _title_base_color: Color = Color(0.84, 0.97, 1.0, 1.0)
-var _title_accent_color: Color = Color(0.98, 0.48, 0.88, 1.0)
+var _title_accent_color: Color = Color(1.0, 0.34, 0.50, 1.0)
 var _tracks: Array[Dictionary] = []
 var _track_index: int = 0
 var _audio_overlay: AudioTrackOverlay
@@ -269,7 +269,7 @@ func _apply_launch_bay_hierarchy() -> void:
 		brand_label.add_theme_font_size_override("font_size", Typography.px(16.0))
 		brand_label.add_theme_color_override("font_color", Color(0.60, 0.90, 1.0, 0.96))
 	title_label.add_theme_font_size_override("font_size", Typography.px(98.0))
-	title_label.add_theme_color_override("font_color", Color(1.0, 0.60, 0.92, 1.0))
+	title_label.add_theme_color_override("font_color", Color(1.0, 0.42, 0.56, 1.0))
 	title_label.add_theme_color_override("font_outline_color", Color(0.02, 0.0, 0.08, 0.98))
 	title_label.add_theme_color_override("font_shadow_color", Color(0.20, 0.94, 1.0, 0.92))
 	title_label.add_theme_constant_override("outline_size", 7)

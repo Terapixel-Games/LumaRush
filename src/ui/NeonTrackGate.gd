@@ -21,7 +21,7 @@ func _draw() -> void:
 	var gate_h: float = clamp(rect.size.y * 0.40, 280.0, 540.0)
 	var gate := Rect2(center - Vector2(gate_w, gate_h) * 0.5, Vector2(gate_w, gate_h))
 	var glow_color := Color(0.08, 0.86, 1.0, 0.34)
-	var magenta := Color(0.88, 0.18, 1.0, 0.30)
+	var magenta := Color(0.42, 0.16, 1.0, 0.34)
 	var orange := Color(1.0, 0.42, 0.05, 0.34)
 	var dark_fill := Color(0.015, 0.026, 0.075, 0.50)
 
@@ -61,7 +61,7 @@ func _draw() -> void:
 	var gate_body := gate.grow(12.0)
 	draw_rect(gate_body, dark_fill, true)
 	draw_rect(gate_body, Color(0.07, 0.92, 1.0, 0.46), false, 3.0)
-	draw_rect(gate_body.grow(-10.0), Color(0.95, 0.20, 1.0, 0.22), false, 2.0)
+	draw_rect(gate_body.grow(-10.0), Color(0.42, 0.16, 1.0, 0.26), false, 2.0)
 
 	var start_bar := Rect2(
 		Vector2(gate.position.x + gate_w * 0.17, gate.position.y + gate_h * 0.61),

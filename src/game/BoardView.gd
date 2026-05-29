@@ -16,10 +16,10 @@ signal non_match_tapped(cell: Vector2i)
 
 const TILE_PALETTE_MODERN := [
 	Color(0.08, 0.74, 1.0, 0.96),  # cyan
-	Color(1.0, 0.20, 0.60, 0.96),  # magenta
+	Color(1.0, 0.12, 0.30, 0.96),  # hot pink
 	Color(0.38, 1.0, 0.18, 0.96),  # green
 	Color(1.0, 0.72, 0.04, 0.96),  # gold
-	Color(0.68, 0.18, 1.0, 0.96),  # purple
+	Color(0.44, 0.10, 1.0, 0.96),  # violet
 ]
 
 const TILE_PALETTE_LEGACY := [

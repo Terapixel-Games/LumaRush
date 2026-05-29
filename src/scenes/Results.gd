@@ -723,7 +723,7 @@ func _ensure_dynamic_stats() -> void:
 		_move_before_spacer(_reward_cards)
 		_best_reward_label = _make_reward_card("BestReward", Color(1.0, 0.78, 0.20, 1.0))
 		_coins_reward_label = _make_reward_card("CoinsReward", Color(0.18, 0.86, 1.0, 1.0))
-		_streak_reward_label = _make_reward_card("StreakReward", Color(1.0, 0.30, 0.72, 1.0))
+		_streak_reward_label = _make_reward_card("StreakReward", Color(1.0, 0.12, 0.30, 1.0))
 		_reward_cards.add_child(_best_reward_label)
 		_reward_cards.add_child(_coins_reward_label)
 		_reward_cards.add_child(_streak_reward_label)

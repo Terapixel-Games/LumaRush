@@ -27,7 +27,7 @@ func _draw() -> void:
 	if r.size.x < 8.0 or r.size.y < 8.0:
 		return
 	var cyan := Color(0.08, 0.92, 1.0, 0.94)
-	var magenta := Color(1.0, 0.08, 0.74, 0.88)
+	var magenta := Color(0.55, 0.16, 1.0, 0.88)
 	var amber := Color(1.0, 0.72, 0.10, 0.88)
 	var shell := Color(0.002, 0.006, 0.022, 0.95)
 	var panel := Color(0.006, 0.018, 0.064, 0.76)
@@ -92,7 +92,7 @@ func _draw_scanlines(r: Rect2, cyan: Color) -> void:
 func _draw_horizon(r: Rect2, cyan: Color, magenta: Color) -> void:
 	var c := r.size * 0.5
 	var horizon_y: float = r.size.y * 0.43
-	draw_circle(c + Vector2(0, -r.size.y * 0.06), min(r.size.x, r.size.y) * 0.24, Color(0.9, 0.1, 1.0, 0.10))
+	draw_circle(c + Vector2(0, -r.size.y * 0.06), min(r.size.x, r.size.y) * 0.24, Color(0.34, 0.08, 1.0, 0.12))
 	for i in range(8):
 		var u: float = float(i) / 7.0
 		var x: float = lerp(r.size.x * 0.12, r.size.x * 0.88, u)
