@@ -244,11 +244,11 @@ func _apply_launch_bay_copy() -> void:
 	_set_label_text("UI/RootMargin/Layout/TopBar/Brand", "LUMARUSH // RUN DECK")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Kicker", "RUN DECK")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Title", "LUMARUSH")
-	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Subtitle", "Pick a lane. Break the rival mark. Bank the streak.")
+	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Subtitle", "Build heat, chase the rival meter, and bank the run.")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/LaunchNote", "")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchEyebrow", "LANE INTEL")
-	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchTitle", "Set the run pressure")
-	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchMeta", "Mode, daily board, rival target, and side jump stay here.")
+	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchTitle", "Pressure contract")
+	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchMeta", "Pure starts clean. Power-ups move the run to Open. Rival progress stays live in-game.")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/ModeCard/Margin/VBox/ModeTitle", "LANE")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/DailyCard/Margin/VBox/DailyTitle", "DAILY")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox/WeeklyTitle", "RIVAL")
@@ -384,20 +384,20 @@ func _sync_mode_buttons() -> void:
 	var week_tier: int = int(SaveStore.data.get("social_week_tier", 0))
 	var rival_target: int = RunManager.get_active_rival_target()
 	var rival_name: String = str(SaveStore.data.get("social_rival_name", "Rival"))
-	mode_button.text = "OPEN ON POWERUP"
+	mode_button.text = "PURE UNTIL POWERUP"
 	mode_button.disabled = true
-	mode_meta.text = "Starts Pure // Open after first power-up"
+	mode_meta.text = "Clean lane // Open after first tool"
 	var daily_enabled: bool = SaveStore.get_daily_challenge_enabled()
 	daily_button.text = "DAILY %s" % ("ON" if daily_enabled else "OFF")
-	daily_meta.text = "Rival board %s" % ("armed" if daily_enabled else "muted")
-	weekly_button.text = "LADDER LOCKED"
+	daily_meta.text = "Bonus pressure %s" % ("armed" if daily_enabled else "muted")
+	weekly_button.text = "RIVAL %d" % rival_target
 	weekly_button.disabled = true
-	weekly_meta.text = "%d pts // %s target %d" % [week_points, rival_name, rival_target]
-	promo_button.text = "COLORCRUNCH"
-	promo_meta.text = "Color board standby"
+	weekly_meta.text = "%s // %d ladder pts" % [rival_name.to_upper(), week_points]
+	promo_button.text = "SIDE BOARD"
+	promo_meta.text = "ColorCrunch jump"
 	pure_meta.text = "%s // TIER %d" % [mode_id, week_tier]
 	daily_signal_meta.text = "LIVE" if daily_enabled else "MUTED"
-	flow_meta.text = "%s %d" % [rival_name, rival_target]
+	flow_meta.text = "%s // %d" % [rival_name.to_upper(), rival_target]
 
 func _on_mode_toggle_pressed() -> void:
 	_sync_mode_buttons()

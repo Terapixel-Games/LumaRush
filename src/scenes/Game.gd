@@ -63,6 +63,12 @@ var _shake_time_left: float = 0.0
 var _board_anchor_pos: Vector2 = Vector2.ZERO
 var _scene_opened_msec: int = Time.get_ticks_msec()
 var _combo_timeout_remaining: float = -1.0
+var _pressure_hud: PanelContainer
+var _pressure_heat_label: Label
+var _pressure_rival_label: Label
+var _pressure_matches_label: Label
+var _pressure_bar: ProgressBar
+var _score_burst_label: Label
 const COMBO_BREAK_TIMEOUT_SECONDS: float = 1.8
 
 const ICON_UNDO: Texture2D = preload("res://assets/ui/icons/atlas/powerup_undo.tres")
@@ -150,8 +156,10 @@ func _ready() -> void:
 	powerup_flash.visible = false
 	_board_anchor_pos = board.position
 	_setup_combo_label()
+	_setup_pressure_hud()
 	_maybe_show_micro_tutorial()
 	_update_score()
+	_update_pressure_hud()
 	_update_powerup_buttons()
 	_center_board()
 	call_deferred("_refresh_button_pivots")
@@ -183,7 +191,9 @@ func _on_match_made(group: Array) -> void:
 	var gained := group.size() * 10 * combo
 	score += gained
 	_update_score()
+	_update_pressure_hud()
 	UiFx.pop(score_value_label, 1.04, 0.14)
+	_show_score_burst(gained)
 	_show_combo_escalation()
 	_kick_screen_shake(min(11.0, 2.0 + float(group.size()) + (combo * 0.35)))
 	_update_gameplay_mood_from_matches()
@@ -261,6 +271,7 @@ func _on_undo_pressed() -> void:
 	_record_powerup_use("undo")
 	call_deferred("_consume_powerup_server", "undo")
 	_update_score()
+	_update_pressure_hud()
 	_update_gameplay_mood_from_matches(0.3)
 	_update_powerup_buttons()
 	_play_powerup_juice(Color(0.72, 0.9, 1.0, FeatureFlags.powerup_flash_alpha()))
@@ -303,6 +314,8 @@ func _on_prism_color_selected(color_idx: int) -> void:
 	_arm_combo_timeout()
 	score += removed * 12
 	_update_score()
+	_update_pressure_hud()
+	_show_score_burst(removed * 12)
 	_update_gameplay_mood_from_matches(0.3)
 	_update_powerup_buttons()
 	MusicManager.on_match_made()
@@ -335,6 +348,7 @@ func _update_gameplay_mood_from_matches(fade_seconds: float = -1.0) -> void:
 	var calm_weight: float = raw_calm_weight * max_calm_weight
 	var fade: float = fade_seconds if fade_seconds >= 0.0 else FeatureFlags.gameplay_matches_mood_fade_seconds()
 	BackgroundMood.set_mood_mix(calm_weight, fade)
+	_update_pressure_hud()
 
 func _update_powerup_buttons() -> void:
 	undo_button.icon = _powerup_button_icon(ICON_UNDO, "undo")
@@ -766,6 +780,9 @@ func _center_board() -> void:
 	var top_limit: float = view_size.y * 0.14
 	if top_bar_bg and top_bar_bg.size.y > 0.0:
 		top_limit = top_bar_bg.position.y + top_bar_bg.size.y + vertical_gap
+	_layout_pressure_hud(view_size, content_left, content_width)
+	if _pressure_hud and _pressure_hud.visible:
+		top_limit = max(top_limit, _pressure_hud.position.y + _pressure_hud.size.y + vertical_gap)
 	var bottom_limit: float = view_size.y * (0.84 if is_wide else 0.81)
 	if powerups_row and powerups_row.size.y > 0.0:
 		bottom_limit = powerups_row.position.y - vertical_gap
@@ -782,6 +799,7 @@ func _center_board() -> void:
 	var final_hud_left: float = (view_size.x - final_hud_width) * 0.5
 	_layout_top_bar(view_size, final_hud_left, final_hud_width)
 	_layout_top_right(view_size)
+	_layout_pressure_hud(view_size, final_hud_left, final_hud_width)
 	_apply_responsive_hud_typography(final_hud_width, top_bar_bg.size.y, powerup_row_height)
 	board.position = Vector2(
 		(view_size.x - board_size.x) * 0.5,
@@ -885,6 +903,12 @@ func _apply_responsive_hud_typography(content_width: float, bar_height: float, p
 		score_value_label.add_theme_font_size_override("font_size", value_size)
 		score_value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		score_value_label.custom_minimum_size.y = clamp(score_inner_height * 0.42, 30.0, 50.0)
+	var pressure_font: int = int(round(clamp(bar_height * 0.15, Typography.px(12.0), Typography.px(18.0))))
+	for label in [_pressure_heat_label, _pressure_rival_label, _pressure_matches_label]:
+		if label:
+			label.add_theme_font_size_override("font_size", pressure_font)
+	if _score_burst_label:
+		_score_burst_label.add_theme_font_size_override("font_size", int(round(clamp(bar_height * 0.24, Typography.px(18.0), Typography.px(30.0)))))
 
 	var badge_font_size: int = int(round(clamp(powerup_row_height * 0.32, Typography.px(14.0), Typography.px(26.0))))
 	for badge in [undo_badge, prism_badge, hint_badge]:
@@ -937,6 +961,156 @@ func _setup_combo_label() -> void:
 	_combo_label.offset_bottom = 146.0
 	_combo_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	$UI.add_child(_combo_label)
+
+func _setup_pressure_hud() -> void:
+	if _pressure_hud != null:
+		return
+	_pressure_hud = PanelContainer.new()
+	_pressure_hud.name = "PressureHud"
+	_pressure_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pressure_hud.z_index = 8
+	_pressure_hud.add_theme_stylebox_override("panel", _pressure_panel_style())
+	$UI.add_child(_pressure_hud)
+
+	var margin := MarginContainer.new()
+	margin.name = "Margin"
+	margin.add_theme_constant_override("margin_left", 14)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_right", 14)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	_pressure_hud.add_child(margin)
+
+	var row := HBoxContainer.new()
+	row.name = "Row"
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 14)
+	margin.add_child(row)
+
+	_pressure_heat_label = _make_pressure_label("Heat")
+	row.add_child(_pressure_heat_label)
+	_pressure_bar = ProgressBar.new()
+	_pressure_bar.name = "RivalMeter"
+	_pressure_bar.min_value = 0.0
+	_pressure_bar.max_value = 100.0
+	_pressure_bar.value = 0.0
+	_pressure_bar.show_percentage = false
+	_pressure_bar.custom_minimum_size = Vector2(180.0, 14.0)
+	_pressure_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_pressure_bar.add_theme_stylebox_override("background", _pressure_bar_style(Color(0.05, 0.09, 0.16, 0.88)))
+	_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(0.18, 0.86, 1.0, 0.92)))
+	row.add_child(_pressure_bar)
+	_pressure_rival_label = _make_pressure_label("Rival")
+	row.add_child(_pressure_rival_label)
+	_pressure_matches_label = _make_pressure_label("Matches")
+	row.add_child(_pressure_matches_label)
+
+	_score_burst_label = Label.new()
+	_score_burst_label.name = "ScoreBurst"
+	_score_burst_label.visible = false
+	_score_burst_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_score_burst_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_score_burst_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_score_burst_label.add_theme_color_override("font_color", Color(1.0, 0.94, 0.42, 1.0))
+	_score_burst_label.add_theme_color_override("font_outline_color", Color(0.04, 0.02, 0.12, 0.96))
+	_score_burst_label.add_theme_constant_override("outline_size", 4)
+	$UI.add_child(_score_burst_label)
+
+func _make_pressure_label(node_name: String) -> Label:
+	var label := Label.new()
+	label.name = node_name
+	label.clip_text = true
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_color_override("font_color", Color(0.86, 0.96, 1.0, 0.96))
+	label.add_theme_color_override("font_outline_color", Color(0.0, 0.03, 0.08, 0.9))
+	label.add_theme_constant_override("outline_size", 2)
+	return label
+
+func _pressure_panel_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.05, 0.11, 0.72)
+	style.border_color = Color(0.12, 0.92, 1.0, 0.52)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.corner_radius_top_left = 14
+	style.corner_radius_top_right = 14
+	style.corner_radius_bottom_left = 14
+	style.corner_radius_bottom_right = 14
+	style.anti_aliasing = true
+	return style
+
+func _pressure_bar_style(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.corner_radius_top_left = 999
+	style.corner_radius_top_right = 999
+	style.corner_radius_bottom_left = 999
+	style.corner_radius_bottom_right = 999
+	return style
+
+func _layout_pressure_hud(view_size: Vector2, content_left: float, content_width: float) -> void:
+	if _pressure_hud == null or top_bar_bg == null:
+		return
+	var is_wide: bool = ArcadeResponsiveLayout.is_wide(view_size)
+	var hud_height: float = clamp(view_size.y * (0.058 if is_wide else 0.064), 42.0, 58.0)
+	var hud_gap: float = clamp(view_size.y * 0.007, 5.0, 9.0)
+	_pressure_hud.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_pressure_hud.position = Vector2(content_left, top_bar_bg.position.y + top_bar_bg.size.y + hud_gap)
+	_pressure_hud.size = Vector2(content_width, hud_height)
+	_pressure_hud.custom_minimum_size = _pressure_hud.size
+	if _pressure_bar:
+		_pressure_bar.custom_minimum_size.x = clamp(content_width * 0.28, 90.0, 260.0)
+	if _score_burst_label and board:
+		var board_size: Vector2 = Vector2(float(board.width) * board.tile_size, float(board.height) * board.tile_size)
+		_score_burst_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		_score_burst_label.position = board.position + Vector2(board_size.x * 0.5 - 120.0, board_size.y * 0.14)
+		_score_burst_label.size = Vector2(240.0, 46.0)
+
+func _update_pressure_hud() -> void:
+	if _pressure_hud == null:
+		return
+	var target: int = max(1, RunManager.get_active_rival_target())
+	var progress: float = clamp(float(score) / float(target), 0.0, 1.0)
+	var matches_left: int = 0
+	if board and board.board:
+		matches_left = board.board.count_available_matches()
+	var heat_text: String = "HEAT x%d" % max(1, combo)
+	if combo >= HIGH_COMBO_THRESHOLD:
+		heat_text = "OVERDRIVE x%d" % combo
+		_pressure_heat_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.98, 1.0))
+	else:
+		_pressure_heat_label.add_theme_color_override("font_color", Color(0.86, 0.96, 1.0, 0.96))
+	_pressure_heat_label.text = heat_text
+	_pressure_rival_label.text = "RIVAL %d%%" % int(round(progress * 100.0))
+	_pressure_matches_label.text = "%d LIVE MATCHES" % matches_left
+	_pressure_bar.value = progress * 100.0
+	if progress >= 1.0:
+		_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(1.0, 0.82, 0.28, 0.95)))
+	elif combo >= HIGH_COMBO_THRESHOLD:
+		_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(0.95, 0.28, 1.0, 0.92)))
+	else:
+		_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(0.18, 0.86, 1.0, 0.92)))
+
+func _show_score_burst(points: int) -> void:
+	if _score_burst_label == null or points <= 0:
+		return
+	_score_burst_label.visible = true
+	_score_burst_label.text = "+%d" % points
+	_score_burst_label.modulate = Color(1, 1, 1, 1)
+	_score_burst_label.scale = Vector2(0.82, 0.82)
+	var start_y: float = _score_burst_label.position.y
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(_score_burst_label, "scale", Vector2(1.18, 1.18), 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_score_burst_label, "position:y", start_y - 18.0, 0.26).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.chain().tween_property(_score_burst_label, "modulate:a", 0.0, 0.28)
+	tween.finished.connect(func() -> void:
+		if _score_burst_label:
+			_score_burst_label.visible = false
+			_score_burst_label.position.y = start_y
+	)
 
 func _show_combo_escalation() -> void:
 	if _combo_label == null or combo < 2:

@@ -43,6 +43,8 @@ var _unlock_progress: ProgressBar
 var _dual_leaderboard_label: Label
 var _weekly_ladder_label: Label
 var _rival_target_label: Label
+var _grade_label: Label
+var _rival_progress: ProgressBar
 
 func _ready() -> void:
 	BackgroundMood.register_controller($BackgroundController)
@@ -96,6 +98,10 @@ func _update_labels() -> void:
 		_encouragement_label.text = _build_encouragement_text(local_best, best_value)
 	if _unlock_progress:
 		_unlock_progress.value = SaveStore.get_unlock_progress() * 100.0
+	if _grade_label:
+		_grade_label.text = _build_grade_text(best_value)
+	if _rival_progress:
+		_rival_progress.value = _rival_progress_value()
 	if _dual_leaderboard_label:
 		_dual_leaderboard_label.text = ""
 	_update_social_labels()
@@ -366,6 +372,8 @@ func _apply_responsive_typography(
 		_weekly_ladder_label.add_theme_font_size_override("font_size", int(round(body_size * 0.96)))
 	if _rival_target_label:
 		_rival_target_label.add_theme_font_size_override("font_size", int(round(body_size * 0.94)))
+	if _grade_label:
+		_grade_label.add_theme_font_size_override("font_size", int(round(body_size * 1.08)))
 	if double_reward_button:
 		double_reward_button.add_theme_font_size_override("font_size", reward_button_size)
 	if play_again_button:
@@ -418,6 +426,10 @@ func _apply_direct_loop_mode() -> void:
 		_encouragement_label.visible = false
 	if _unlock_progress:
 		_unlock_progress.visible = false
+	if _grade_label:
+		_grade_label.visible = true
+	if _rival_progress:
+		_rival_progress.visible = true
 	if _dual_leaderboard_label:
 		_dual_leaderboard_label.visible = false
 	if _weekly_ladder_label:
@@ -664,6 +676,28 @@ func _ensure_dynamic_stats() -> void:
 		_rival_target_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(_rival_target_label)
 		_move_before_spacer(_rival_target_label)
+	if _grade_label == null:
+		_grade_label = Label.new()
+		_grade_label.name = "RunGrade"
+		_grade_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_grade_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_grade_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.48, 1.0))
+		_grade_label.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.12, 0.96))
+		_grade_label.add_theme_constant_override("outline_size", 3)
+		box.add_child(_grade_label)
+		_move_before_spacer(_grade_label)
+	if _rival_progress == null:
+		_rival_progress = ProgressBar.new()
+		_rival_progress.name = "RivalProgress"
+		_rival_progress.min_value = 0.0
+		_rival_progress.max_value = 100.0
+		_rival_progress.value = 0.0
+		_rival_progress.show_percentage = false
+		_rival_progress.custom_minimum_size.y = 18.0
+		_rival_progress.add_theme_stylebox_override("background", _progress_style(Color(0.05, 0.08, 0.15, 0.9)))
+		_rival_progress.add_theme_stylebox_override("fill", _progress_style(Color(0.17, 0.9, 1.0, 0.94)))
+		box.add_child(_rival_progress)
+		_move_before_spacer(_rival_progress)
 
 func _move_before_spacer(node: Control) -> void:
 	if box == null or spacer == null:
@@ -685,6 +719,10 @@ func _set_compact_optional_rows(compact_mode: bool) -> void:
 		_weekly_ladder_label.visible = not compact_mode
 	if _rival_target_label:
 		_rival_target_label.visible = not compact_mode
+	if _grade_label:
+		_grade_label.visible = true
+	if _rival_progress:
+		_rival_progress.visible = true
 
 func _reset_scroll_top() -> void:
 	if scroll == null:
@@ -701,6 +739,33 @@ func _build_encouragement_text(_local_best: int, best_value: int) -> String:
 	if delta <= 150:
 		return "You were close! Just %d more for a new best." % delta
 	return "Solid run. You're %d away from your best." % delta
+
+func _build_grade_text(best_value: int) -> String:
+	var target: int = max(1, int(RunManager.get_rival_snapshot().get("target_before", RunManager.get_active_rival_target())))
+	var score_value: int = RunManager.last_score
+	var ratio: float = float(score_value) / float(target)
+	var grade: String = "C"
+	if ratio >= 1.0:
+		grade = "S"
+	elif ratio >= 0.82:
+		grade = "A"
+	elif ratio >= 0.55:
+		grade = "B"
+	var best_suffix: String = " // NEW BEST" if best_value > 0 and score_value >= best_value else ""
+	return "RUN GRADE %s // RIVAL %d%%%s" % [grade, int(round(clamp(ratio, 0.0, 1.0) * 100.0)), best_suffix]
+
+func _rival_progress_value() -> float:
+	var target: int = max(1, int(RunManager.get_rival_snapshot().get("target_before", RunManager.get_active_rival_target())))
+	return clamp(float(RunManager.last_score) / float(target), 0.0, 1.0) * 100.0
+
+func _progress_style(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.corner_radius_top_left = 999
+	style.corner_radius_top_right = 999
+	style.corner_radius_bottom_left = 999
+	style.corner_radius_bottom_right = 999
+	return style
 
 func _update_social_labels() -> void:
 	var weekly: Dictionary = RunManager.get_weekly_snapshot()
