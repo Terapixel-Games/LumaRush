@@ -49,6 +49,9 @@ var _logo_idle_tween: Tween
 var _cta_pulse_tween: Tween
 var _badge_pulse_tween: Tween
 var _panel_fade_tween: Tween
+var _coin_status_label: Label
+var _streak_status_label: Label
+var _rival_status_label: Label
 
 func _ready() -> void:
 	if FeatureFlags.clear_high_score_on_boot():
@@ -65,6 +68,7 @@ func _ready() -> void:
 	Typography.style_main_menu(self)
 	ThemeManager.apply_to_scene(self)
 	_apply_neon_run_deck()
+	_ensure_status_rail()
 	_apply_launch_bay_copy()
 	_apply_launch_bay_hierarchy()
 	_layout_menu()
@@ -153,6 +157,7 @@ func _layout_menu() -> void:
 	account_button.custom_minimum_size = Vector2(icon_size, icon_size)
 	shop_button.custom_minimum_size = Vector2(icon_size, icon_size)
 	_layout_coin_badge(icon_size)
+	_layout_status_rail(viewport_size)
 	_refresh_title_pivots()
 
 func _refresh_title_pivots() -> void:
@@ -228,6 +233,8 @@ func _on_wallet_updated(wallet: Dictionary) -> void:
 func _apply_wallet_to_ui(wallet: Dictionary) -> void:
 	var balance: int = int(wallet.get("coin_balance", 0))
 	coin_badge.text = str(max(0, balance))
+	if _coin_status_label:
+		_coin_status_label.text = "COINS %d" % max(0, balance)
 	var shop_state: Variant = wallet.get("shop", {})
 	if typeof(shop_state) == TYPE_DICTIONARY:
 		ThemeManager.apply_from_shop_state(shop_state as Dictionary)
@@ -241,7 +248,7 @@ func _apply_neon_run_deck() -> void:
 func _apply_launch_bay_copy() -> void:
 	if start_button != null:
 		start_button.text = "START RUN"
-	_set_label_text("UI/RootMargin/Layout/TopBar/Brand", "LUMARUSH // RUN DECK")
+	_set_label_text("UI/RootMargin/Layout/TopBar/Brand", "LUMARUSH")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Kicker", "RUN DECK")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Title", "LUMARUSH")
 	_set_label_text("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Subtitle", "Build heat, chase the rival meter, and bank the run.")
@@ -260,7 +267,7 @@ func _apply_launch_bay_hierarchy() -> void:
 	if brand_label != null:
 		brand_label.add_theme_font_size_override("font_size", Typography.px(16.0))
 		brand_label.add_theme_color_override("font_color", Color(0.60, 0.90, 1.0, 0.96))
-	title_label.add_theme_font_size_override("font_size", Typography.px(72.0))
+	title_label.add_theme_font_size_override("font_size", Typography.px(86.0))
 	title_label.add_theme_color_override("font_color", Color(0.96, 0.99, 1.0, 1.0))
 	title_label.add_theme_color_override("font_outline_color", Color(0.0, 0.02, 0.08, 0.95))
 	title_label.add_theme_constant_override("outline_size", 6)
@@ -306,7 +313,13 @@ func _apply_launch_bay_hierarchy() -> void:
 	for button in [mode_button, daily_button, weekly_button, promo_button]:
 		if button != null:
 			button.add_theme_font_size_override("font_size", Typography.px(18.0))
-	start_button.add_theme_font_size_override("font_size", Typography.px(34.0))
+	start_button.add_theme_font_size_override("font_size", Typography.px(46.0))
+	for status_label in [_coin_status_label, _streak_status_label, _rival_status_label]:
+		if status_label:
+			status_label.add_theme_font_size_override("font_size", Typography.px(19.0))
+			status_label.add_theme_color_override("font_color", Color(0.92, 0.98, 1.0, 0.98))
+			status_label.add_theme_color_override("font_outline_color", Color(0.0, 0.02, 0.08, 0.95))
+			status_label.add_theme_constant_override("outline_size", 3)
 
 func _set_label_text(path: String, value: String) -> void:
 	var label := get_node_or_null(path) as Label
@@ -378,6 +391,46 @@ func _layout_coin_badge(icon_size: float) -> void:
 	coin_badge_panel.offset_right = coin_badge_panel.offset_left + (radius * 2.0)
 	coin_badge_panel.offset_bottom = coin_badge_panel.offset_top + (radius * 2.0)
 
+func _ensure_status_rail() -> void:
+	if _coin_status_label != null:
+		return
+	var top_bar := get_node_or_null("UI/RootMargin/Layout/TopBar") as HBoxContainer
+	if top_bar == null:
+		return
+	var brand := top_bar.get_node_or_null("Brand") as Label
+	if brand:
+		brand.text = "LUMARUSH"
+		brand.custom_minimum_size.x = 150.0
+	_coin_status_label = _make_status_chip("CoinStatus", "COINS 0")
+	_streak_status_label = _make_status_chip("StreakStatus", "STREAK %d" % StreakManager.get_streak_days())
+	_rival_status_label = _make_status_chip("RivalStatus", "RIVAL %s" % _compact_status_number(RunManager.get_active_rival_target()))
+	top_bar.add_child(_coin_status_label)
+	top_bar.add_child(_streak_status_label)
+	top_bar.add_child(_rival_status_label)
+	top_bar.move_child(_coin_status_label, 1)
+	top_bar.move_child(_streak_status_label, 2)
+	top_bar.move_child(_rival_status_label, 3)
+
+func _make_status_chip(node_name: String, text_value: String) -> Label:
+	var label := Label.new()
+	label.name = node_name
+	label.text = text_value
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.clip_text = true
+	label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	label.add_theme_font_size_override("font_size", Typography.px(12.0))
+	label.add_theme_color_override("font_outline_color", Color(0.0, 0.02, 0.08, 0.92))
+	label.add_theme_constant_override("outline_size", 2)
+	return label
+
+func _layout_status_rail(viewport_size: Vector2) -> void:
+	var chip_width: float = clamp(viewport_size.x * 0.13, 118.0, 148.0)
+	var chip_height: float = clamp(viewport_size.y * 0.046, 38.0, 52.0)
+	for label in [_coin_status_label, _streak_status_label, _rival_status_label]:
+		if label:
+			label.custom_minimum_size = Vector2(chip_width, chip_height)
+
 func _sync_mode_buttons() -> void:
 	var mode_id := "PURE"
 	var week_points: int = int(SaveStore.data.get("social_week_points", 0))
@@ -398,6 +451,15 @@ func _sync_mode_buttons() -> void:
 	pure_meta.text = "%s // TIER %d" % [mode_id, week_tier]
 	daily_signal_meta.text = "LIVE" if daily_enabled else "MUTED"
 	flow_meta.text = "%s // %d" % [rival_name.to_upper(), rival_target]
+	if _streak_status_label:
+		_streak_status_label.text = "STREAK %d" % StreakManager.get_streak_days()
+	if _rival_status_label:
+		_rival_status_label.text = "RIVAL %s" % _compact_status_number(rival_target)
+
+func _compact_status_number(value: int) -> String:
+	if abs(value) >= 1000:
+		return "%dK" % int(round(float(value) / 1000.0))
+	return "%d" % value
 
 func _on_mode_toggle_pressed() -> void:
 	_sync_mode_buttons()

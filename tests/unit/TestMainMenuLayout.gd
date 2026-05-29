@@ -21,12 +21,21 @@ func test_menu_panel_is_centered_in_viewport_and_uses_split_deck_when_possible()
 	var start_button: Button = menu.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Start") as Button
 	var subtitle: Label = menu.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Subtitle") as Label
 	var weekly_button: Button = menu.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox/WeeklyLadderInfo") as Button
+	var coin_status: Label = menu.get_node_or_null("UI/RootMargin/Layout/TopBar/CoinStatus") as Label
+	var streak_status: Label = menu.get_node_or_null("UI/RootMargin/Layout/TopBar/StreakStatus") as Label
+	var rival_status: Label = menu.get_node_or_null("UI/RootMargin/Layout/TopBar/RivalStatus") as Label
 	assert_that(start_button).is_not_null()
 	assert_that(subtitle).is_not_null()
 	assert_that(weekly_button).is_not_null()
+	assert_that(coin_status).is_not_null()
+	assert_that(streak_status).is_not_null()
+	assert_that(rival_status).is_not_null()
 	assert_that(start_button.text).is_equal("START RUN")
 	assert_that(subtitle.text).contains("rival meter")
 	assert_that(weekly_button.text).contains("RIVAL")
+	assert_that(coin_status.text).contains("COINS")
+	assert_that(streak_status.text).contains("STREAK")
+	assert_that(rival_status.text).contains("RIVAL")
 	var viewport_center: Vector2 = menu.get_viewport_rect().size * 0.5
 	var panel_center: Vector2 = panel.global_position + (panel.size * 0.5)
 	var box_center: Vector2 = box.global_position + (box.size * 0.5)

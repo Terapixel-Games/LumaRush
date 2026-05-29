@@ -29,6 +29,7 @@ func test_results_actions_stay_inside_panel_on_wide_short_viewports() -> void:
 	var score: Label = results.get_node("UI/Panel/Scroll/VBox/StatsSplit/LeftColumn/Score") as Label
 	var grade: Label = results.get_node_or_null("UI/Panel/Scroll/VBox/RunGrade") as Label
 	var rival_progress: ProgressBar = results.get_node_or_null("UI/Panel/Scroll/VBox/RivalProgress") as ProgressBar
+	var reward_cards: GridContainer = results.get_node_or_null("UI/Panel/Scroll/VBox/RewardCards") as GridContainer
 	var play_again: Button = results.get_node("UI/Panel/Scroll/VBox/PlayAgain") as Button
 	var menu: Button = results.get_node("UI/Panel/Scroll/VBox/Menu") as Button
 	var account_button: Button = results.get_node_or_null("UI/TopRightBar/Account") as Button
@@ -42,6 +43,8 @@ func test_results_actions_stay_inside_panel_on_wide_short_viewports() -> void:
 	assert_that(grade.text).contains("RUN GRADE")
 	assert_that(grade.text).contains("RIVAL")
 	assert_that(rival_progress.value).is_greater_equal(0.0)
+	assert_that(reward_cards).is_not_null()
+	assert_that(reward_cards.columns).is_equal(3)
 	assert_that(play_again).is_not_null()
 	assert_that(menu).is_not_null()
 	assert_that(menu.visible).is_false()

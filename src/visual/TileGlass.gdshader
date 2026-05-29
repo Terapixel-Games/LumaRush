@@ -33,8 +33,9 @@ void fragment() {
 	float sdf = rounded_rect_sdf(p, vec2(0.5 - border), radius);
 	float inside = 1.0 - smoothstep(0.0, 0.006, sdf);
 	// Edge highlight should only exist near the border, not across the full tile.
-	float edge = (1.0 - smoothstep(0.0, 0.03, abs(sdf))) * inside;
+	float edge = (1.0 - smoothstep(0.0, 0.045, abs(sdf))) * inside;
 	float inner_edge = smoothstep(-0.08, -0.01, sdf) * inside;
+	float bevel = smoothstep(0.0, 0.22, UV.x) * smoothstep(1.0, 0.78, UV.x) * smoothstep(0.0, 0.22, UV.y) * smoothstep(1.0, 0.78, UV.y) * inside;
 
 	// Keep tile hue anchored to logical tint color while still borrowing
 	// some background luminance for a glass feel.
@@ -44,9 +45,12 @@ void fragment() {
 	float luma = dot(glass.rgb, vec3(0.2126, 0.7152, 0.0722));
 	glass.rgb = mix(vec3(luma), glass.rgb, saturation_boost);
 	glass.rgb = mix(glass.rgb, edge_color.rgb, edge * edge_color.a);
-	float top_sheen = smoothstep(0.55, 0.08, UV.y) * inside;
-	glass.rgb += vec3(0.24, 0.28, 0.34) * top_sheen * specular_strength;
-	glass.rgb *= 1.0 - (inner_edge * inner_shadow_strength * 0.2);
+	float top_sheen = smoothstep(0.58, 0.08, UV.y) * inside;
+	float diagonal_sheen = smoothstep(0.74, 0.2, UV.x + UV.y) * inside;
+	glass.rgb += vec3(0.34, 0.40, 0.50) * top_sheen * specular_strength;
+	glass.rgb += vec3(0.20, 0.30, 0.42) * diagonal_sheen * specular_strength * 0.34;
+	glass.rgb *= 1.0 - (inner_edge * inner_shadow_strength * 0.34);
+	glass.rgb = mix(glass.rgb * 0.68, glass.rgb, bevel);
 	glass.a *= inside;
 	COLOR = glass;
 }

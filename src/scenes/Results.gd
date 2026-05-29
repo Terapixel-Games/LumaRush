@@ -45,6 +45,10 @@ var _weekly_ladder_label: Label
 var _rival_target_label: Label
 var _grade_label: Label
 var _rival_progress: ProgressBar
+var _reward_cards: GridContainer
+var _best_reward_label: Label
+var _coins_reward_label: Label
+var _streak_reward_label: Label
 
 func _ready() -> void:
 	BackgroundMood.register_controller($BackgroundController)
@@ -102,6 +106,12 @@ func _update_labels() -> void:
 		_grade_label.text = _build_grade_text(best_value)
 	if _rival_progress:
 		_rival_progress.value = _rival_progress_value()
+	if _best_reward_label:
+		_best_reward_label.text = "BEST\n+%d" % max(0, RunManager.last_score - local_best)
+	if _coins_reward_label:
+		_coins_reward_label.text = "COINS\n+%d" % _base_reward_amount
+	if _streak_reward_label:
+		_streak_reward_label.text = "STREAK\n%d" % StreakManager.get_streak_days()
 	if _dual_leaderboard_label:
 		_dual_leaderboard_label.text = ""
 	_update_social_labels()
@@ -195,8 +205,8 @@ func _layout_results_for_size(viewport_size: Vector2) -> void:
 	var max_panel_height: float = max(320.0, viewport_size.y - (outer_margin_y * 2.0))
 	var direct_loop_mode: bool = _is_direct_loop_mode()
 	var min_panel_height: float = min(300.0 if direct_loop_mode else 460.0, max_panel_height)
-	var target_panel_height: float = viewport_size.y * (0.34 if is_wide else 0.42) if direct_loop_mode else viewport_size.y * (0.36 if is_wide else ArcadeResponsiveLayout.results_panel_height_ratio(viewport_size))
-	var panel_height_cap: float = min(max_panel_height, viewport_size.y * (0.58 if direct_loop_mode else 0.86)) if is_wide or direct_loop_mode else max_panel_height
+	var target_panel_height: float = viewport_size.y * (0.74 if is_wide else 0.78) if direct_loop_mode else viewport_size.y * (0.36 if is_wide else ArcadeResponsiveLayout.results_panel_height_ratio(viewport_size))
+	var panel_height_cap: float = min(max_panel_height, viewport_size.y * (0.86 if direct_loop_mode else 0.86)) if is_wide or direct_loop_mode else max_panel_height
 	var panel_height: float = clamp(target_panel_height, min_panel_height, panel_height_cap)
 	var panel_size: Vector2 = Vector2(panel_width, panel_height)
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -374,6 +384,10 @@ func _apply_responsive_typography(
 		_rival_target_label.add_theme_font_size_override("font_size", int(round(body_size * 0.94)))
 	if _grade_label:
 		_grade_label.add_theme_font_size_override("font_size", int(round(body_size * 1.08)))
+	for reward_label in [_best_reward_label, _coins_reward_label, _streak_reward_label]:
+		if reward_label:
+			reward_label.add_theme_font_size_override("font_size", int(round(body_size * 1.18)))
+			reward_label.custom_minimum_size.y = clamp(content_size.y * 0.16 * compact_scale, 58.0, 112.0)
 	if double_reward_button:
 		double_reward_button.add_theme_font_size_override("font_size", reward_button_size)
 	if play_again_button:
@@ -430,6 +444,8 @@ func _apply_direct_loop_mode() -> void:
 		_grade_label.visible = true
 	if _rival_progress:
 		_rival_progress.visible = true
+	if _reward_cards:
+		_reward_cards.visible = true
 	if _dual_leaderboard_label:
 		_dual_leaderboard_label.visible = false
 	if _weekly_ladder_label:
@@ -698,6 +714,21 @@ func _ensure_dynamic_stats() -> void:
 		_rival_progress.add_theme_stylebox_override("fill", _progress_style(Color(0.17, 0.9, 1.0, 0.94)))
 		box.add_child(_rival_progress)
 		_move_before_spacer(_rival_progress)
+	if _reward_cards == null:
+		_reward_cards = GridContainer.new()
+		_reward_cards.name = "RewardCards"
+		_reward_cards.columns = 3
+		_reward_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_reward_cards.add_theme_constant_override("h_separation", 12)
+		_reward_cards.add_theme_constant_override("v_separation", 8)
+		box.add_child(_reward_cards)
+		_move_before_spacer(_reward_cards)
+		_best_reward_label = _make_reward_card("BestReward", Color(1.0, 0.78, 0.20, 1.0))
+		_coins_reward_label = _make_reward_card("CoinsReward", Color(0.18, 0.86, 1.0, 1.0))
+		_streak_reward_label = _make_reward_card("StreakReward", Color(1.0, 0.30, 0.72, 1.0))
+		_reward_cards.add_child(_best_reward_label)
+		_reward_cards.add_child(_coins_reward_label)
+		_reward_cards.add_child(_streak_reward_label)
 
 func _move_before_spacer(node: Control) -> void:
 	if box == null or spacer == null:
@@ -723,6 +754,21 @@ func _set_compact_optional_rows(compact_mode: bool) -> void:
 		_grade_label.visible = true
 	if _rival_progress:
 		_rival_progress.visible = true
+	if _reward_cards:
+		_reward_cards.visible = true
+
+func _make_reward_card(node_name: String, accent: Color) -> Label:
+	var label := Label.new()
+	label.name = node_name
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.clip_text = true
+	label.custom_minimum_size = Vector2(0.0, 78.0)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.add_theme_color_override("font_color", accent)
+	label.add_theme_color_override("font_outline_color", Color(0.02, 0.01, 0.08, 0.98))
+	label.add_theme_constant_override("outline_size", 4)
+	return label
 
 func _reset_scroll_top() -> void:
 	if scroll == null:

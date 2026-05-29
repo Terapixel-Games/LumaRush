@@ -20,6 +20,9 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 	var pause_button: Control = game.get_node_or_null("UI/TopBar/Pause") as Control
 	var pause_icon: Control = game.get_node_or_null("UI/TopBar/Pause/Center/PauseIcon") as Control
 	var top_bar_inner_highlight: Control = game.get_node_or_null("UI/TopBarBg/TopBarInnerHighlight") as Control
+	var cabinet_title: Label = game.get_node_or_null("UI/CabinetTitle") as Label
+	var combo_pod: Label = game.get_node_or_null("UI/TopBar/ComboPod") as Label
+	var rival_pod: Label = game.get_node_or_null("UI/TopBar/RivalPod") as Label
 	var pressure_hud: Control = game.get_node_or_null("UI/PressureHud") as Control
 	var pressure_heat: Label = game.get_node_or_null("UI/PressureHud/Margin/Row/Heat") as Label
 	var pressure_rival: Label = game.get_node_or_null("UI/PressureHud/Margin/Row/Rival") as Label
@@ -41,6 +44,12 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 	assert_that(pause_button).is_not_null()
 	assert_that(pause_icon).is_not_null()
 	assert_that(top_bar_inner_highlight).is_not_null()
+	assert_that(cabinet_title).is_not_null()
+	assert_that(cabinet_title.text).is_equal("LUMARUSH")
+	assert_that(combo_pod).is_not_null()
+	assert_that(rival_pod).is_not_null()
+	assert_that(combo_pod.text).contains("COMBO")
+	assert_that(rival_pod.text).contains("RIVAL")
 	assert_that(pressure_hud).is_not_null()
 	assert_that(pressure_heat).is_not_null()
 	assert_that(pressure_rival).is_not_null()
@@ -83,6 +92,9 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		var pause_rect: Rect2 = pause_button.get_global_rect()
 		var pause_icon_rect: Rect2 = pause_icon.get_global_rect()
 		var inner_highlight_rect: Rect2 = top_bar_inner_highlight.get_global_rect()
+		var cabinet_title_rect: Rect2 = cabinet_title.get_global_rect()
+		var combo_pod_rect: Rect2 = combo_pod.get_global_rect()
+		var rival_pod_rect: Rect2 = rival_pod.get_global_rect()
 		var pressure_rect: Rect2 = pressure_hud.get_global_rect()
 		var powerups_rect: Rect2 = powerups_row.get_global_rect()
 		var undo_rect: Rect2 = undo_button.get_global_rect()
@@ -92,6 +104,7 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		)
 		var board_frame_rect: Rect2 = board_frame.get_global_rect()
 		_assert_rect_inside(top_bg_rect, viewport_rect)
+		_assert_rect_inside(cabinet_title_rect, viewport_rect)
 		_assert_rect_inside(top_rect, viewport_rect)
 		_assert_rect_inside(top_right_rect, viewport_rect)
 		_assert_rect_inside(top_rect, top_bg_rect)
@@ -105,6 +118,8 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		assert_that(pressure_rect.position.y + pressure_rect.size.y).is_less_equal(board_rect.position.y + 1.0)
 		assert_that(abs(_rect_center_y(inner_highlight_rect) - _rect_center_y(top_bg_rect))).is_less_equal(1.0)
 		_assert_rect_inside(score_box_rect, top_bg_rect)
+		_assert_rect_inside(combo_pod_rect, top_bg_rect)
+		_assert_rect_inside(rival_pod_rect, top_bg_rect)
 		_assert_rect_inside(score_caption_rect, top_bg_rect)
 		_assert_rect_inside(score_value_rect, top_bg_rect)
 		_assert_rect_inside(pause_rect, top_bg_rect)

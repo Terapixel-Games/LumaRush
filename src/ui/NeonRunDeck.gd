@@ -1,6 +1,7 @@
 extends RefCounted
 class_name NeonRunDeck
 
+const NEON_CABINET := preload("res://src/ui/NeonCabinet.gd")
 const SURFACE_PANEL: Color = Color(0.055, 0.075, 0.17, 0.90)
 const SURFACE_CARD: Color = Color(0.075, 0.10, 0.22, 0.82)
 const TEXT_MAIN: Color = Color(0.94, 0.985, 1.0, 1.0)
@@ -10,6 +11,7 @@ const SHADOW: Color = Color(0.005, 0.015, 0.045, 0.92)
 const BACKDROP: Color = Color(0.01, 0.015, 0.04, 0.78)
 
 static func apply_main_menu(scene: Node) -> void:
+	_ensure_cabinet(scene, "menu")
 	var bg_controller := scene.get_node_or_null("BackgroundController")
 	if bg_controller != null and bg_controller.is_node_ready() and bg_controller.has_method("set_theme_palette"):
 		bg_controller.call(
@@ -21,7 +23,7 @@ static func apply_main_menu(scene: Node) -> void:
 		)
 	_style_color_rect(scene.get_node_or_null("BackgroundController/ColorRect"), Color(0.01, 0.02, 0.06, 1.0))
 	_style_color_rect(scene.get_node_or_null("BackgroundController/CenterGlow"), Color(0.55, 0.10, 1.0, 0.18))
-	_style_color_rect(scene.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel"), Color(0.018, 0.028, 0.08, 0.36))
+	_style_color_rect(scene.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel"), Color(0.018, 0.028, 0.08, 0.18))
 	_style_panels(scene, _find_paths_containing(scene, "Card"), "card")
 	_style_panels(scene, [
 		"UI/RootMargin/Layout/Center/PanelShell",
@@ -47,9 +49,19 @@ static func apply_main_menu(scene: Node) -> void:
 	_tint_labels(scene)
 
 static func apply_game(scene: Node) -> void:
-	_style_color_rect(scene.get_node_or_null("UI/TopBarBg"), Color(0.035, 0.055, 0.14, 0.78))
-	_style_color_rect(scene.get_node_or_null("UI/BoardFrame"), Color(0.20, 0.92, 1.0, 0.15))
-	_style_color_rect(scene.get_node_or_null("UI/BoardGlow"), Color(0.9, 0.20, 1.0, 0.08))
+	_ensure_cabinet(scene, "game")
+	var bg_controller := scene.get_node_or_null("BackgroundController")
+	if bg_controller != null and bg_controller.is_node_ready() and bg_controller.has_method("set_theme_palette"):
+		bg_controller.call(
+			"set_theme_palette",
+			Color(0.005, 0.012, 0.035, 1.0),
+			Color(0.015, 0.032, 0.090, 1.0),
+			Color(0.0, 0.10, 0.24, 1.0),
+			Color(0.52, 0.0, 0.72, 1.0)
+		)
+	_style_color_rect(scene.get_node_or_null("UI/TopBarBg"), Color(0.018, 0.026, 0.082, 0.92))
+	_style_color_rect(scene.get_node_or_null("UI/BoardFrame"), Color(0.05, 0.14, 0.34, 0.18))
+	_style_color_rect(scene.get_node_or_null("UI/BoardGlow"), Color(0.10, 0.86, 1.0, 0.10))
 	_style_panels(scene, _find_paths_containing(scene, "Badge"), "hot_badge")
 	_style_buttons(scene, ["UI/TopBar/Pause", "UI/TopRightBar/Account", "UI/TopRightBar/Shop", "UI/TopRightBar/Audio"], "icon")
 	_style_buttons(scene, ["UI/Powerups/Undo", "UI/Powerups/RemoveColor", "UI/Powerups/Hint", "UI/Powerups/Shuffle"], "powerup")
@@ -57,6 +69,7 @@ static func apply_game(scene: Node) -> void:
 	_tint_labels(scene)
 
 static func apply_results(scene: Node) -> void:
+	_ensure_cabinet(scene, "results")
 	var bg_controller := scene.get_node_or_null("BackgroundController")
 	if bg_controller != null and bg_controller.is_node_ready() and bg_controller.has_method("set_theme_palette"):
 		bg_controller.call(
@@ -68,7 +81,7 @@ static func apply_results(scene: Node) -> void:
 		)
 	_style_color_rect(scene.get_node_or_null("BackgroundController/ColorRect"), Color(0.01, 0.02, 0.06, 1.0))
 	_style_color_rect(scene.get_node_or_null("BackgroundController/CenterGlow"), Color(0.10, 0.75, 1.0, 0.12))
-	_style_color_rect(scene.get_node_or_null("UI/Panel"), Color(0.035, 0.052, 0.13, 0.95))
+	_style_color_rect(scene.get_node_or_null("UI/Panel"), Color(0.018, 0.026, 0.082, 0.92))
 	_style_panels(scene, ["UI/Panel"], "panel")
 	_style_buttons(scene, ["UI/Panel/Scroll/VBox/PlayAgain"], "primary")
 	_style_buttons(scene, ["UI/Panel/Scroll/VBox/DoubleReward"], "reward")
@@ -120,38 +133,38 @@ static func make_style(kind: String) -> StyleBoxFlat:
 	style.anti_aliasing_size = 1.2
 	match kind:
 		"panel":
-			style.bg_color = SURFACE_PANEL
-			style.border_color = Color(0.18, 0.86, 1.0, 0.42)
-			style.corner_radius_top_left = 26
-			style.corner_radius_top_right = 26
-			style.corner_radius_bottom_left = 26
-			style.corner_radius_bottom_right = 26
-			style.shadow_color = Color(0.0, 0.02, 0.08, 0.48)
-			style.shadow_size = 11
+			style.bg_color = Color(0.018, 0.028, 0.085, 0.90)
+			style.border_color = Color(0.12, 0.90, 1.0, 0.70)
+			style.corner_radius_top_left = 10
+			style.corner_radius_top_right = 10
+			style.corner_radius_bottom_left = 10
+			style.corner_radius_bottom_right = 10
+			style.shadow_color = Color(0.0, 0.75, 1.0, 0.24)
+			style.shadow_size = 15
 		"primary":
-			style.bg_color = Color(1.0, 0.45, 0.10, 0.98)
-			style.border_color = Color(1.0, 0.92, 0.52, 0.98)
-			style.shadow_color = Color(1.0, 0.35, 0.0, 0.34)
-			style.shadow_size = 7
-			style.corner_radius_top_left = 20
-			style.corner_radius_top_right = 20
-			style.corner_radius_bottom_left = 20
-			style.corner_radius_bottom_right = 20
+			style.bg_color = Color(1.0, 0.08, 0.36, 0.98)
+			style.border_color = Color(1.0, 0.72, 0.18, 0.98)
+			style.shadow_color = Color(1.0, 0.12, 0.58, 0.48)
+			style.shadow_size = 16
+			style.corner_radius_top_left = 8
+			style.corner_radius_top_right = 8
+			style.corner_radius_bottom_left = 8
+			style.corner_radius_bottom_right = 8
 		"reward":
 			style.bg_color = Color(0.04, 0.12, 0.23, 0.78)
 			style.border_color = Color(0.08, 0.88, 1.0, 0.92)
 			style.shadow_color = Color(0.02, 0.8, 1.0, 0.18)
 		"secondary":
-			style.bg_color = Color(0.06, 0.10, 0.22, 0.74)
-			style.border_color = Color(0.18, 0.84, 1.0, 0.72)
+			style.bg_color = Color(0.018, 0.026, 0.085, 0.86)
+			style.border_color = Color(0.20, 0.86, 1.0, 0.86)
 		"icon":
 			style.bg_color = Color(0.06, 0.10, 0.22, 0.82)
 			style.border_color = Color(0.82, 0.95, 1.0, 0.84)
 		"powerup":
-			style.bg_color = Color(0.09, 0.10, 0.25, 0.82)
-			style.border_color = Color(0.82, 0.90, 1.0, 0.86)
-			style.shadow_color = Color(0.50, 0.10, 1.0, 0.22)
-			style.shadow_size = 6
+			style.bg_color = Color(0.018, 0.026, 0.085, 0.90)
+			style.border_color = Color(0.22, 0.88, 1.0, 0.96)
+			style.shadow_color = Color(0.95, 0.12, 1.0, 0.34)
+			style.shadow_size = 14
 		"gate_shell":
 			style.bg_color = Color(0.005, 0.012, 0.035, 0.18)
 			style.border_color = Color(0.08, 0.90, 1.0, 0.54)
@@ -162,10 +175,10 @@ static func make_style(kind: String) -> StyleBoxFlat:
 			style.shadow_color = Color(0.05, 0.78, 1.0, 0.22)
 			style.shadow_size = 14
 		"gate_panel":
-			style.bg_color = Color(0.025, 0.04, 0.13, 0.52)
-			style.border_color = Color(0.10, 0.94, 1.0, 0.62)
-			style.shadow_color = Color(0.82, 0.12, 1.0, 0.18)
-			style.shadow_size = 10
+			style.bg_color = Color(0.014, 0.022, 0.070, 0.54)
+			style.border_color = Color(0.10, 0.94, 1.0, 0.82)
+			style.shadow_color = Color(0.82, 0.12, 1.0, 0.30)
+			style.shadow_size = 18
 		"gate_rail":
 			style.bg_color = Color(0.015, 0.026, 0.085, 0.66)
 			style.border_color = Color(0.14, 0.86, 1.0, 0.54)
@@ -180,6 +193,20 @@ static func make_style(kind: String) -> StyleBoxFlat:
 			style.corner_radius_bottom_right = 999
 			style.shadow_size = 2
 	return style
+
+static func _ensure_cabinet(scene: Node, mode: String) -> void:
+	var ui := scene.get_node_or_null("UI") as Control
+	if ui == null:
+		return
+	var cabinet := ui.get_node_or_null("NeonCabinet") as Control
+	if cabinet == null:
+		cabinet = NEON_CABINET.new()
+		cabinet.name = "NeonCabinet"
+		cabinet.set_anchors_preset(Control.PRESET_FULL_RECT)
+		cabinet.z_index = -20
+		ui.add_child(cabinet)
+		ui.move_child(cabinet, 0)
+	cabinet.mode = mode
 
 static func _style_color_rect(node: Node, color: Color) -> void:
 	if node is ColorRect:

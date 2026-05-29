@@ -6,16 +6,16 @@ const THEME_NEON := "neon"
 const THEMES := {
 	THEME_DEFAULT: {
 		"display_name": "Default",
-		"background_calm_a": Color(0.88, 0.93, 1.0, 1.0),
-		"background_calm_b": Color(0.64, 0.76, 1.0, 1.0),
-		"background_hype_a": Color(0.2, 0.26, 0.66, 1.0),
-		"background_hype_b": Color(0.6, 0.28, 0.94, 1.0),
+		"background_calm_a": Color(0.005, 0.012, 0.035, 1.0),
+		"background_calm_b": Color(0.018, 0.032, 0.090, 1.0),
+		"background_hype_a": Color(0.0, 0.10, 0.24, 1.0),
+		"background_hype_b": Color(0.52, 0.0, 0.72, 1.0),
 		"tile_palette": [
-			Color(0.18, 0.78, 1.0, 0.78),
-			Color(0.98, 0.34, 0.30, 0.78),
-			Color(0.28, 0.94, 0.46, 0.78),
-			Color(1.0, 0.84, 0.18, 0.78),
-			Color(0.88, 0.34, 1.0, 0.84),
+			Color(0.06, 0.82, 1.0, 0.96),
+			Color(1.0, 0.24, 0.62, 0.96),
+			Color(0.35, 1.0, 0.30, 0.96),
+			Color(1.0, 0.78, 0.10, 0.96),
+			Color(0.72, 0.18, 1.0, 0.96),
 		],
 		"vfx_palette": [
 			Color(0.42, 0.8, 1.0, 0.9),
@@ -28,10 +28,10 @@ const THEMES := {
 	},
 	THEME_NEON: {
 		"display_name": "Neon",
-		"background_calm_a": Color(0.08, 0.06, 0.18, 1.0),
-		"background_calm_b": Color(0.12, 0.04, 0.22, 1.0),
-		"background_hype_a": Color(0.0, 0.12, 0.28, 1.0),
-		"background_hype_b": Color(0.62, 0.0, 0.72, 1.0),
+		"background_calm_a": Color(0.005, 0.012, 0.035, 1.0),
+		"background_calm_b": Color(0.020, 0.032, 0.092, 1.0),
+		"background_hype_a": Color(0.0, 0.10, 0.24, 1.0),
+		"background_hype_b": Color(0.18, 0.0, 0.34, 1.0),
 		"tile_palette": [
 			Color(0.0, 0.96, 1.0, 0.86),
 			Color(1.0, 0.2, 0.64, 0.86),

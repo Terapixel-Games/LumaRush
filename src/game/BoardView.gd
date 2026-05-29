@@ -15,11 +15,11 @@ signal non_match_tapped(cell: Vector2i)
 @export var tile_size := 100.0
 
 const TILE_PALETTE_MODERN := [
-	Color(0.18, 0.78, 1.0, 0.78),  # cyan
-	Color(0.98, 0.34, 0.30, 0.78), # red
-	Color(0.28, 0.94, 0.46, 0.78), # green
-	Color(1.0, 0.84, 0.18, 0.78),  # yellow
-	Color(0.88, 0.34, 1.0, 0.84),  # vivid purple
+	Color(0.08, 0.74, 1.0, 0.96),  # cyan
+	Color(1.0, 0.20, 0.60, 0.96),  # magenta
+	Color(0.38, 1.0, 0.18, 0.96),  # green
+	Color(1.0, 0.72, 0.04, 0.96),  # gold
+	Color(0.68, 0.18, 1.0, 0.96),  # purple
 ]
 
 const TILE_PALETTE_LEGACY := [
@@ -203,8 +203,7 @@ func _refresh_tiles() -> void:
 	for y in range(height):
 		for x in range(width):
 			var tile: ColorRect = tiles[y][x]
-			var c := _color_from_index(int(board.grid[y][x]))
-			_apply_tile_color(tile, c)
+			_apply_tile_visual(tile, int(board.grid[y][x]))
 			tile.modulate = Color(1, 1, 1, 1)
 			tile.scale = Vector2.ONE
 			tile.position = _tile_origin(Vector2i(x, y))
@@ -275,8 +274,7 @@ func _animate_resolution(group: Array, snapshot: Array) -> void:
 			var target_y: int = start_y + i
 			new_tiles[target_y][x] = node
 			# Force visual to match final logical color during fall, not only after settle.
-			var target_color: Color = _color_from_index(int(final_grid[target_y][x]))
-			_apply_tile_color(node, target_color)
+			_apply_tile_visual(node, int(final_grid[target_y][x]))
 			fall_tween.tween_property(node, "position:y", (target_y * tile_size) + (_tile_gap_px * 0.5), 0.22)
 
 		for y in range(start_y):
@@ -306,6 +304,31 @@ func _apply_tile_color(tile: ColorRect, color: Color) -> void:
 	var mat: ShaderMaterial = tile.material as ShaderMaterial
 	if mat:
 		mat.set_shader_parameter("tint_color", color)
+
+func _apply_tile_visual(tile: ColorRect, color_idx: int) -> void:
+	var color := _color_from_index(color_idx)
+	_apply_tile_color(tile, color)
+	_sync_tile_symbol(tile, color_idx, color)
+
+func _sync_tile_symbol(tile: ColorRect, color_idx: int, color: Color) -> void:
+	var symbol := tile.get_node_or_null("Symbol") as Label
+	if symbol == null:
+		symbol = Label.new()
+		symbol.name = "Symbol"
+		symbol.set_anchors_preset(Control.PRESET_FULL_RECT)
+		symbol.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		symbol.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		symbol.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.12, 0.74))
+		symbol.add_theme_constant_override("outline_size", 3)
+		tile.add_child(symbol)
+	symbol.text = _tile_symbol(color_idx)
+	symbol.add_theme_color_override("font_color", color.lightened(0.72))
+	symbol.add_theme_font_size_override("font_size", int(round(clamp(tile_size * 0.38, 18.0, 58.0))))
+
+func _tile_symbol(color_idx: int) -> String:
+	var symbols := ["◇", "⬡", "○", "☆", "△"]
+	return symbols[posmod(color_idx, symbols.size())]
 
 func _blur_radius() -> float:
 	return 2.0 if FeatureFlags.tile_blur_mode() == FeatureFlags.TileBlurMode.LITE else 6.0
@@ -414,14 +437,14 @@ func _apply_tile_design_shader_profile(mat: ShaderMaterial) -> void:
 		mat.set_shader_parameter("inner_shadow_strength", 0.3)
 		mat.set_shader_parameter("edge_color", Color(0.84, 0.9, 1.0, 0.4))
 	else:
-		mat.set_shader_parameter("corner_radius", 0.11)
-		mat.set_shader_parameter("border", 0.08)
+		mat.set_shader_parameter("corner_radius", 0.075)
+		mat.set_shader_parameter("border", 0.12)
 		mat.set_shader_parameter("tint_mix", 1.0)
-		mat.set_shader_parameter("saturation_boost", 1.3)
-		mat.set_shader_parameter("bg_luma_mix", 0.14)
-		mat.set_shader_parameter("specular_strength", 0.36)
-		mat.set_shader_parameter("inner_shadow_strength", 0.34)
-		mat.set_shader_parameter("edge_color", Color(0.88, 0.95, 1.0, 0.54))
+		mat.set_shader_parameter("saturation_boost", 1.48)
+		mat.set_shader_parameter("bg_luma_mix", 0.06)
+		mat.set_shader_parameter("specular_strength", 0.58)
+		mat.set_shader_parameter("inner_shadow_strength", 0.56)
+		mat.set_shader_parameter("edge_color", Color(0.98, 1.0, 1.0, 0.80))
 
 func _normalize_board_color_ids() -> void:
 	if board == null or board.grid.is_empty():

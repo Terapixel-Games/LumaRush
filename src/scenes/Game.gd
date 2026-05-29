@@ -69,6 +69,9 @@ var _pressure_rival_label: Label
 var _pressure_matches_label: Label
 var _pressure_bar: ProgressBar
 var _score_burst_label: Label
+var _cabinet_title_label: Label
+var _combo_pod_label: Label
+var _rival_pod_label: Label
 const COMBO_BREAK_TIMEOUT_SECONDS: float = 1.8
 
 const ICON_UNDO: Texture2D = preload("res://assets/ui/icons/atlas/powerup_undo.tres")
@@ -114,6 +117,7 @@ func _ready() -> void:
 	BackgroundMood.reset_starfield_emission_taper()
 	MusicManager.set_gameplay()
 	VisualTestMode.apply_if_enabled($BackgroundController, $BackgroundController)
+	_force_cabinet_background_palette()
 	board.connect("match_made", Callable(self, "_on_match_made"))
 	board.connect("move_committed", Callable(self, "_on_move_committed"))
 	board.connect("no_moves", Callable(self, "_on_no_moves"))
@@ -134,9 +138,11 @@ func _ready() -> void:
 	_remove_color_charges += int(stored_powerups.get("prism", 0))
 	_hint_charges += int(stored_powerups.get("hint", 0))
 	if board_frame:
-		board_frame.visible = false
+		board_frame.visible = true
+		board_frame.z_index = -6
 	if board_glow:
-		board_glow.visible = false
+		board_glow.visible = true
+		board_glow.z_index = -7
 	for badge in [undo_badge, prism_badge, hint_badge]:
 		badge.add_theme_color_override("font_color", Color(0.98, 0.99, 1.0, 1.0))
 		badge.add_theme_color_override("font_outline_color", Color(0.3, 0.0, 0.05, 0.95))
@@ -155,6 +161,7 @@ func _ready() -> void:
 	_refresh_audio_icon()
 	powerup_flash.visible = false
 	_board_anchor_pos = board.position
+	_setup_cabinet_hud()
 	_setup_combo_label()
 	_setup_pressure_hud()
 	_maybe_show_micro_tutorial()
@@ -211,6 +218,12 @@ func _on_non_match_tapped(_cell: Vector2i) -> void:
 
 func _update_score() -> void:
 	score_value_label.text = "%d" % score
+	if _combo_pod_label:
+		_combo_pod_label.text = "COMBO\nx%d" % max(1, combo)
+	if _rival_pod_label:
+		var target: int = max(1, RunManager.get_active_rival_target())
+		var progress: int = int(round(clamp(float(score) / float(target), 0.0, 1.0) * 100.0))
+		_rival_pod_label.text = "RIVAL\n%d%%" % progress
 
 func _on_pause_pressed() -> void:
 	_close_audio_overlay()
@@ -349,6 +362,22 @@ func _update_gameplay_mood_from_matches(fade_seconds: float = -1.0) -> void:
 	var fade: float = fade_seconds if fade_seconds >= 0.0 else FeatureFlags.gameplay_matches_mood_fade_seconds()
 	BackgroundMood.set_mood_mix(calm_weight, fade)
 	_update_pressure_hud()
+
+func _force_cabinet_background_palette() -> void:
+	var bg_controller := get_node_or_null("BackgroundController")
+	if bg_controller and bg_controller.has_method("set_theme_palette"):
+		bg_controller.call(
+			"set_theme_palette",
+			Color(0.002, 0.006, 0.024, 1.0),
+			Color(0.010, 0.025, 0.078, 1.0),
+			Color(0.004, 0.060, 0.155, 1.0),
+			Color(0.145, 0.000, 0.300, 1.0)
+		)
+		bg_controller.call("set_mood_mix", 0.52, 0.0)
+	var bg_rect := get_node_or_null("BackgroundController/ColorRect") as ColorRect
+	if bg_rect and bg_rect.material:
+		bg_rect.material.set_shader_parameter("color_a", Color(0.002, 0.006, 0.024, 1.0))
+		bg_rect.material.set_shader_parameter("color_b", Color(0.010, 0.025, 0.078, 1.0))
 
 func _update_powerup_buttons() -> void:
 	undo_button.icon = _powerup_button_icon(ICON_UNDO, "undo")
@@ -776,7 +805,8 @@ func _center_board() -> void:
 	_layout_powerups(view_size, powerup_row_width, powerup_row_height)
 	_apply_responsive_hud_typography(content_width, top_bar_bg.size.y, powerup_row_height)
 
-	var vertical_gap: float = clamp(view_size.y * (0.017 if is_wide else 0.022), 10.0, 26.0)
+	_layout_cabinet_title(view_size)
+	var vertical_gap: float = clamp(view_size.y * (0.014 if is_wide else 0.018), 8.0, 22.0)
 	var top_limit: float = view_size.y * 0.14
 	if top_bar_bg and top_bar_bg.size.y > 0.0:
 		top_limit = top_bar_bg.position.y + top_bar_bg.size.y + vertical_gap
@@ -828,8 +858,9 @@ func _layout_top_bar(view_size: Vector2, content_left: float, content_width: flo
 	if top_bar_bg == null or top_bar == null:
 		return
 	var is_wide: bool = ArcadeResponsiveLayout.is_wide(view_size)
-	var top_margin: float = clamp(view_size.y * (0.022 if is_wide else 0.03), 10.0, 30.0)
-	var bar_height: float = clamp(view_size.y * (0.13 if is_wide else 0.16), 84.0, 132.0)
+	var title_band: float = _cabinet_title_height(view_size)
+	var top_margin: float = title_band + clamp(view_size.y * (0.006 if is_wide else 0.01), 4.0, 12.0)
+	var bar_height: float = clamp(view_size.y * (0.16 if is_wide else 0.17), 96.0, 150.0)
 	top_bar_bg.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	top_bar_bg.position = Vector2(content_left, top_margin)
 	top_bar_bg.size = Vector2(content_width, bar_height)
@@ -860,6 +891,9 @@ func _layout_top_bar(view_size: Vector2, content_left: float, content_width: flo
 		if pause_icon:
 			var pause_icon_size: float = clamp(pause_size * 0.48, 28.0, 40.0)
 			pause_icon.custom_minimum_size = Vector2(pause_icon_size, pause_icon_size)
+	for pod in [_combo_pod_label, _rival_pod_label]:
+		if pod:
+			pod.custom_minimum_size = Vector2(clamp(content_width * 0.23, 104.0, 210.0), content_height)
 
 func _layout_top_right(view_size: Vector2) -> void:
 	if top_right_bar == null or audio_button == null:
@@ -909,6 +943,11 @@ func _apply_responsive_hud_typography(content_width: float, bar_height: float, p
 			label.add_theme_font_size_override("font_size", pressure_font)
 	if _score_burst_label:
 		_score_burst_label.add_theme_font_size_override("font_size", int(round(clamp(bar_height * 0.24, Typography.px(18.0), Typography.px(30.0)))))
+	for pod in [_combo_pod_label, _rival_pod_label]:
+		if pod:
+			pod.add_theme_font_size_override("font_size", int(round(clamp(score_inner_height * 0.23, Typography.px(16.0), Typography.px(28.0)))))
+	if _cabinet_title_label:
+		_cabinet_title_label.add_theme_font_size_override("font_size", int(round(clamp(bar_height * 0.52, Typography.px(40.0), Typography.px(78.0)))))
 
 	var badge_font_size: int = int(round(clamp(powerup_row_height * 0.32, Typography.px(14.0), Typography.px(26.0))))
 	for badge in [undo_badge, prism_badge, hint_badge]:
@@ -961,6 +1000,54 @@ func _setup_combo_label() -> void:
 	_combo_label.offset_bottom = 146.0
 	_combo_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	$UI.add_child(_combo_label)
+
+func _setup_cabinet_hud() -> void:
+	if _cabinet_title_label == null:
+		_cabinet_title_label = Label.new()
+		_cabinet_title_label.name = "CabinetTitle"
+		_cabinet_title_label.text = "LUMARUSH"
+		_cabinet_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_cabinet_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_cabinet_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_cabinet_title_label.add_theme_color_override("font_color", Color(0.92, 0.98, 1.0, 1.0))
+		_cabinet_title_label.add_theme_color_override("font_shadow_color", Color(0.1, 0.85, 1.0, 0.95))
+		_cabinet_title_label.add_theme_color_override("font_outline_color", Color(0.95, 0.18, 1.0, 0.72))
+		_cabinet_title_label.add_theme_constant_override("outline_size", 5)
+		$UI.add_child(_cabinet_title_label)
+	if _combo_pod_label == null:
+		_combo_pod_label = _make_hud_pod("ComboPod", Color(1.0, 0.76, 0.1, 1.0))
+		top_bar.add_child(_combo_pod_label)
+		top_bar.move_child(_combo_pod_label, min(1, top_bar.get_child_count() - 1))
+	if _rival_pod_label == null:
+		_rival_pod_label = _make_hud_pod("RivalPod", Color(1.0, 0.48, 0.96, 1.0))
+		top_bar.add_child(_rival_pod_label)
+		top_bar.move_child(_rival_pod_label, min(2, top_bar.get_child_count() - 1))
+	score_caption_label.text = "SCORE"
+	_update_score()
+
+func _make_hud_pod(node_name: String, color: Color) -> Label:
+	var label := Label.new()
+	label.name = node_name
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.clip_text = true
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_color_override("font_outline_color", Color(0.02, 0.01, 0.08, 0.98))
+	label.add_theme_constant_override("outline_size", 4)
+	return label
+
+func _cabinet_title_height(view_size: Vector2) -> float:
+	return clamp(view_size.y * (0.085 if ArcadeResponsiveLayout.is_wide(view_size) else 0.092), 54.0, 104.0)
+
+func _layout_cabinet_title(view_size: Vector2) -> void:
+	if _cabinet_title_label == null:
+		return
+	var title_h: float = _cabinet_title_height(view_size)
+	var title_w: float = min(view_size.x * 0.76, 960.0)
+	_cabinet_title_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_cabinet_title_label.position = Vector2((view_size.x - title_w) * 0.5, clamp(view_size.y * 0.008, 4.0, 12.0))
+	_cabinet_title_label.size = Vector2(title_w, title_h)
+	_cabinet_title_label.pivot_offset = _cabinet_title_label.size * 0.5
 
 func _setup_pressure_hud() -> void:
 	if _pressure_hud != null:
@@ -1085,6 +1172,10 @@ func _update_pressure_hud() -> void:
 	_pressure_heat_label.text = heat_text
 	_pressure_rival_label.text = "RIVAL %d%%" % int(round(progress * 100.0))
 	_pressure_matches_label.text = "%d LIVE MATCHES" % matches_left
+	if _combo_pod_label:
+		_combo_pod_label.text = "COMBO\nx%d" % max(1, combo)
+	if _rival_pod_label:
+		_rival_pod_label.text = "RIVAL\n%d%%" % int(round(progress * 100.0))
 	_pressure_bar.value = progress * 100.0
 	if progress >= 1.0:
 		_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(1.0, 0.82, 0.28, 0.95)))
