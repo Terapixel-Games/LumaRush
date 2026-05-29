@@ -119,6 +119,8 @@ func _ready() -> void:
 	VisualTestMode.apply_if_enabled($BackgroundController, $BackgroundController)
 	_force_cabinet_background_palette()
 	board.connect("match_made", Callable(self, "_on_match_made"))
+	if not board.is_connected("match_feedback", Callable(self, "_on_match_feedback")):
+		board.connect("match_feedback", Callable(self, "_on_match_feedback"))
 	board.connect("move_committed", Callable(self, "_on_move_committed"))
 	board.connect("no_moves", Callable(self, "_on_no_moves"))
 	if not board.is_connected("non_match_tapped", Callable(self, "_on_non_match_tapped")):
@@ -205,10 +207,17 @@ func _on_match_made(group: Array) -> void:
 	_kick_screen_shake(min(11.0, 2.0 + float(group.size()) + (combo * 0.35)))
 	_update_gameplay_mood_from_matches()
 	BackgroundMood.reset_starfield_emission_taper()
-	BackgroundMood.pulse_starfield()
 	_play_feedback_tier(group.size())
 	if _tutorial_overlay and is_instance_valid(_tutorial_overlay) and _tutorial_step <= 1:
 		_advance_tutorial_step()
+
+func _on_match_feedback(group: Array, center_global: Vector2) -> void:
+	var next_combo: int = combo + 1
+	var gained: int = group.size() * 10 * next_combo
+	var intensity: float = _match_feedback_intensity(group.size(), next_combo)
+	_show_match_center_score(center_global, gained, next_combo, group.size(), intensity)
+	BackgroundMood.pulse_starfield(intensity)
+	_pulse_match_chrome(intensity)
 
 func _on_move_committed(_group: Array, snapshot: Array) -> void:
 	_push_undo(snapshot, score, combo)
@@ -1233,6 +1242,53 @@ func _show_combo_escalation() -> void:
 		if _combo_label:
 			_combo_label.visible = false
 	)
+
+func _show_match_center_score(center_global: Vector2, gained: int, next_combo: int, group_size: int, intensity: float) -> void:
+	var label := Label.new()
+	label.name = "MatchScoreBurst"
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.z_index = 80
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.text = "+%d" % gained
+	if next_combo >= 3:
+		label.text = "+%d\nCHAIN x%d" % [gained, next_combo]
+	elif group_size >= 5:
+		label.text = "+%d\nBIG CLEAR" % gained
+	label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.30, 1.0) if group_size < 5 else Color(1.0, 0.22, 0.30, 1.0))
+	label.add_theme_color_override("font_outline_color", Color(0.03, 0.0, 0.08, 0.98))
+	label.add_theme_constant_override("outline_size", 5)
+	label.add_theme_font_size_override("font_size", int(round(clamp(30.0 + (intensity * 8.0), 34.0, 58.0))))
+	label.size = Vector2(260.0, 96.0)
+	label.pivot_offset = label.size * 0.5
+	label.scale = Vector2(0.68, 0.68)
+	$UI.add_child(label)
+	label.global_position = center_global - (label.size * 0.5)
+	var start_y: float = label.position.y
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "scale", Vector2(1.22, 1.22), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "position:y", start_y - 54.0, 0.34).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.chain().tween_property(label, "modulate:a", 0.0, 0.18)
+	tween.finished.connect(func() -> void:
+		if is_instance_valid(label):
+			label.queue_free()
+	)
+
+func _pulse_match_chrome(intensity: float) -> void:
+	if board_glow:
+		board_glow.color.a = min(0.50, 0.18 + (intensity * 0.10))
+		var glow_tween := create_tween()
+		glow_tween.tween_property(board_glow, "color:a", 0.18, 0.34)
+	if _combo_pod_label:
+		UiFx.pop(_combo_pod_label, 1.05 + (intensity * 0.015), 0.16)
+	if _rival_pod_label:
+		UiFx.pop(_rival_pod_label, 1.03 + (intensity * 0.012), 0.14)
+
+func _match_feedback_intensity(group_size: int, next_combo: int) -> float:
+	var size_boost: float = max(0.0, float(group_size - 3)) * 0.22
+	var combo_boost: float = max(0.0, float(next_combo - 1)) * 0.12
+	return clamp(1.0 + size_boost + combo_boost, 1.0, 2.6)
 
 func _kick_screen_shake(strength: float) -> void:
 	_shake_strength = max(_shake_strength, strength)

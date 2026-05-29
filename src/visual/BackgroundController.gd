@@ -169,18 +169,19 @@ func set_deterministic(enabled: bool) -> void:
 		if is_instance_valid(_emission_tween):
 			_emission_tween.kill()
 
-func pulse_starfield() -> void:
+func pulse_starfield(intensity: float = 1.0) -> void:
 	if _deterministic:
 		return
 	if is_instance_valid(_pulse_tween):
 		_pulse_tween.kill()
-	_match_density_mul = FeatureFlags.starfield_match_pulse_density_mult()
-	_match_speed_mul = FeatureFlags.starfield_match_pulse_speed_mult()
-	_match_brightness_mul = FeatureFlags.starfield_match_pulse_brightness_mult()
+	var hit: float = clamp(intensity, 1.0, 2.8)
+	_match_density_mul = 1.0 + ((FeatureFlags.starfield_match_pulse_density_mult() - 1.0) * hit)
+	_match_speed_mul = 1.0 + ((FeatureFlags.starfield_match_pulse_speed_mult() - 1.0) * hit)
+	_match_brightness_mul = 1.0 + ((FeatureFlags.starfield_match_pulse_brightness_mult() - 1.0) * hit)
 	_update_starfield_runtime()
 	_pulse_tween = create_tween()
-	# Mirror match-layer envelope timing: hold, then taper back to base.
-	_pulse_tween.tween_interval(FeatureFlags.combo_decay_delay_seconds())
+	# Keep match hits sharp: spike immediately, hold briefly, then taper.
+	_pulse_tween.tween_interval(FeatureFlags.starfield_match_pulse_seconds() * min(hit, 1.8))
 	if _boost_particles:
 		_boost_particles.restart()
 		_boost_particles.emitting = true
@@ -191,13 +192,13 @@ func pulse_starfield() -> void:
 	_pulse_tween.tween_method(func(v: float) -> void:
 		_match_speed_mul = v
 		_update_starfield_runtime()
-	, _match_speed_mul, 1.0, FeatureFlags.combo_decay_seconds())
+	, _match_speed_mul, 1.0, max(0.22, FeatureFlags.starfield_match_pulse_seconds() * 1.8))
 	_pulse_tween.tween_method(func(v: float) -> void:
 		_match_density_mul = v
-	, _match_density_mul, 1.0, FeatureFlags.combo_decay_seconds())
+	, _match_density_mul, 1.0, max(0.22, FeatureFlags.starfield_match_pulse_seconds() * 1.8))
 	_pulse_tween.tween_method(func(v: float) -> void:
 		_match_brightness_mul = v
-	, _match_brightness_mul, 1.0, FeatureFlags.combo_decay_seconds())
+	, _match_brightness_mul, 1.0, max(0.22, FeatureFlags.starfield_match_pulse_seconds() * 1.8))
 	_pulse_tween.finished.connect(func() -> void:
 		if _boost_particles:
 			_boost_particles.emitting = false

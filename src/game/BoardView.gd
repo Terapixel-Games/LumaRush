@@ -2,6 +2,7 @@ extends Node2D
 class_name BoardView
 
 signal match_made(group: Array)
+signal match_feedback(group: Array, center_global: Vector2)
 signal no_moves
 signal move_committed(group: Array, snapshot: Array)
 signal match_click_haptic_triggered(duration_ms: int, amplitude: float)
@@ -133,8 +134,9 @@ func _handle_click(pos: Vector2) -> void:
 		# Keep color ids strictly in palette bounds before visual refresh/animation.
 		_normalize_board_color_ids()
 		_clear_hint()
+		emit_signal("match_feedback", group, _group_center_global(group))
 		await _animate_resolution(group, snapshot)
-		_trigger_match_haptic()
+		_trigger_match_haptic(group.size())
 		emit_signal("move_committed", group, snapshot)
 		emit_signal("match_made", group)
 		_check_no_moves_and_emit()
@@ -239,7 +241,6 @@ func _rebuild_tiles_from_grid() -> void:
 	queue_redraw()
 
 func _animate_resolution(group: Array, snapshot: Array) -> void:
-	VFXManager.play_pixel_explosion(group, tile_size, global_position, snapshot)
 	var final_grid: Array = board.grid.duplicate(true)
 	var group_set := {}
 	for p in group:
@@ -251,13 +252,25 @@ func _animate_resolution(group: Array, snapshot: Array) -> void:
 		row.resize(width)
 		new_tiles.append(row)
 
-	var fade_tween: Tween = create_tween()
-	fade_tween.set_parallel(true)
+	var hit_tween: Tween = create_tween()
+	hit_tween.set_parallel(true)
 	for p in group:
 		var removed_tile: ColorRect = tiles[p.y][p.x]
-		fade_tween.tween_property(removed_tile, "modulate:a", 0.0, 0.16)
-		fade_tween.tween_property(removed_tile, "scale", Vector2(0.82, 0.82), 0.16)
-	await fade_tween.finished
+		removed_tile.z_index = 30
+		hit_tween.tween_property(removed_tile, "scale", Vector2(1.18, 1.18), 0.07).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		hit_tween.tween_property(removed_tile, "modulate", Color(1.55, 1.55, 1.55, 1.0), 0.06)
+	await hit_tween.finished
+
+	VFXManager.play_pixel_explosion(group, tile_size, global_position, snapshot)
+	var collapse_tween: Tween = create_tween()
+	collapse_tween.set_parallel(true)
+	for p in group:
+		var removed_tile: ColorRect = tiles[p.y][p.x]
+		var spin: float = 12.0 if (p.x + p.y) % 2 == 0 else -12.0
+		collapse_tween.tween_property(removed_tile, "scale", Vector2(1.42, 1.42), 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		collapse_tween.tween_property(removed_tile, "rotation_degrees", spin, 0.10)
+		collapse_tween.tween_property(removed_tile, "modulate:a", 0.0, 0.12)
+	await collapse_tween.finished
 
 	var fall_tween: Tween = create_tween()
 	fall_tween.set_parallel(true)
@@ -275,17 +288,29 @@ func _animate_resolution(group: Array, snapshot: Array) -> void:
 			new_tiles[target_y][x] = node
 			# Force visual to match final logical color during fall, not only after settle.
 			_apply_tile_visual(node, int(final_grid[target_y][x]))
-			fall_tween.tween_property(node, "position:y", (target_y * tile_size) + (_tile_gap_px * 0.5), 0.22)
+			fall_tween.tween_property(node, "position:y", (target_y * tile_size) + (_tile_gap_px * 0.5), 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 		for y in range(start_y):
 			var spawn_color: Color = _color_from_index(int(final_grid[y][x]))
 			var spawned: ColorRect = _create_tile_node(Vector2i(x, y), spawn_color)
 			spawned.modulate.a = 0.0
+			spawned.scale = Vector2(0.74, 0.74)
 			spawned.position.y = -(start_y - y) * tile_size + (_tile_gap_px * 0.5)
 			new_tiles[y][x] = spawned
-			fall_tween.tween_property(spawned, "position:y", (y * tile_size) + (_tile_gap_px * 0.5), 0.24)
-			fall_tween.tween_property(spawned, "modulate:a", 1.0, 0.18)
+			var delay: float = float(start_y - y) * 0.018
+			fall_tween.tween_property(spawned, "position:y", (y * tile_size) + (_tile_gap_px * 0.5), 0.25).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			fall_tween.tween_property(spawned, "scale", Vector2(1.08, 1.08), 0.18).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			fall_tween.tween_property(spawned, "modulate:a", 1.0, 0.12).set_delay(delay)
 	await fall_tween.finished
+
+	var settle_tween: Tween = create_tween()
+	settle_tween.set_parallel(true)
+	for row in new_tiles:
+		for tile in row:
+			var tile_node: ColorRect = tile as ColorRect
+			if is_instance_valid(tile_node):
+				settle_tween.tween_property(tile_node, "scale", Vector2.ONE, 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	await settle_tween.finished
 
 	for p in group:
 		var old_tile: ColorRect = tiles[p.y][p.x]
@@ -294,6 +319,14 @@ func _animate_resolution(group: Array, snapshot: Array) -> void:
 
 	tiles = new_tiles
 	_refresh_tiles()
+
+func _group_center_global(group: Array) -> Vector2:
+	if group.is_empty():
+		return global_position
+	var center := Vector2.ZERO
+	for p in group:
+		center += global_position + Vector2((float(p.x) + 0.5) * tile_size, (float(p.y) + 0.5) * tile_size)
+	return center / float(group.size())
 
 func _color_from_index(idx: int) -> Color:
 	var palette: Array = _tile_palette()
@@ -492,11 +525,12 @@ func _animate_powerup_release() -> void:
 			t.tween_property(tile_node, "scale", Vector2.ONE, 0.18)
 	await t.finished
 
-func _trigger_match_haptic() -> bool:
+func _trigger_match_haptic(group_size: int = 0) -> bool:
 	if not FeatureFlags.haptics_enabled():
 		return false
-	var duration_ms: int = FeatureFlags.match_haptic_duration_ms()
-	var amplitude: float = FeatureFlags.match_haptic_amplitude()
+	var tier: int = max(0, group_size - _min_match_size)
+	var duration_ms: int = FeatureFlags.match_haptic_duration_ms() + (tier * 4)
+	var amplitude: float = clamp(FeatureFlags.match_haptic_amplitude() + (float(tier) * 0.08), 0.0, 1.0)
 	Input.vibrate_handheld(duration_ms, amplitude)
 	emit_signal("match_haptic_triggered", duration_ms, amplitude)
 	return true

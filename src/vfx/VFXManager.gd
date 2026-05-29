@@ -7,6 +7,7 @@ var _theme_palette: Array = []
 func play_pixel_explosion(group: Array, tile_size: float, board_origin: Vector2, colors: Array) -> void:
 	if group.is_empty():
 		return
+	var intensity: float = clamp(float(group.size()) / 3.0, 1.0, 2.6)
 	var first: Vector2i = group[0]
 	var min_x: int = first.x
 	var max_x: int = first.x
@@ -35,9 +36,12 @@ func play_pixel_explosion(group: Array, tile_size: float, board_origin: Vector2,
 	parent.add_child(explosion)
 	var pos := board_origin + Vector2(min_x * tile_size, min_y * tile_size)
 	explosion.position = pos
-	explosion.call("setup", tex, 6.0, float(randi() % 1000))
+	explosion.call("setup", tex, clamp(7.5 - intensity, 4.5, 6.5), float(randi() % 1000))
 	var burst_center: Vector2 = board_origin + Vector2((min_x + max_x + 1) * tile_size * 0.5, (min_y + max_y + 1) * tile_size * 0.5)
-	_spawn_pop_burst(parent, burst_center, _color_from_index(int(colors[first.y][first.x])))
+	var tint := _color_from_index(int(colors[first.y][first.x]))
+	_spawn_pop_burst(parent, burst_center, tint, intensity)
+	_spawn_pop_burst(parent, burst_center + Vector2(randf_range(-10.0, 10.0), randf_range(-8.0, 8.0)), Color(1.0, 1.0, 1.0, 0.94), intensity * 0.65)
+	_spawn_shock_ring(parent, burst_center, tint, tile_size * (0.72 + intensity * 0.16))
 
 func play_prism_clear(group: Array, tile_size: float, board_origin: Vector2, color_idx: int) -> void:
 	if group.is_empty():
@@ -50,9 +54,10 @@ func play_prism_clear(group: Array, tile_size: float, board_origin: Vector2, col
 		center += board_origin + Vector2((p.x + 0.5) * tile_size, (p.y + 0.5) * tile_size)
 	center /= float(group.size())
 	var tint: Color = _color_from_index(color_idx)
-	_spawn_pop_burst(parent, center, tint)
-	_spawn_pop_burst(parent, center + Vector2(14, -10), Color(1.0, 1.0, 1.0, 0.9))
-	_spawn_pop_burst(parent, center + Vector2(-12, 10), tint.lightened(0.2))
+	_spawn_pop_burst(parent, center, tint, 1.65)
+	_spawn_pop_burst(parent, center + Vector2(14, -10), Color(1.0, 1.0, 1.0, 0.9), 1.2)
+	_spawn_pop_burst(parent, center + Vector2(-12, 10), tint.lightened(0.2), 1.35)
+	_spawn_shock_ring(parent, center, tint, tile_size * 1.2)
 
 func set_theme_palette(palette: Array) -> void:
 	_theme_palette = palette.duplicate(true)
@@ -67,7 +72,7 @@ func _color_from_index(idx: int) -> Color:
 	]
 	return palette[idx % palette.size()]
 
-func _spawn_pop_burst(parent: Node, at: Vector2, tint: Color) -> void:
+func _spawn_pop_burst(parent: Node, at: Vector2, tint: Color, intensity: float = 1.0) -> void:
 	var burst := GPUParticles2D.new()
 	if _burst_texture == null:
 		_burst_texture = _build_burst_texture()
@@ -76,8 +81,8 @@ func _spawn_pop_burst(parent: Node, at: Vector2, tint: Color) -> void:
 	burst.top_level = true
 	burst.one_shot = true
 	burst.emitting = false
-	burst.amount = 180
-	burst.lifetime = 1.6
+	burst.amount = int(round(180.0 * clamp(intensity, 0.75, 2.8)))
+	burst.lifetime = 1.25 + (0.22 * clamp(intensity, 0.0, 2.0))
 	burst.explosiveness = 1.0
 	burst.global_position = at
 	burst.modulate = Color(tint.r, tint.g, tint.b, 0.9)
@@ -87,8 +92,8 @@ func _spawn_pop_burst(parent: Node, at: Vector2, tint: Color) -> void:
 	pm.direction = Vector3(1.0, 0.0, 0.0)
 	pm.spread = 180.0
 	pm.gravity = Vector3.ZERO
-	pm.initial_velocity_min = 980.0
-	pm.initial_velocity_max = 1480.0
+	pm.initial_velocity_min = 980.0 * clamp(intensity, 0.85, 2.2)
+	pm.initial_velocity_max = 1480.0 * clamp(intensity, 0.85, 2.2)
 	pm.linear_accel_min = 40.0
 	pm.linear_accel_max = 80.0
 	pm.angle_min = 0.0
@@ -104,6 +109,29 @@ func _spawn_pop_burst(parent: Node, at: Vector2, tint: Color) -> void:
 	await get_tree().create_timer(1.9).timeout
 	if is_instance_valid(burst):
 		burst.queue_free()
+
+func _spawn_shock_ring(parent: Node, at: Vector2, tint: Color, radius: float) -> void:
+	var ring := Line2D.new()
+	ring.name = "MatchShockRing"
+	ring.top_level = true
+	ring.global_position = at
+	ring.closed = true
+	ring.width = 5.0
+	ring.default_color = Color(tint.r, tint.g, tint.b, 0.88)
+	ring.z_index = 6
+	for i in range(48):
+		var a: float = (TAU * float(i)) / 48.0
+		ring.add_point(Vector2(cos(a), sin(a)) * radius)
+	ring.scale = Vector2(0.16, 0.16)
+	parent.add_child(ring)
+	var tween := ring.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(ring, "scale", Vector2(1.0, 1.0), 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(ring, "modulate:a", 0.0, 0.24)
+	tween.finished.connect(func() -> void:
+		if is_instance_valid(ring):
+			ring.queue_free()
+	)
 
 func _resolve_vfx_parent() -> Node:
 	var parent := get_tree().current_scene
