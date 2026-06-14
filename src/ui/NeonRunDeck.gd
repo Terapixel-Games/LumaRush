@@ -91,16 +91,19 @@ static func apply_results(scene: Node) -> void:
 	_tint_labels(scene)
 
 static func apply_pause(scene: Node) -> void:
-	_style_panels(scene, ["Panel"], "panel")
+	_style_color_rect(scene.get_node_or_null("Dim"), BACKDROP)
+	_style_panels(scene, ["Panel"], "modal_panel")
 	_style_buttons(scene, ["VBox/Resume", "Panel/VBox/Resume"], "primary")
 	_style_buttons(scene, ["VBox/Quit", "Panel/VBox/Quit"], "secondary")
+	_style_buttons(scene, ["VBox/Tutorial", "Panel/VBox/Tutorial"], "secondary")
 	_style_arcade_surfaces(scene)
 	_tint_labels(scene)
 
 static func apply_modal(scene: Node) -> void:
 	_style_color_rect(scene.get_node_or_null("Backdrop"), BACKDROP)
+	_style_color_rect(scene.get_node_or_null("Dim"), BACKDROP)
 	_style_color_rect(scene.get_node_or_null("Center/Panel"), SURFACE_PANEL)
-	_style_panels(scene, ["Panel", "Center/Panel", "Panel/VBox/Footer"], "panel")
+	_style_panels(scene, ["Panel", "Center/Panel", "Panel/VBox/Footer"], "modal_panel")
 	_style_panels(scene, _find_paths_containing(scene, "Header") + _find_paths_containing(scene, "Card") + _find_paths_containing(scene, "Pack") + _find_paths_containing(scene, "Theme") + _find_paths_containing(scene, "Buy"), "card")
 	_style_all_buttons(scene, "secondary")
 	for path in [
@@ -110,6 +113,8 @@ static func apply_modal(scene: Node) -> void:
 		"Panel/VBox/Scroll/Content/UpdateUsername",
 		"Panel/VBox/Scroll/Content/CreateMergeCode",
 		"Panel/VBox/Scroll/Content/RedeemMergeCode",
+		"Panel/VBox/Footer/Close",
+		"Panel/VBox/Footer/Actions/Close",
 	]:
 		_style_button(scene.get_node_or_null(path), "primary")
 	_style_line_edits(scene)
@@ -138,22 +143,37 @@ static func make_style(kind: String) -> StyleBoxFlat:
 			style.border_color = Color(0.10, 0.92, 1.0, 0.88)
 			style.shadow_color = Color(0.0, 0.78, 1.0, 0.34)
 			style.shadow_size = 18
+		"modal_panel":
+			style.bg_color = Color(0.006, 0.038, 0.085, 0.96)
+			style.border_color = Color(0.0, 1.0, 0.86, 0.94)
+			style.shadow_color = Color(0.0, 0.70, 1.0, 0.30)
+			style.shadow_size = 22
+			style.corner_radius_top_left = 20
+			style.corner_radius_top_right = 20
+			style.corner_radius_bottom_left = 20
+			style.corner_radius_bottom_right = 20
 		"primary":
-			style.bg_color = Color(1.0, 0.06, 0.22, 0.98)
-			style.border_color = Color(1.0, 0.88, 0.20, 1.0)
-			style.shadow_color = Color(1.0, 0.04, 0.24, 0.64)
-			style.shadow_size = 24
-			style.border_width_left = 5
-			style.border_width_top = 5
-			style.border_width_right = 5
-			style.border_width_bottom = 5
+			style.bg_color = Color(1.0, 0.78, 0.22, 0.98)
+			style.border_color = Color(1.0, 0.92, 0.42, 1.0)
+			style.shadow_color = Color(1.0, 0.62, 0.10, 0.50)
+			style.shadow_size = 18
+			style.border_width_left = 3
+			style.border_width_top = 3
+			style.border_width_right = 3
+			style.border_width_bottom = 3
+			style.corner_radius_top_left = 18
+			style.corner_radius_top_right = 18
+			style.corner_radius_bottom_left = 18
+			style.corner_radius_bottom_right = 18
 		"reward":
 			style.bg_color = Color(0.04, 0.12, 0.23, 0.78)
 			style.border_color = Color(0.08, 0.88, 1.0, 0.92)
 			style.shadow_color = Color(0.02, 0.8, 1.0, 0.18)
 		"secondary":
-			style.bg_color = Color(0.006, 0.010, 0.038, 0.92)
-			style.border_color = Color(0.20, 0.86, 1.0, 0.92)
+			style.bg_color = Color(0.006, 0.018, 0.050, 0.92)
+			style.border_color = Color(0.72, 0.92, 1.0, 0.76)
+			style.shadow_color = Color(0.0, 0.45, 1.0, 0.16)
+			style.shadow_size = 10
 		"icon":
 			style.bg_color = Color(0.018, 0.028, 0.085, 0.92)
 			style.border_color = Color(0.82, 0.95, 1.0, 0.92)
@@ -221,7 +241,9 @@ static func _style_color_rect(node: Node, color: Color) -> void:
 static func _style_panels(scene: Node, paths: Array, kind: String) -> void:
 	for path in paths:
 		var node := scene.get_node_or_null(str(path))
-		if node is PanelContainer:
+		if node is Panel:
+			(node as Panel).add_theme_stylebox_override("panel", make_style(kind))
+		elif node is PanelContainer:
 			(node as PanelContainer).add_theme_stylebox_override("panel", make_style(kind))
 		elif node is ColorRect:
 			(node as ColorRect).color = make_style(kind).bg_color
@@ -252,13 +274,15 @@ static func _style_button(node: Node, kind: String) -> void:
 	button.add_theme_stylebox_override("pressed", pressed)
 	button.add_theme_stylebox_override("focus", hover)
 	button.add_theme_stylebox_override("disabled", disabled_style)
-	button.add_theme_color_override("font_color", TEXT_MAIN)
-	button.add_theme_color_override("font_hover_color", TEXT_MAIN)
-	button.add_theme_color_override("font_pressed_color", TEXT_MAIN)
-	button.add_theme_color_override("font_focus_color", TEXT_MAIN)
+	var font_color := Color(0.03, 0.025, 0.01, 1.0) if kind == "primary" else TEXT_MAIN
+	var outline_color := Color(1.0, 0.92, 0.46, 0.48) if kind == "primary" else SHADOW
+	button.add_theme_color_override("font_color", font_color)
+	button.add_theme_color_override("font_hover_color", font_color)
+	button.add_theme_color_override("font_pressed_color", font_color)
+	button.add_theme_color_override("font_focus_color", font_color)
 	button.add_theme_color_override("font_disabled_color", TEXT_SOFT)
-	button.add_theme_color_override("font_outline_color", SHADOW)
-	button.add_theme_constant_override("outline_size", 4 if kind == "primary" else 2)
+	button.add_theme_color_override("font_outline_color", outline_color)
+	button.add_theme_constant_override("outline_size", 1 if kind == "primary" else 2)
 	_apply_arcade_node(button, kind)
 	if button.has_method("_sync_glass_state"):
 		button.call_deferred("_sync_glass_state")
@@ -290,11 +314,23 @@ static func _style_arcade_surfaces(scene: Node) -> void:
 	for node in scene.find_children("*", "ColorRect", true, false):
 		if _is_under_background_controller(node):
 			continue
-		_apply_arcade_node(node, "panel")
+		_apply_arcade_node(node, _surface_kind_for_node(scene, node))
 	for node in scene.find_children("*", "PanelContainer", true, false):
 		if _is_under_background_controller(node):
 			continue
-		_apply_arcade_node(node, "panel")
+		_apply_arcade_node(node, _surface_kind_for_node(scene, node))
+	for node in scene.find_children("*", "Panel", true, false):
+		if _is_under_background_controller(node):
+			continue
+		_apply_arcade_node(node, _surface_kind_for_node(scene, node))
+
+static func _surface_kind_for_node(scene: Node, node: Node) -> String:
+	if node == null:
+		return "panel"
+	var has_modal_backdrop := scene.get_node_or_null("Backdrop") != null or scene.get_node_or_null("Dim") != null
+	if has_modal_backdrop and node.name == "Panel":
+		return "modal_panel"
+	return "panel"
 
 static func _is_under_background_controller(node: Node) -> bool:
 	var cursor := node
@@ -312,6 +348,9 @@ static func _apply_arcade_node(node: Node, kind: String) -> void:
 	if kind == "primary":
 		tint = Color(1.0, 0.36, 0.08, 0.72)
 		edge = Color(1.0, 0.88, 0.42, 0.9)
+	elif kind == "modal_panel":
+		tint = Color(0.006, 0.038, 0.085, 0.96)
+		edge = Color(0.0, 1.0, 0.86, 0.94)
 	elif kind == "powerup":
 		tint = Color(0.08, 0.08, 0.22, 0.72)
 		edge = Color(0.85, 0.92, 1.0, 0.82)

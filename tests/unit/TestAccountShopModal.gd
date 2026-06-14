@@ -309,3 +309,83 @@ func test_account_modal_uses_username_label_not_bonus() -> void:
 	assert_that(contains_bonus).is_false()
 
 	await _free_node(host)
+
+func test_modal_surfaces_share_premium_casino_style() -> void:
+	var host := _create_root_host()
+	var account: Control = (load("res://src/scenes/AccountModal.tscn") as PackedScene).instantiate() as Control
+	var shop: Control = (load("res://src/scenes/ShopModal.tscn") as PackedScene).instantiate() as Control
+	var save_streak: Control = (load("res://src/scenes/SaveStreakModal.tscn") as PackedScene).instantiate() as Control
+	var pause: Control = (load("res://src/scenes/PauseOverlay.tscn") as PackedScene).instantiate() as Control
+	var audio: Control = (load("res://src/scenes/AudioTrackOverlay.tscn") as PackedScene).instantiate() as Control
+	for modal in [account, shop, save_streak, pause, audio]:
+		assert_that(modal).is_not_null()
+		host.add_child(modal)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	_assert_modal_panel_contract(account.get_node("Panel"))
+	_assert_modal_panel_contract(shop.get_node("Panel"))
+	_assert_modal_color_rect_contract(save_streak.get_node("Panel") as ColorRect)
+	_assert_modal_panel_contract(pause.get_node("Panel"))
+	_assert_modal_color_rect_contract(audio.get_node("Center/Panel") as ColorRect)
+
+	_assert_gold_primary_button(account.get_node("Panel/VBox/Footer/Close") as Button)
+	_assert_gold_primary_button(shop.get_node("Panel/VBox/Footer/Actions/Close") as Button)
+	_assert_gold_primary_button(save_streak.get_node("Panel/VBox/SaveButton") as Button)
+	_assert_gold_primary_button(pause.get_node("VBox/Resume") as Button)
+	_assert_cyan_secondary_button(audio.get_node("Center/Panel/Margin/VBox/Close") as Button)
+
+	_assert_dim_backdrop(account.get_node("Backdrop") as ColorRect)
+	_assert_dim_backdrop(shop.get_node("Backdrop") as ColorRect)
+	_assert_dim_backdrop(save_streak.get_node("Dim") as ColorRect)
+	_assert_dim_backdrop(pause.get_node("Dim") as ColorRect)
+	_assert_dim_backdrop(audio.get_node("Backdrop") as ColorRect)
+
+	await _free_node(host)
+
+func _assert_modal_panel_contract(node: Node) -> void:
+	assert_that(node).is_not_null()
+	var style := _panel_style(node)
+	assert_that(style).is_not_null()
+	assert_that(style.bg_color.b).is_greater(style.bg_color.r)
+	assert_that(style.border_color.g).is_greater_equal(0.85)
+	assert_that(style.border_color.b).is_greater_equal(0.80)
+	assert_that(style.corner_radius_top_left).is_greater_equal(18)
+
+func _assert_modal_color_rect_contract(panel: ColorRect) -> void:
+	assert_that(panel).is_not_null()
+	assert_that(panel.color.b).is_greater(panel.color.r)
+	assert_that(panel.color.a).is_greater_equal(0.90)
+	assert_that(panel.material).is_not_null()
+
+func _assert_gold_primary_button(button: Button) -> void:
+	assert_that(button).is_not_null()
+	var style := button.get_theme_stylebox("normal") as StyleBoxFlat
+	assert_that(style).is_not_null()
+	assert_that(style.bg_color.r).is_greater_equal(0.90)
+	assert_that(style.bg_color.g).is_greater_equal(0.65)
+	assert_that(style.bg_color.b).is_less_equal(0.35)
+	var font_color: Color = button.get_theme_color("font_color")
+	assert_that(font_color.r).is_less_equal(0.12)
+	assert_that(font_color.g).is_less_equal(0.12)
+	assert_that(font_color.b).is_less_equal(0.12)
+
+func _assert_cyan_secondary_button(button: Button) -> void:
+	assert_that(button).is_not_null()
+	var style := button.get_theme_stylebox("normal") as StyleBoxFlat
+	assert_that(style).is_not_null()
+	assert_that(style.bg_color.b).is_greater(style.bg_color.r)
+	assert_that(style.border_color.b).is_greater_equal(0.85)
+	assert_that(style.border_color.g).is_greater_equal(0.70)
+
+func _assert_dim_backdrop(backdrop: ColorRect) -> void:
+	assert_that(backdrop).is_not_null()
+	assert_that(backdrop.color.b).is_greater_equal(backdrop.color.r)
+	assert_that(backdrop.color.a).is_greater_equal(0.70)
+
+func _panel_style(node: Node) -> StyleBoxFlat:
+	if node is Panel:
+		return (node as Panel).get_theme_stylebox("panel") as StyleBoxFlat
+	if node is PanelContainer:
+		return (node as PanelContainer).get_theme_stylebox("panel") as StyleBoxFlat
+	return null

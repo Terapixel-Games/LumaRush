@@ -917,23 +917,23 @@ func _apply_shop_card_style(card: Control, variant: String) -> void:
 	var panel_card := card as PanelContainer
 	if panel_card == null:
 		return
-	var base := Color(0.045, 0.08, 0.16, 0.76)
-	var edge := Color(0.86, 0.94, 1.0, 0.24)
-	var shadow := Color(0.03, 0.05, 0.12, 0.32)
+	var base := Color(0.020, 0.040, 0.095, 0.84)
+	var edge := Color(0.20, 0.86, 1.0, 0.36)
+	var shadow := Color(0.00, 0.35, 0.90, 0.16)
 	match variant:
 		"coin":
-			base = Color(0.06, 0.095, 0.17, 0.76)
-			edge = Color(1.0, 0.84, 0.36, 0.28)
+			base = Color(0.035, 0.055, 0.110, 0.86)
+			edge = Color(1.0, 0.84, 0.36, 0.36)
 		"theme":
-			base = Color(0.045, 0.09, 0.2, 0.76)
-			edge = Color(0.64, 0.92, 1.0, 0.28)
+			base = Color(0.025, 0.060, 0.125, 0.86)
+			edge = Color(0.00, 1.0, 0.86, 0.42)
 		"featured":
-			base = Color(0.095, 0.08, 0.24, 0.82)
-			edge = Color(1.0, 0.62, 1.0, 0.42)
-			shadow = Color(0.09, 0.02, 0.16, 0.36)
+			base = Color(0.055, 0.050, 0.150, 0.88)
+			edge = Color(1.0, 0.76, 0.32, 0.56)
+			shadow = Color(1.0, 0.58, 0.08, 0.20)
 		"powerup":
-			base = Color(0.055, 0.075, 0.145, 0.74)
-			edge = Color(0.82, 0.96, 1.0, 0.22)
+			base = Color(0.020, 0.045, 0.100, 0.84)
+			edge = Color(0.72, 0.92, 1.0, 0.32)
 	var style := StyleBoxFlat.new()
 	style.bg_color = base
 	style.border_width_left = 1
@@ -941,10 +941,10 @@ func _apply_shop_card_style(card: Control, variant: String) -> void:
 	style.border_width_right = 1
 	style.border_width_bottom = 1
 	style.border_color = edge
-	style.corner_radius_top_left = 16
-	style.corner_radius_top_right = 16
-	style.corner_radius_bottom_right = 16
-	style.corner_radius_bottom_left = 16
+	style.corner_radius_top_left = 14
+	style.corner_radius_top_right = 14
+	style.corner_radius_bottom_right = 14
+	style.corner_radius_bottom_left = 14
 	style.shadow_color = shadow
 	style.shadow_size = 5
 	style.anti_aliasing = true
@@ -970,26 +970,27 @@ func _apply_powerup_typography() -> void:
 func _apply_button_variant(button: Button, variant: String) -> void:
 	if button == null:
 		return
-	var base := Color(0.12, 0.2, 0.38, 0.58)
-	var edge := Color(0.9, 0.96, 1.0, 0.62)
-	var font := Color(0.98, 0.99, 1.0, 1.0)
-	var shadow := Color(0.03, 0.07, 0.16, 0.36)
+	var base := Color(1.0, 0.78, 0.22, 0.98)
+	var edge := Color(1.0, 0.92, 0.42, 1.0)
+	var font := Color(0.03, 0.025, 0.01, 1.0)
+	var shadow := Color(1.0, 0.62, 0.10, 0.42)
 	var corner := 18
 	match variant:
 		"secondary":
-			base = Color(0.11, 0.18, 0.34, 0.48)
-			edge = Color(0.86, 0.93, 1.0, 0.5)
-			shadow = Color(0.03, 0.06, 0.14, 0.28)
+			base = Color(0.006, 0.018, 0.050, 0.92)
+			edge = Color(0.72, 0.92, 1.0, 0.76)
+			shadow = Color(0.0, 0.45, 1.0, 0.16)
+			font = Color(0.94, 0.985, 1.0, 1.0)
 		"ghost":
-			base = Color(0.09, 0.14, 0.27, 0.28)
-			edge = Color(0.86, 0.93, 1.0, 0.4)
-			shadow = Color(0.03, 0.05, 0.12, 0.16)
+			base = Color(0.006, 0.018, 0.050, 0.55)
+			edge = Color(0.72, 0.92, 1.0, 0.42)
+			shadow = Color(0.0, 0.45, 1.0, 0.10)
 			font = Color(0.9, 0.95, 1.0, 0.95)
 			corner = 999
 		"badge":
-			base = Color(0.12, 0.18, 0.34, 0.4)
-			edge = Color(0.89, 0.96, 1.0, 0.42)
-			shadow = Color(0.03, 0.05, 0.12, 0.2)
+			base = Color(0.006, 0.018, 0.050, 0.62)
+			edge = Color(1.0, 0.84, 0.36, 0.58)
+			shadow = Color(1.0, 0.58, 0.08, 0.18)
 			font = Color(0.9, 0.95, 1.0, 0.95)
 			corner = 999
 	var normal := StyleBoxFlat.new()
