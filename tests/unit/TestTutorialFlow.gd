@@ -139,6 +139,8 @@ func test_powerups_are_available_during_pure_run_until_used() -> void:
 	game.queue_free()
 
 func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_prompt() -> void:
+	var original_window_size: Vector2i = DisplayServer.window_get_size()
+	DisplayServer.window_set_size(Vector2i(1880, 959))
 	RunManager.set_selected_mode("PURE", "test")
 	SaveStore.set_tutorial_seen(true)
 	SaveStore.set_tip_dismissed(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, false)
@@ -161,6 +163,8 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	var target_highlight: Control = modal.get_node_or_null("Center/TargetHighlight") as Control
 	var target_beam: Control = modal.get_node_or_null("Center/TargetBeam") as Control
 	var checkbox: Control = modal.get_node_or_null("Center/Panel/VBox/DoNotShow") as Control
+	var board_view: BoardView = game.get_node_or_null("BoardView") as BoardView
+	var hint_button: Control = game.get_node_or_null("UI/Powerups/Hint") as Control
 	assert_that(title.text).is_equal("Open Run")
 	assert_that(message.text).contains("Open run")
 	assert_that(message.text).contains("Pure leaderboard scores stay separate")
@@ -177,17 +181,26 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	var checkbox_rect: Rect2 = checkbox.get_global_rect()
 	var confirm_rect: Rect2 = confirm.get_global_rect()
 	var target_rect: Rect2 = target_highlight.get_global_rect()
+	var board_rect := Rect2(
+		board_view.global_position,
+		Vector2(float(board_view.width) * board_view.tile_size, float(board_view.height) * board_view.tile_size)
+	)
+	var hint_rect: Rect2 = hint_button.get_global_rect()
 	_assert_rect_inside(message_rect, panel_rect)
 	_assert_rect_inside(checkbox_rect, panel_rect)
 	_assert_rect_inside(confirm_rect, panel_rect)
 	assert_that(message_rect.end.y).is_less_equal(checkbox_rect.position.y + 1.0)
 	assert_that(checkbox_rect.end.y).is_less_equal(confirm_rect.position.y + 1.0)
-	assert_that(panel_rect.end.y).is_less_equal(target_rect.position.y - 6.0)
+	assert_that(panel_rect.intersects(board_rect)).is_false()
+	assert_that(panel_rect.intersects(target_rect)).is_false()
+	assert_that(target_rect.intersects(hint_rect)).is_true()
+	assert_that(panel_rect.end.x <= board_rect.position.x or panel_rect.position.x >= board_rect.end.x).is_true()
 
 	game.call("_on_open_mode_tip_dismissed", true)
 	assert_that(SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)).is_false()
 	game.call("_on_tutorial_requested")
 	assert_that(SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)).is_true()
+	DisplayServer.window_set_size(original_window_size)
 	game.queue_free()
 
 func test_powerup_tutorial_panel_keeps_text_and_buttons_in_bounds() -> void:

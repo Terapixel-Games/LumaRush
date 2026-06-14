@@ -525,6 +525,7 @@ func _maybe_show_open_mode_tip(powerup_type: String) -> void:
 			"show_checkbox": true,
 			"icon_texture": _powerup_icon_for_type(powerup_type),
 			"target_rect": _powerup_control_rect(powerup_type),
+			"avoid_rect": _board_control_rect(),
 			"bottom_offset": _open_tip_bottom_offset(),
 		})
 	if modal.has_signal("dismissed"):
@@ -557,6 +558,14 @@ func _powerup_control_rect(powerup_type: String) -> Rect2:
 	if control == null or not is_instance_valid(control):
 		return Rect2()
 	return control.get_global_rect()
+
+func _board_control_rect() -> Rect2:
+	if board == null or not is_instance_valid(board):
+		return Rect2()
+	return Rect2(
+		board.global_position,
+		Vector2(float(board.width) * board.tile_size, float(board.height) * board.tile_size)
+	)
 
 func _open_tip_bottom_offset() -> float:
 	var view_height: float = get_viewport_rect().size.y
