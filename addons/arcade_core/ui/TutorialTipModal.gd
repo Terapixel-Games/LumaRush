@@ -173,7 +173,7 @@ func _layout_tip() -> void:
 	var panel_width: float = clamp(view_size.x * 0.62, 880.0, 1120.0)
 	if view_size.x < 720.0:
 		panel_width = max(320.0, view_size.x - (margin * 2.0))
-	var panel_height: float = clamp(view_size.y * 0.24, 232.0, 276.0)
+	var panel_height: float = clamp(view_size.y * 0.27, 252.0, 300.0)
 	if view_size.x < 720.0:
 		panel_height = clamp(view_size.y * 0.36, 292.0, 380.0)
 	var panel_x: float = (view_size.x - panel_width) * 0.5
@@ -192,8 +192,8 @@ func _layout_tip() -> void:
 		content_box.offset_top = 0.0
 		content_box.offset_right = 0.0
 		content_box.offset_bottom = 0.0
-		_icon_cluster.position = panel.position + Vector2(38.0, 44.0)
-		_icon_cluster.size = Vector2(148.0, 148.0)
+		_icon_cluster.position = panel.position + Vector2(44.0, 50.0)
+		_icon_cluster.size = Vector2(124.0, 124.0)
 		_layout_desktop_content(panel.size)
 	else:
 		content_box.position = Vector2.ZERO
@@ -206,18 +206,22 @@ func _layout_tip() -> void:
 	_layout_target_effects(panel.position, panel.size)
 
 func _layout_desktop_content(panel_size: Vector2) -> void:
+	var text_x := 248.0
+	var right_lane_width := 340.0
+	var side_margin := 42.0
+	var bottom_margin := 22.0
 	if title_label:
-		title_label.position = Vector2(214.0, 30.0)
-		title_label.size = Vector2(panel_size.x - 530.0, 58.0)
+		title_label.position = Vector2(text_x, 30.0)
+		title_label.size = Vector2(panel_size.x - text_x - right_lane_width - 30.0, 58.0)
 	if message_label:
-		message_label.position = Vector2(214.0, 96.0)
-		message_label.size = Vector2(panel_size.x - 500.0, 78.0)
+		message_label.position = Vector2(text_x, 94.0)
+		message_label.size = Vector2(panel_size.x - text_x - right_lane_width - 30.0, 94.0)
 	if do_not_show_toggle:
-		do_not_show_toggle.position = Vector2(28.0, panel_size.y - 72.0)
-		do_not_show_toggle.size = Vector2(360.0, 48.0)
+		do_not_show_toggle.position = Vector2(side_margin, panel_size.y - bottom_margin - 44.0)
+		do_not_show_toggle.size = Vector2(370.0, 44.0)
 	if confirm_button:
-		confirm_button.position = Vector2(panel_size.x - 348.0, panel_size.y - 84.0)
-		confirm_button.size = Vector2(316.0, 64.0)
+		confirm_button.position = Vector2(panel_size.x - side_margin - 308.0, panel_size.y - bottom_margin - 58.0)
+		confirm_button.size = Vector2(308.0, 58.0)
 		confirm_button.pivot_offset = confirm_button.size * 0.5
 
 func _layout_mobile_content(panel_size: Vector2) -> void:
