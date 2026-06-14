@@ -104,7 +104,7 @@ func _style_controls() -> void:
 		message_label.add_theme_color_override("font_color", Color(0.96, 0.98, 1.0, 1.0))
 		message_label.add_theme_color_override("font_outline_color", Color(0.02, 0.04, 0.10, 0.94))
 		message_label.add_theme_constant_override("outline_size", 3)
-		message_label.add_theme_constant_override("line_spacing", -3)
+		message_label.add_theme_constant_override("line_spacing", 8)
 	if do_not_show_toggle:
 		do_not_show_toggle.focus_mode = Control.FOCUS_NONE
 		do_not_show_toggle.add_theme_color_override("font_color", Color(1.0, 1.0, 0.96, 1.0))
@@ -171,12 +171,12 @@ func _layout_tip() -> void:
 	if view_size == Vector2.ZERO:
 		view_size = size
 	var margin: float = clamp(view_size.x * 0.018, 18.0, 34.0)
-	var panel_width: float = clamp(view_size.x * 0.72, 1040.0, 1200.0)
+	var panel_width: float = clamp(view_size.x * 0.72, 1060.0, 1200.0)
 	if view_size.x < 720.0:
 		panel_width = max(320.0, view_size.x - (margin * 2.0))
-	var panel_height: float = clamp(view_size.y * 0.31, 304.0, 348.0)
+	var panel_height: float = clamp(view_size.y * 0.36, 384.0, 416.0)
 	if view_size.x < 720.0:
-		panel_height = clamp(view_size.y * 0.36, 292.0, 380.0)
+		panel_height = clamp(view_size.y * 0.39, 340.0, 430.0)
 	var panel_x: float = (view_size.x - panel_width) * 0.5
 	var notch_gap: float = clamp(view_size.y * 0.048, 42.0, 58.0)
 	var panel_y: float = _target_rect.position.y - panel_height - notch_gap if _target_rect.size.y > 0.0 else view_size.y - _bottom_offset - panel_height
@@ -187,16 +187,14 @@ func _layout_tip() -> void:
 	panel.size = Vector2(panel_width, panel_height)
 	panel.pivot_offset = panel.size * 0.5
 	if view_size.x >= 720.0:
+		content_box.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		content_box.position = Vector2.ZERO
 		content_box.size = panel.size
-		content_box.offset_left = 0.0
-		content_box.offset_top = 0.0
-		content_box.offset_right = 0.0
-		content_box.offset_bottom = 0.0
 		_icon_cluster.position = panel.position + Vector2(44.0, 50.0)
 		_icon_cluster.size = Vector2(124.0, 124.0)
 		_layout_desktop_content(panel.size)
 	else:
+		content_box.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		content_box.position = Vector2.ZERO
 		content_box.size = panel.size
 		_icon_cluster.position = panel.position + Vector2((panel_width - 76.0) * 0.5, 18.0)
@@ -207,37 +205,45 @@ func _layout_tip() -> void:
 	_layout_target_effects(panel.position, panel.size)
 
 func _layout_desktop_content(panel_size: Vector2) -> void:
-	var text_x := 248.0
-	var right_lane_width := 320.0
+	var text_x := 242.0
 	var side_margin := 42.0
-	var bottom_margin := 34.0
+	var bottom_margin := 52.0
+	var message_width: float = min(640.0, panel_size.x - text_x - side_margin)
 	if title_label:
-		title_label.position = Vector2(text_x, 24.0)
-		title_label.size = Vector2(panel_size.x - text_x - side_margin, 54.0)
+		title_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		title_label.position = Vector2(text_x, 34.0)
+		title_label.size = Vector2(panel_size.x - text_x - side_margin, 58.0)
 	if message_label:
-		message_label.position = Vector2(text_x, 106.0)
-		message_label.size = Vector2(panel_size.x - text_x - right_lane_width - 20.0, 84.0)
+		message_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		message_label.position = Vector2(text_x, 130.0)
+		message_label.size = Vector2(message_width, 96.0)
 	if do_not_show_toggle:
-		do_not_show_toggle.position = Vector2(side_margin, panel_size.y - bottom_margin - 44.0)
-		do_not_show_toggle.size = Vector2(370.0, 44.0)
+		do_not_show_toggle.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		do_not_show_toggle.position = Vector2(side_margin, panel_size.y - bottom_margin - 48.0)
+		do_not_show_toggle.size = Vector2(380.0, 48.0)
 	if confirm_button:
-		confirm_button.position = Vector2(panel_size.x - side_margin - 308.0, panel_size.y - bottom_margin - 58.0)
-		confirm_button.size = Vector2(308.0, 58.0)
+		confirm_button.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		confirm_button.position = Vector2(panel_size.x - side_margin - 308.0, panel_size.y - bottom_margin - 60.0)
+		confirm_button.size = Vector2(308.0, 60.0)
 		confirm_button.pivot_offset = confirm_button.size * 0.5
 
 func _layout_mobile_content(panel_size: Vector2) -> void:
 	if title_label:
-		title_label.position = Vector2(24.0, 104.0)
-		title_label.size = Vector2(panel_size.x - 48.0, 42.0)
+		title_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		title_label.position = Vector2(24.0, 112.0)
+		title_label.size = Vector2(panel_size.x - 48.0, 52.0)
 	if message_label:
-		message_label.position = Vector2(24.0, 150.0)
-		message_label.size = Vector2(panel_size.x - 48.0, 86.0)
+		message_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		message_label.position = Vector2(24.0, 176.0)
+		message_label.size = Vector2(panel_size.x - 48.0, 108.0)
 	if do_not_show_toggle:
-		do_not_show_toggle.position = Vector2(24.0, panel_size.y - 116.0)
-		do_not_show_toggle.size = Vector2(panel_size.x - 48.0, 44.0)
+		do_not_show_toggle.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		do_not_show_toggle.position = Vector2(24.0, panel_size.y - 124.0)
+		do_not_show_toggle.size = Vector2(panel_size.x - 48.0, 48.0)
 	if confirm_button:
-		confirm_button.position = Vector2(24.0, panel_size.y - 66.0)
-		confirm_button.size = Vector2(panel_size.x - 48.0, 52.0)
+		confirm_button.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		confirm_button.position = Vector2(24.0, panel_size.y - 68.0)
+		confirm_button.size = Vector2(panel_size.x - 48.0, 54.0)
 		confirm_button.pivot_offset = confirm_button.size * 0.5
 
 func _layout_pointer(panel_position: Vector2, panel_size: Vector2) -> void:

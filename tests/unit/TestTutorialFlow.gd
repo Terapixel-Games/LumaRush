@@ -29,9 +29,10 @@ func test_first_run_tutorial_teaches_board_music_and_powerups() -> void:
 	var message: Label = overlay.get_node_or_null("Panel/Margin/VBox/Message") as Label
 	assert_that(title).is_not_null()
 	assert_that(message).is_not_null()
-	assert_that(title.text).is_equal("Tap A Group")
-	assert_that(message.text).contains("highlighted tiles")
-	assert_that(message.text).contains("advances when you make the move")
+	assert_that(title.text).is_equal("Tap a Group")
+	assert_that(message.text).contains("glowing group")
+	assert_that(message.text).contains("advances after your move")
+	assert_that(message.get_theme_constant("line_spacing")).is_greater_equal(6)
 
 	var next_button: Button = overlay.get_node_or_null("Panel/Margin/VBox/Buttons/Next") as Button
 	var skip_button: Button = overlay.get_node_or_null("Panel/Margin/VBox/Buttons/Skip") as Button
@@ -43,27 +44,27 @@ func test_first_run_tutorial_teaches_board_music_and_powerups() -> void:
 	assert_that(next_button.size_flags_horizontal & Control.SIZE_EXPAND).is_equal(0)
 
 	next_button.pressed.emit()
-	assert_that(title.text).is_equal("Keep The Beat")
-	assert_that(message.text).contains("music grows")
+	assert_that(title.text).is_equal("Keep the Beat")
+	assert_that(message.text).contains("music rises")
 
 	next_button.pressed.emit()
 	assert_that(title.text).is_equal("Undo")
 	assert_that(message.text).contains("rewinds your last move")
-	assert_that(message.text).contains("Tap anywhere")
+	assert_that(message.text).contains("board turns against you")
 	assert_that(next_button.text).is_equal("Tap Anywhere")
 
 	next_button.pressed.emit()
 	assert_that(title.text).is_equal("Prism")
-	assert_that(message.text).contains("star button")
-	assert_that(message.text).contains("rewarded ad")
+	assert_that(message.text).contains("tile color")
+	assert_that(message.text).contains("coins, ads")
 
 	next_button.pressed.emit()
 	assert_that(title.text).is_equal("Hint")
-	assert_that(message.text).contains("question mark")
 	assert_that(message.text).contains("points out")
+	assert_that(message.text).contains("board gets noisy")
 
 	next_button.pressed.emit()
-	assert_that(title.text).is_equal("That's It")
+	assert_that(title.text).is_equal("You're Set")
 	assert_that(message.text).contains("Tap anywhere to play")
 	assert_that(next_button.text).is_equal("Done")
 
@@ -169,7 +170,7 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	var hint_button: Control = game.get_node_or_null("UI/Powerups/Hint") as Control
 	assert_that(title.text).is_equal("Open Run")
 	assert_that(message.text).contains("Open run")
-	assert_that(message.text).contains("Pure leaderboard scores stay separate")
+	assert_that(message.text).contains("Pure scores stay separate")
 	assert_that(confirm.text).is_equal("Use Power-Up")
 	assert_that(panel).is_not_null()
 	assert_that(icon_cluster).is_not_null()
@@ -180,7 +181,7 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	assert_that(pointer_outer.visible).is_true()
 	assert_that(checkbox).is_not_null()
 	assert_that(panel.size.x).is_greater_equal(1040.0)
-	assert_that(panel.size.y).is_greater_equal(304.0)
+	assert_that(panel.size.y).is_greater_equal(352.0)
 	assert_that(icon_cluster.size.x).is_greater_equal(120.0)
 	assert_that(target_highlight.visible).is_true()
 	var panel_rect: Rect2 = panel.get_global_rect()
@@ -200,17 +201,17 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	_assert_rect_inside(checkbox_rect, panel_rect)
 	_assert_rect_inside(confirm_rect, panel_rect)
 	assert_that(message_rect.position.y).is_greater(title_rect.position.y)
-	assert_that(message_rect.position.y - title_rect.end.y).is_greater_equal(26.0)
+	assert_that(message_rect.position.y - title_rect.end.y).is_greater_equal(24.0)
 	assert_that(title_rect.position.x).is_greater_equal(icon_rect.end.x + 70.0)
 	assert_that(message_rect.position.x).is_equal(title_rect.position.x)
-	assert_that(message_rect.size.x).is_greater_equal(440.0)
-	assert_that(message.get_theme_constant("line_spacing")).is_less_equal(-3)
+	assert_that(message_rect.size.x).is_greater_equal(560.0)
+	assert_that(message.get_theme_constant("line_spacing")).is_greater_equal(6)
 	assert_that(checkbox_rect.position.x).is_less(message_rect.position.x)
-	assert_that(confirm_rect.position.x).is_greater(message_rect.end.x)
-	assert_that(message_rect.end.y).is_less_equal(checkbox_rect.position.y - 24.0)
+	assert_that(confirm_rect.position.x).is_greater(checkbox_rect.end.x)
+	assert_that(message_rect.end.y).is_less_equal(checkbox_rect.position.y - 32.0)
 	assert_that(checkbox_rect.position.y).is_greater_equal(icon_rect.end.y + 8.0)
-	assert_that(panel_rect.end.y - checkbox_rect.end.y).is_greater_equal(30.0)
-	assert_that(panel_rect.end.y - confirm_rect.end.y).is_greater_equal(30.0)
+	assert_that(panel_rect.end.y - checkbox_rect.end.y).is_greater_equal(40.0)
+	assert_that(panel_rect.end.y - confirm_rect.end.y).is_greater_equal(40.0)
 	assert_that(absf(confirm_rect.get_center().y - checkbox_rect.get_center().y)).is_less_equal(16.0)
 	assert_that(panel_rect.intersects(target_rect)).is_false()
 	assert_that(target_rect.intersects(hint_rect)).is_true()
@@ -304,10 +305,10 @@ func test_playing_a_match_advances_the_early_tutorial_steps() -> void:
 
 	var overlay: Control = game.get_node_or_null("UI/TutorialOverlay") as Control
 	var title: Label = overlay.get_node_or_null("Panel/Margin/VBox/Title") as Label
-	assert_that(title.text).is_equal("Tap A Group")
+	assert_that(title.text).is_equal("Tap a Group")
 	game.call("_on_match_made", [Vector2i.ZERO, Vector2i.RIGHT])
 	await get_tree().process_frame
-	assert_that(title.text).is_equal("Keep The Beat")
+	assert_that(title.text).is_equal("Keep the Beat")
 
 	game.queue_free()
 

@@ -279,15 +279,15 @@ func style_save_streak(scene: Control) -> void:
 	style_button(scene.get_node_or_null("Center/Panel/VBox/Close"), 18.0, WEIGHT_MEDIUM)
 
 func style_tutorial_tip(scene: Control) -> void:
-	style_label(scene.get_node_or_null("Center/Panel/VBox/Title"), 44.0, WEIGHT_BOLD)
+	style_label(scene.get_node_or_null("Center/Panel/VBox/Title"), 46.0, WEIGHT_BOLD)
 	var message := scene.get_node_or_null("Center/Panel/VBox/Message") as Label
-	style_label(message, 25.0, WEIGHT_REGULAR, false)
+	style_label(message, 26.0, WEIGHT_REGULAR, false)
 	if message:
-		message.add_theme_constant_override("line_spacing", -3)
+		message.add_theme_constant_override("line_spacing", max(6, int(round(8.0 * scale_factor()))))
 	style_button(scene.get_node_or_null("Center/Panel/VBox/Confirm"), 26.0, WEIGHT_BOLD)
 	var toggle := scene.get_node_or_null("Center/Panel/VBox/DoNotShow")
 	if toggle and toggle is BaseButton:
-		style_button(toggle as BaseButton, 24.0, WEIGHT_MEDIUM)
+		style_button(toggle as BaseButton, 22.0, WEIGHT_MEDIUM)
 
 func _node_from_paths(scene: Node, paths: Array[String]) -> Node:
 	for path in paths:

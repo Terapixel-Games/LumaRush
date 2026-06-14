@@ -519,9 +519,9 @@ func _maybe_show_open_mode_tip(powerup_type: String) -> void:
 	if modal.has_method("configure"):
 		modal.configure({
 			"title": "Open Run",
-			"message": "This will count as an Open run. Pure leaderboard scores stay separate.",
+			"message": "Power-ups start an Open run.\nPure scores stay separate.",
 			"confirm_text": "Use Power-Up",
-			"checkbox_text": "Don't show this again",
+			"checkbox_text": "Don't show again",
 			"show_checkbox": true,
 			"icon_texture": _powerup_icon_for_type(powerup_type),
 			"target_rect": _powerup_control_rect(powerup_type),
@@ -1378,7 +1378,7 @@ func _show_tutorial(force: bool = false) -> void:
 	_tutorial_panel.add_child(margin)
 	var box := VBoxContainer.new()
 	box.name = "VBox"
-	box.add_theme_constant_override("separation", 12)
+	box.add_theme_constant_override("separation", 16)
 	margin.add_child(box)
 	_tutorial_title = Label.new()
 	_tutorial_title.name = "Title"
@@ -1390,7 +1390,7 @@ func _show_tutorial(force: bool = false) -> void:
 	box.add_child(_tutorial_message)
 	var buttons := HBoxContainer.new()
 	buttons.name = "Buttons"
-	buttons.add_theme_constant_override("separation", 10)
+	buttons.add_theme_constant_override("separation", 14)
 	box.add_child(buttons)
 	_tutorial_skip_button = Button.new()
 	_tutorial_skip_button.name = "Skip"
@@ -1468,23 +1468,23 @@ func _update_tutorial_step() -> void:
 	var message := ""
 	match _tutorial_step:
 		0:
-			title = "Tap A Group"
-			message = "The highlighted tiles are live. Tap one connected color group, watch the board pop, and this lesson advances when you make the move."
+			title = "Tap a Group"
+			message = "Tap a glowing group to clear it.\nThis lesson advances after your move."
 		1:
-			title = "Keep The Beat"
-			message = "Keep the rhythm moving: each clear pops the board, fast chains build combo pressure, and the music grows as the run heats up."
+			title = "Keep the Beat"
+			message = "Clear groups quickly to build combo pressure.\nThe music rises as the run heats up."
 		TUTORIAL_STEP_UNDO:
 			title = "Undo"
-			message = "Undo rewinds your last move. Watch it pulse when it is the tool to use. Tap anywhere for the next powerup."
+			message = "Undo rewinds your last move.\nUse it when the board turns against you."
 		TUTORIAL_STEP_PRISM:
 			title = "Prism"
-			message = "Prism is the star button. It clears one color from the board, then refills can use coins, a rewarded ad, or a shop purchase."
+			message = "Prism clears one tile color.\nRefill with coins, ads, or shop packs."
 		TUTORIAL_STEP_HINT:
 			title = "Hint"
-			message = "Hint is the question mark. It points out a playable group when the board gets noisy. Tap anywhere once more and you are in the run."
+			message = "Hint points out a playable group.\nUse it when the board gets noisy."
 		TUTORIAL_STEP_DONE:
-			title = "That's It"
-			message = "Clear connected groups, keep the music climbing, and use powerups when you need a save. Tap anywhere to play."
+			title = "You're Set"
+			message = "Clear groups, build the music, and save power-ups for tough boards.\nTap anywhere to play."
 	_tutorial_title.text = title
 	_tutorial_message.text = message
 	if _tutorial_step >= TUTORIAL_STEP_COUNT - 1:

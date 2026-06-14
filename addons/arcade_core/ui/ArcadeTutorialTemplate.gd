@@ -2,21 +2,24 @@ extends RefCounted
 class_name ArcadeTutorialTemplate
 
 const DEFAULT_TEMPLATE := {
-	"panel_margin": Vector2(22.0, 18.0),
+	"panel_margin": Vector2(28.0, 24.0),
 	"panel_min_width": 360.0,
 	"panel_max_width": 680.0,
-	"panel_min_height": 190.0,
+	"panel_min_height": 216.0,
 	"panel_screen_margin": 18.0,
 	"panel_top_gap": 14.0,
 	"panel_bottom_gap": 18.0,
-	"title_font_size": 24.0,
-	"message_font_size": 20.0,
-	"button_font_size": 15.0,
-	"secondary_button_font_size": 14.0,
+	"title_font_size": 28.0,
+	"message_font_size": 22.0,
+	"button_font_size": 16.0,
+	"secondary_button_font_size": 15.0,
 	"button_height": 56.0,
 	"primary_button_width": 136.0,
 	"secondary_button_width": 166.0,
 	"highlight_growth": 12.0,
+	"title_message_gap": 18.0,
+	"message_button_gap": 24.0,
+	"message_line_spacing": 7.0,
 }
 
 static func merged_template(overrides: Dictionary = {}) -> Dictionary:
@@ -54,6 +57,7 @@ static func style_label(label: Label, is_title: bool, template: Dictionary = {})
 	if not is_title:
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		label.add_theme_constant_override("line_spacing", _font_px(float(template["message_line_spacing"])))
 	label.add_theme_font_size_override("font_size", _font_px(float(template["title_font_size"] if is_title else template["message_font_size"])))
 	label.add_theme_color_override("font_color", Color(1.0, 0.96, 0.76, 1.0) if is_title else Color(0.93, 0.97, 1.0, 0.98))
 
@@ -107,10 +111,21 @@ static func calculate_text_height(message: String, panel_width: float, base_heig
 	var inner_width: float = max(180.0, panel_width - (panel_margin.x * 2.0))
 	var message_size: float = float(_font_px(float(template["message_font_size"])))
 	var chars_per_line: int = max(20, int(floor(inner_width / max(8.0, message_size * 0.52))))
-	var line_count: int = max(1, int(ceil(float(message.length()) / float(chars_per_line))))
+	var line_count: int = 0
+	for line in message.split("\n"):
+		line_count += max(1, int(ceil(float(line.length()) / float(chars_per_line))))
+	line_count = max(1, line_count)
 	var title_height: float = float(_font_px(float(template["title_font_size"]) + 6.0))
-	var message_height: float = float(line_count) * float(_font_px(float(template["message_font_size"]) + 6.0))
-	var required_height: float = (panel_margin.y * 2.0) + title_height + 24.0 + message_height + float(template["button_height"])
+	var message_line_height: float = float(_font_px(float(template["message_font_size"]) + float(template["message_line_spacing"]) + 4.0))
+	var message_height: float = float(line_count) * message_line_height
+	var required_height: float = (
+		(panel_margin.y * 2.0)
+		+ title_height
+		+ float(template["title_message_gap"])
+		+ message_height
+		+ float(template["message_button_gap"])
+		+ float(template["button_height"])
+	)
 	var max_height: float = max(float(template["panel_min_height"]), view_size.y - top_limit - (float(template["panel_screen_margin"]) * 2.0))
 	return clamp(max(base_height, required_height), float(template["panel_min_height"]), max_height)
 
@@ -129,7 +144,7 @@ static func layout_panel(context: Dictionary, template: Dictionary = {}) -> Dict
 		float(template["panel_min_width"]) + (20.0 if early_step else 0.0),
 		float(template["panel_max_width"])
 	)
-	var panel_height: float = clamp(view_size.y * (0.25 if early_step else 0.22), 208.0 if early_step else 184.0, 292.0 if early_step else 260.0)
+	var panel_height: float = clamp(view_size.y * (0.25 if early_step else 0.22), 232.0 if early_step else 216.0, 320.0 if early_step else 292.0)
 	var panel_x: float = (view_size.x - panel_width) * 0.5
 	var panel_y: float = view_size.y - panel_height - clamp(view_size.y * 0.16, 120.0, 170.0)
 	if early_step and board_rect.size != Vector2.ZERO:
