@@ -162,6 +162,8 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	var icon_cluster: Control = modal.get_node_or_null("Center/IconCluster") as Control
 	var target_highlight: Control = modal.get_node_or_null("Center/TargetHighlight") as Control
 	var target_beam: Control = modal.get_node_or_null("Center/TargetBeam") as Control
+	var pointer_outer: Polygon2D = modal.get_node_or_null("Center/PointerOuter") as Polygon2D
+	var pointer_inner: Polygon2D = modal.get_node_or_null("Center/PointerInner") as Polygon2D
 	var checkbox: Control = modal.get_node_or_null("Center/Panel/VBox/DoNotShow") as Control
 	var board_view: BoardView = game.get_node_or_null("BoardView") as BoardView
 	var hint_button: Control = game.get_node_or_null("UI/Powerups/Hint") as Control
@@ -173,10 +175,16 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	assert_that(icon_cluster).is_not_null()
 	assert_that(target_highlight).is_not_null()
 	assert_that(target_beam).is_null()
+	assert_that(pointer_outer).is_not_null()
+	assert_that(pointer_inner).is_not_null()
+	assert_that(pointer_outer.visible).is_true()
 	assert_that(checkbox).is_not_null()
-	assert_that(panel.size.x).is_greater_equal(620.0)
+	assert_that(panel.size.x).is_greater_equal(880.0)
+	assert_that(panel.size.y).is_greater_equal(232.0)
+	assert_that(icon_cluster.size.x).is_greater_equal(140.0)
 	assert_that(target_highlight.visible).is_true()
 	var panel_rect: Rect2 = panel.get_global_rect()
+	var title_rect: Rect2 = title.get_global_rect()
 	var message_rect: Rect2 = message.get_global_rect()
 	var checkbox_rect: Rect2 = checkbox.get_global_rect()
 	var confirm_rect: Rect2 = confirm.get_global_rect()
@@ -186,16 +194,20 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 		Vector2(float(board_view.width) * board_view.tile_size, float(board_view.height) * board_view.tile_size)
 	)
 	var hint_rect: Rect2 = hint_button.get_global_rect()
+	_assert_rect_inside(title_rect, panel_rect)
 	_assert_rect_inside(message_rect, panel_rect)
 	_assert_rect_inside(checkbox_rect, panel_rect)
 	_assert_rect_inside(confirm_rect, panel_rect)
-	assert_that(message_rect.end.y).is_less_equal(checkbox_rect.position.y + 1.0)
-	assert_that(checkbox_rect.end.y).is_less_equal(confirm_rect.position.y + 1.0)
+	assert_that(message_rect.position.y).is_greater(title_rect.position.y)
+	assert_that(checkbox_rect.position.x).is_less(message_rect.position.x)
+	assert_that(confirm_rect.position.x).is_greater(message_rect.end.x)
+	assert_that(absf(confirm_rect.get_center().y - checkbox_rect.get_center().y)).is_less_equal(24.0)
 	assert_that(panel_rect.intersects(target_rect)).is_false()
 	assert_that(target_rect.intersects(hint_rect)).is_true()
 	assert_that(absf(panel_rect.get_center().x - board_rect.get_center().x)).is_less_equal(2.0)
 	assert_that(panel_rect.end.y).is_less_equal(target_rect.position.y - 6.0)
 	assert_that(panel_rect.position.y).is_less(board_rect.end.y)
+	assert_that(absf(pointer_outer.polygon[2].x - target_rect.get_center().x)).is_less_equal(2.0)
 
 	game.call("_on_open_mode_tip_dismissed", true)
 	assert_that(SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)).is_false()

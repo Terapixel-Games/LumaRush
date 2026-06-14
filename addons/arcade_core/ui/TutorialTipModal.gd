@@ -7,8 +7,8 @@ signal dismissed(do_not_show_again: bool)
 @onready var confirm_button: Button = $Center/Panel/VBox/Confirm
 @onready var do_not_show_toggle: CheckButton = $Center/Panel/VBox/DoNotShow
 @onready var center_layer: Control = $Center
-@onready var panel: PanelContainer = $Center/Panel
-@onready var content_box: VBoxContainer = $Center/Panel/VBox
+@onready var panel: Panel = $Center/Panel
+@onready var content_box: Control = $Center/Panel/VBox
 @onready var dim: ColorRect = $Dim
 
 var _pending_config: Dictionary = {}
@@ -18,6 +18,8 @@ var _avoid_rect: Rect2 = Rect2()
 var _icon_texture: Texture2D
 var _icon_cluster: Control
 var _target_highlight: Panel
+var _pointer_outer: Polygon2D
+var _pointer_inner: Polygon2D
 var _panel_tween: Tween
 var _panel_breath_tween: Tween
 var _button_tween: Tween
@@ -31,6 +33,7 @@ func _ready() -> void:
 	if not _pending_config.is_empty():
 		_apply_config(_pending_config)
 	_apply_optional_style()
+	_style_controls()
 	_layout_tip()
 	_play_entry_motion()
 	_play_idle_motion()
@@ -38,6 +41,7 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == Control.NOTIFICATION_RESIZED:
 		_apply_optional_style()
+		_style_controls()
 		_layout_tip()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -89,10 +93,48 @@ func _apply_optional_style() -> void:
 	if typography and typography.has_method("style_tutorial_tip"):
 		typography.call("style_tutorial_tip", self)
 
+func _style_controls() -> void:
+	if title_label:
+		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		title_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.36, 1.0))
+		title_label.add_theme_color_override("font_outline_color", Color(0.10, 0.06, 0.0, 0.95))
+		title_label.add_theme_constant_override("outline_size", 4)
+	if message_label:
+		message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		message_label.add_theme_color_override("font_color", Color(0.96, 0.98, 1.0, 1.0))
+		message_label.add_theme_color_override("font_outline_color", Color(0.02, 0.04, 0.10, 0.94))
+		message_label.add_theme_constant_override("outline_size", 3)
+	if do_not_show_toggle:
+		do_not_show_toggle.focus_mode = Control.FOCUS_NONE
+		do_not_show_toggle.add_theme_color_override("font_color", Color(1.0, 1.0, 0.96, 1.0))
+		do_not_show_toggle.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0, 1.0))
+		do_not_show_toggle.add_theme_color_override("font_pressed_color", Color(1.0, 0.9, 0.46, 1.0))
+		do_not_show_toggle.add_theme_color_override("font_outline_color", Color(0.02, 0.02, 0.05, 0.96))
+		do_not_show_toggle.add_theme_constant_override("outline_size", 3)
+	if confirm_button:
+		confirm_button.focus_mode = Control.FOCUS_NONE
+		confirm_button.clip_text = false
+		confirm_button.add_theme_color_override("font_color", Color(0.03, 0.025, 0.01, 1.0))
+		confirm_button.add_theme_color_override("font_hover_color", Color(0.02, 0.018, 0.006, 1.0))
+		confirm_button.add_theme_color_override("font_pressed_color", Color(0.02, 0.018, 0.006, 1.0))
+		confirm_button.add_theme_color_override("font_outline_color", Color(1.0, 0.92, 0.46, 0.55))
+		confirm_button.add_theme_constant_override("outline_size", 1)
+		confirm_button.add_theme_stylebox_override("normal", _button_style(Color(1.0, 0.78, 0.22, 1.0), Color(1.0, 0.91, 0.44, 1.0)))
+		confirm_button.add_theme_stylebox_override("hover", _button_style(Color(1.0, 0.86, 0.30, 1.0), Color(1.0, 0.98, 0.60, 1.0)))
+		confirm_button.add_theme_stylebox_override("pressed", _button_style(Color(0.86, 0.55, 0.10, 1.0), Color(1.0, 0.78, 0.20, 1.0)))
+
 func _build_effect_nodes() -> void:
 	if panel == null or center_layer == null:
 		return
 	_style_panel()
+	_pointer_outer = Polygon2D.new()
+	_pointer_outer.name = "PointerOuter"
+	_pointer_outer.color = Color(0.0, 1.0, 0.86, 0.96)
+	center_layer.add_child(_pointer_outer)
+	_pointer_inner = Polygon2D.new()
+	_pointer_inner.name = "PointerInner"
+	_pointer_inner.color = Color(0.02, 0.08, 0.16, 0.98)
+	center_layer.add_child(_pointer_inner)
 	_icon_cluster = Control.new()
 	_icon_cluster.name = "IconCluster"
 	_icon_cluster.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -101,7 +143,7 @@ func _build_effect_nodes() -> void:
 	glow.name = "Glow"
 	glow.set_anchors_preset(Control.PRESET_FULL_RECT)
 	glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_style_circle_panel(glow, Color(1.0, 0.76, 0.22, 0.20), Color(1.0, 0.93, 0.48, 0.72), 44, 3)
+	_style_circle_panel(glow, Color(1.0, 0.72, 0.14, 0.30), Color(1.0, 0.93, 0.44, 0.92), 72, 4)
 	_icon_cluster.add_child(glow)
 	var icon := TextureRect.new()
 	icon.name = "Icon"
@@ -128,14 +170,15 @@ func _layout_tip() -> void:
 	if view_size == Vector2.ZERO:
 		view_size = size
 	var margin: float = clamp(view_size.x * 0.018, 18.0, 34.0)
-	var panel_width: float = clamp(view_size.x * 0.74, 620.0, 940.0)
+	var panel_width: float = clamp(view_size.x * 0.62, 880.0, 1120.0)
 	if view_size.x < 720.0:
 		panel_width = max(320.0, view_size.x - (margin * 2.0))
-	var panel_height: float = clamp(view_size.y * 0.19, 172.0, 218.0)
+	var panel_height: float = clamp(view_size.y * 0.24, 232.0, 276.0)
 	if view_size.x < 720.0:
 		panel_height = clamp(view_size.y * 0.36, 292.0, 380.0)
 	var panel_x: float = (view_size.x - panel_width) * 0.5
-	var panel_y: float = _target_rect.position.y - panel_height - clamp(view_size.y * 0.035, 22.0, 40.0) if _target_rect.size.y > 0.0 else view_size.y - _bottom_offset - panel_height
+	var notch_gap: float = clamp(view_size.y * 0.048, 42.0, 58.0)
+	var panel_y: float = _target_rect.position.y - panel_height - notch_gap if _target_rect.size.y > 0.0 else view_size.y - _bottom_offset - panel_height
 	if panel_y < margin:
 		panel_y = view_size.y - _bottom_offset - panel_height
 	panel_y = clamp(panel_y, margin, max(margin, view_size.y - panel_height - margin))
@@ -143,29 +186,83 @@ func _layout_tip() -> void:
 	panel.size = Vector2(panel_width, panel_height)
 	panel.pivot_offset = panel.size * 0.5
 	if view_size.x >= 720.0:
-		content_box.offset_left = 132.0
-		content_box.offset_top = 18.0
-		content_box.offset_right = -28.0
-		content_box.offset_bottom = -18.0
-		_icon_cluster.position = panel.position + Vector2(30.0, 22.0)
-		_icon_cluster.size = Vector2(78.0, 78.0)
+		content_box.position = Vector2.ZERO
+		content_box.size = panel.size
+		content_box.offset_left = 0.0
+		content_box.offset_top = 0.0
+		content_box.offset_right = 0.0
+		content_box.offset_bottom = 0.0
+		_icon_cluster.position = panel.position + Vector2(38.0, 44.0)
+		_icon_cluster.size = Vector2(148.0, 148.0)
+		_layout_desktop_content(panel.size)
 	else:
-		content_box.offset_left = 24.0
-		content_box.offset_top = 104.0
-		content_box.offset_right = -24.0
-		content_box.offset_bottom = -24.0
+		content_box.position = Vector2.ZERO
+		content_box.size = panel.size
 		_icon_cluster.position = panel.position + Vector2((panel_width - 76.0) * 0.5, 18.0)
 		_icon_cluster.size = Vector2(76.0, 76.0)
+		_layout_mobile_content(panel.size)
 	_layout_icon_children()
+	_layout_pointer(panel.position, panel.size)
 	_layout_target_effects(panel.position, panel.size)
+
+func _layout_desktop_content(panel_size: Vector2) -> void:
+	if title_label:
+		title_label.position = Vector2(214.0, 30.0)
+		title_label.size = Vector2(panel_size.x - 530.0, 58.0)
+	if message_label:
+		message_label.position = Vector2(214.0, 96.0)
+		message_label.size = Vector2(panel_size.x - 500.0, 78.0)
+	if do_not_show_toggle:
+		do_not_show_toggle.position = Vector2(28.0, panel_size.y - 72.0)
+		do_not_show_toggle.size = Vector2(360.0, 48.0)
+	if confirm_button:
+		confirm_button.position = Vector2(panel_size.x - 348.0, panel_size.y - 84.0)
+		confirm_button.size = Vector2(316.0, 64.0)
+		confirm_button.pivot_offset = confirm_button.size * 0.5
+
+func _layout_mobile_content(panel_size: Vector2) -> void:
+	if title_label:
+		title_label.position = Vector2(24.0, 104.0)
+		title_label.size = Vector2(panel_size.x - 48.0, 42.0)
+	if message_label:
+		message_label.position = Vector2(24.0, 150.0)
+		message_label.size = Vector2(panel_size.x - 48.0, 86.0)
+	if do_not_show_toggle:
+		do_not_show_toggle.position = Vector2(24.0, panel_size.y - 116.0)
+		do_not_show_toggle.size = Vector2(panel_size.x - 48.0, 44.0)
+	if confirm_button:
+		confirm_button.position = Vector2(24.0, panel_size.y - 66.0)
+		confirm_button.size = Vector2(panel_size.x - 48.0, 52.0)
+		confirm_button.pivot_offset = confirm_button.size * 0.5
+
+func _layout_pointer(panel_position: Vector2, panel_size: Vector2) -> void:
+	if _pointer_outer == null or _pointer_inner == null:
+		return
+	var has_target := _target_rect.size.x > 0.0 and _target_rect.size.y > 0.0
+	_pointer_outer.visible = has_target
+	_pointer_inner.visible = has_target
+	if not has_target:
+		return
+	var tip_x: float = clamp(_target_rect.get_center().x, panel_position.x + 80.0, panel_position.x + panel_size.x - 80.0)
+	var top_y: float = panel_position.y + panel_size.y - 1.0
+	_pointer_outer.polygon = PackedVector2Array([
+		Vector2(tip_x - 24.0, top_y),
+		Vector2(tip_x + 24.0, top_y),
+		Vector2(tip_x, top_y + 34.0),
+	])
+	_pointer_inner.polygon = PackedVector2Array([
+		Vector2(tip_x - 18.0, top_y + 2.0),
+		Vector2(tip_x + 18.0, top_y + 2.0),
+		Vector2(tip_x, top_y + 25.0),
+	])
 
 func _layout_icon_children() -> void:
 	if _icon_cluster == null:
 		return
 	var icon := _icon_cluster.get_node_or_null("Icon") as TextureRect
 	if icon:
-		icon.position = _icon_cluster.size * 0.16
-		icon.size = _icon_cluster.size * 0.68
+		icon.position = _icon_cluster.size * 0.18
+		icon.size = _icon_cluster.size * 0.64
 	for i in range(8):
 		var dust := _icon_cluster.get_node_or_null("Dust%d" % i) as ColorRect
 		if dust:
@@ -271,19 +368,19 @@ func _stop_idle_motion() -> void:
 
 func _style_panel() -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.035, 0.045, 0.105, 0.96)
-	style.border_color = Color(0.74, 0.96, 1.0, 0.88)
-	style.border_width_left = 2
-	style.border_width_top = 2
-	style.border_width_right = 2
-	style.border_width_bottom = 2
-	style.corner_radius_top_left = 18
-	style.corner_radius_top_right = 18
-	style.corner_radius_bottom_left = 18
-	style.corner_radius_bottom_right = 18
-	style.shadow_color = Color(1.0, 0.64, 0.12, 0.26)
-	style.shadow_size = 28
-	style.shadow_offset = Vector2(0, 0)
+	style.bg_color = Color(0.01, 0.08, 0.17, 0.97)
+	style.border_color = Color(0.0, 1.0, 0.86, 0.96)
+	style.border_width_left = 3
+	style.border_width_top = 3
+	style.border_width_right = 3
+	style.border_width_bottom = 3
+	style.corner_radius_top_left = 20
+	style.corner_radius_top_right = 20
+	style.corner_radius_bottom_left = 20
+	style.corner_radius_bottom_right = 20
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.62)
+	style.shadow_size = 18
+	style.shadow_offset = Vector2(0, 10)
 	panel.add_theme_stylebox_override("panel", style)
 
 func _style_circle_panel(target: Panel, fill: Color, border: Color, radius: int, border_width: int) -> void:
@@ -301,3 +398,20 @@ func _style_circle_panel(target: Panel, fill: Color, border: Color, radius: int,
 	style.shadow_color = Color(1.0, 0.7, 0.16, 0.42)
 	style.shadow_size = 24
 	target.add_theme_stylebox_override("panel", style)
+
+func _button_style(fill: Color, border: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.border_width_left = 3
+	style.border_width_top = 3
+	style.border_width_right = 3
+	style.border_width_bottom = 3
+	style.corner_radius_top_left = 18
+	style.corner_radius_top_right = 18
+	style.corner_radius_bottom_left = 18
+	style.corner_radius_bottom_right = 18
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.42)
+	style.shadow_size = 8
+	style.shadow_offset = Vector2(0, 3)
+	return style
