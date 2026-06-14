@@ -174,7 +174,7 @@ func _layout_tip() -> void:
 	var panel_width: float = clamp(view_size.x * 0.72, 1040.0, 1200.0)
 	if view_size.x < 720.0:
 		panel_width = max(320.0, view_size.x - (margin * 2.0))
-	var panel_height: float = clamp(view_size.y * 0.29, 276.0, 324.0)
+	var panel_height: float = clamp(view_size.y * 0.31, 304.0, 348.0)
 	if view_size.x < 720.0:
 		panel_height = clamp(view_size.y * 0.36, 292.0, 380.0)
 	var panel_x: float = (view_size.x - panel_width) * 0.5
@@ -210,12 +210,12 @@ func _layout_desktop_content(panel_size: Vector2) -> void:
 	var text_x := 248.0
 	var right_lane_width := 320.0
 	var side_margin := 42.0
-	var bottom_margin := 22.0
+	var bottom_margin := 34.0
 	if title_label:
 		title_label.position = Vector2(text_x, 24.0)
 		title_label.size = Vector2(panel_size.x - text_x - side_margin, 54.0)
 	if message_label:
-		message_label.position = Vector2(text_x, 92.0)
+		message_label.position = Vector2(text_x, 106.0)
 		message_label.size = Vector2(panel_size.x - text_x - right_lane_width - 20.0, 84.0)
 	if do_not_show_toggle:
 		do_not_show_toggle.position = Vector2(side_margin, panel_size.y - bottom_margin - 44.0)
