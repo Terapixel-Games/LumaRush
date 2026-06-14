@@ -14,6 +14,10 @@ var _results_hold_frames: int = 90
 var _last_menu_action_frame: int = -100000
 var _results_enter_frame: int = -1
 var _game_enter_frame: int = -1
+var _first_game_entry_frame: int = -1
+var _first_match_action_frame: int = -1
+var _first_powerup_action_frame: int = -1
+var _first_results_entry_frame: int = -1
 var _last_scene_path: String = ""
 var _last_scene_id: int = 0
 
@@ -43,9 +47,13 @@ func step(frame: int, _delta: float) -> void:
 	if scene_changed:
 		if scene_path.ends_with("Game.tscn"):
 			_game_enter_frame = frame
+			if _first_game_entry_frame < 0:
+				_first_game_entry_frame = frame
 			_results_enter_frame = -1
 		elif scene_path.ends_with("Results.tscn"):
 			_results_enter_frame = frame
+			if _first_results_entry_frame < 0:
+				_first_results_entry_frame = frame
 
 	if scene_path.ends_with("Boot.tscn"):
 		if _can_menu_action(frame):
@@ -84,11 +92,15 @@ func step(frame: int, _delta: float) -> void:
 		return
 
 	if frame % _powerup_interval == 0 and _apply_remove_color(scene):
+		if _first_powerup_action_frame < 0:
+			_first_powerup_action_frame = frame
 		_actions_total += 1
 		_score_final = maxi(_score_final, int(scene.get("score")))
 		return
 
 	if frame % _action_interval == 0 and _perform_best_match(scene):
+		if _first_match_action_frame < 0:
+			_first_match_action_frame = frame
 		_actions_total += 1
 		_score_final = maxi(_score_final, int(scene.get("score")))
 
@@ -99,6 +111,10 @@ func collect_metrics() -> Dictionary:
 		"score_final": _score_final,
 		"runs_started": _runs_started,
 		"runs_finished": _runs_finished,
+		"first_game_entry_frame": _first_game_entry_frame,
+		"first_match_action_frame": _first_match_action_frame,
+		"first_results_entry_frame": _first_results_entry_frame,
+		"first_powerup_action_frame": _first_powerup_action_frame,
 	}
 
 

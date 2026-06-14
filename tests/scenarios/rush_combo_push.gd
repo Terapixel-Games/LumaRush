@@ -11,6 +11,8 @@ var _menu_action_interval: int = 12
 var _menu_settle_frames: int = 10
 var _last_menu_action_frame: int = -100000
 var _game_enter_frame: int = -1
+var _first_match_action_frame: int = -1
+var _first_results_entry_frame: int = -1
 var _last_scene_path: String = ""
 var _last_scene_id: int = 0
 
@@ -38,6 +40,8 @@ func step(frame: int, _delta: float) -> void:
 	_track_scene_transition(scene, scene_path)
 	if scene_changed and scene_path.ends_with("Game.tscn"):
 		_game_enter_frame = frame
+	if scene_changed and scene_path.ends_with("Results.tscn") and _first_results_entry_frame < 0:
+		_first_results_entry_frame = frame
 
 	if scene_path.ends_with("Boot.tscn"):
 		if _can_menu_action(frame):
@@ -65,6 +69,8 @@ func step(frame: int, _delta: float) -> void:
 	if frame % _action_interval != 0:
 		return
 	if _perform_best_match(scene):
+		if _first_match_action_frame < 0:
+			_first_match_action_frame = frame
 		_actions_total += 1
 		_score_final = maxi(_score_final, int(scene.get("score")))
 
@@ -78,6 +84,9 @@ func collect_metrics() -> Dictionary:
 		"runs_started": _runs_started,
 		"runs_finished": _runs_finished,
 		"actions_at_300": _actions_at_300,
+		"first_game_entry_frame": _game_enter_frame,
+		"first_match_action_frame": _first_match_action_frame,
+		"first_results_entry_frame": _first_results_entry_frame,
 	}
 
 
