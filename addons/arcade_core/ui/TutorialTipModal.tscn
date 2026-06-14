@@ -22,7 +22,7 @@ grow_vertical = 2
 mouse_filter = 0
 color = Color(0, 0, 0, 0.42)
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Center" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -32,8 +32,8 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Panel" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(520, 380)
-layout_mode = 2
+custom_minimum_size = Vector2(720, 240)
+layout_mode = 1
 mouse_filter = 2
 
 [node name="VBox" type="VBoxContainer" parent="Center/Panel"]
@@ -41,15 +41,15 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
+offset_left = 132.0
 offset_top = 24.0
-offset_right = -24.0
+offset_right = -28.0
 offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-alignment = 1
-theme_override_constants/separation = 14
+alignment = 0
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="Center/Panel/VBox"]
 layout_mode = 2

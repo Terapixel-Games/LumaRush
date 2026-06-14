@@ -16,7 +16,7 @@ const DEFAULT_TEMPLATE := {
 	"button_height": 56.0,
 	"primary_button_width": 136.0,
 	"secondary_button_width": 166.0,
-	"highlight_growth": 10.0,
+	"highlight_growth": 12.0,
 }
 
 static func merged_template(overrides: Dictionary = {}) -> Dictionary:
@@ -137,20 +137,11 @@ static func layout_panel(context: Dictionary, template: Dictionary = {}) -> Dict
 		panel_y = board_rect.position.y - panel_height - clamp(view_size.y * 0.025, 18.0, 34.0)
 		if panel_y < top_limit:
 			panel_y = min(view_size.y - panel_height - 24.0, board_rect.position.y + board_rect.size.y + 18.0)
-	elif powerup_step and board_rect.size != Vector2.ZERO:
-		var side_gap: float = clamp(view_size.x * 0.035, 32.0, 72.0)
-		var right_space: float = view_size.x - board_rect.end.x - side_gap - margin
-		var left_space: float = board_rect.position.x - side_gap - margin
-		var can_place_right: bool = right_space >= 300.0
-		var can_place_left: bool = left_space >= 300.0
-		if can_place_right or can_place_left:
-			panel_width = min(560.0, max(300.0, right_space if can_place_right else left_space))
-			panel_x = board_rect.end.x + side_gap if can_place_right else board_rect.position.x - side_gap - panel_width
-		else:
-			panel_width = clamp(view_size.x * 0.76, float(template["panel_min_width"]), float(template["panel_max_width"]))
-			panel_x = (view_size.x - panel_width) * 0.5
-		panel_height = calculate_text_height(message, panel_width, clamp(view_size.y * 0.26, 240.0, 330.0), view_size, top_limit, template)
-		panel_y = clamp(bottom_limit - panel_height, top_limit, max(top_limit, view_size.y - panel_height - margin))
+	elif powerup_step:
+		panel_width = clamp(view_size.x * 0.72, float(template["panel_min_width"]), min(760.0, view_size.x - (margin * 2.0)))
+		panel_x = (view_size.x - panel_width) * 0.5
+		panel_height = calculate_text_height(message, panel_width, clamp(view_size.y * 0.22, 224.0, 286.0), view_size, top_limit, template)
+		panel_y = bottom_limit - panel_height
 	else:
 		panel_height = calculate_text_height(message, panel_width, panel_height, view_size, top_limit, template)
 	panel_x = clamp(panel_x, margin, max(margin, view_size.x - panel_width - margin))
@@ -164,16 +155,18 @@ static func style_highlight(highlight: Panel) -> void:
 	if highlight == null:
 		return
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(1.0, 0.58, 0.05, 0.10)
-	style.border_color = Color(1.0, 0.76, 0.18, 0.95)
-	style.border_width_left = 4
-	style.border_width_top = 4
-	style.border_width_right = 4
-	style.border_width_bottom = 4
-	style.corner_radius_top_left = 10
-	style.corner_radius_top_right = 10
-	style.corner_radius_bottom_left = 10
-	style.corner_radius_bottom_right = 10
+	style.bg_color = Color(1.0, 0.58, 0.05, 0.14)
+	style.border_color = Color(1.0, 0.82, 0.24, 1.0)
+	style.border_width_left = 5
+	style.border_width_top = 5
+	style.border_width_right = 5
+	style.border_width_bottom = 5
+	style.corner_radius_top_left = 14
+	style.corner_radius_top_right = 14
+	style.corner_radius_bottom_left = 14
+	style.corner_radius_bottom_right = 14
+	style.shadow_color = Color(1.0, 0.64, 0.12, 0.46)
+	style.shadow_size = 22
 	highlight.add_theme_stylebox_override("panel", style)
 
 static func _font_px(value: float) -> int:

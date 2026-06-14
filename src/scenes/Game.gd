@@ -505,9 +505,9 @@ func _record_powerup_use(powerup_type: String) -> void:
 	_run_powerups_used_total += 1
 	_current_mode = "OPEN"
 	Telemetry.mark_powerup_used(powerup_type, "OPEN", _remaining_powerup_charges(powerup_type))
-	_maybe_show_open_mode_tip()
+	_maybe_show_open_mode_tip(powerup_type)
 
-func _maybe_show_open_mode_tip() -> void:
+func _maybe_show_open_mode_tip(powerup_type: String) -> void:
 	if _open_tip_shown_this_run:
 		return
 	if not SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true):
@@ -519,10 +519,13 @@ func _maybe_show_open_mode_tip() -> void:
 	if modal.has_method("configure"):
 		modal.configure({
 			"title": "Open Run",
-			"message": "Using this power-up means this run will not qualify for the Pure leaderboard. Continue to use it and post this run to Open.",
+			"message": "This will count as an Open run. Pure leaderboard scores stay separate.",
 			"confirm_text": "Use Power-Up",
 			"checkbox_text": "Don't show this again",
 			"show_checkbox": true,
+			"icon_texture": _powerup_icon_for_type(powerup_type),
+			"target_rect": _powerup_control_rect(powerup_type),
+			"bottom_offset": _open_tip_bottom_offset(),
 		})
 	if modal.has_signal("dismissed"):
 		modal.dismissed.connect(_on_open_mode_tip_dismissed)
@@ -531,6 +534,35 @@ func _maybe_show_open_mode_tip() -> void:
 func _on_open_mode_tip_dismissed(do_not_show_again: bool) -> void:
 	if do_not_show_again:
 		SaveStore.set_tip_dismissed(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)
+
+func _powerup_icon_for_type(powerup_type: String) -> Texture2D:
+	match powerup_type:
+		"undo":
+			return ICON_UNDO
+		"prism":
+			return ICON_PRISM
+		"hint":
+			return ICON_HINT
+	return null
+
+func _powerup_control_rect(powerup_type: String) -> Rect2:
+	var control: Control = null
+	match powerup_type:
+		"undo":
+			control = undo_button
+		"prism":
+			control = remove_color_button
+		"hint":
+			control = hint_button
+	if control == null or not is_instance_valid(control):
+		return Rect2()
+	return control.get_global_rect()
+
+func _open_tip_bottom_offset() -> float:
+	var view_height: float = get_viewport_rect().size.y
+	if powerups_row == null or not is_instance_valid(powerups_row):
+		return 112.0
+	return max(88.0, view_height - powerups_row.global_position.y + 18.0)
 
 func _on_audio_pressed() -> void:
 	if is_instance_valid(_audio_overlay):

@@ -156,10 +156,19 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	var title: Label = modal.get_node_or_null("Center/Panel/VBox/Title") as Label
 	var message: Label = modal.get_node_or_null("Center/Panel/VBox/Message") as Label
 	var confirm: Button = modal.get_node_or_null("Center/Panel/VBox/Confirm") as Button
+	var panel: Control = modal.get_node_or_null("Center/Panel") as Control
+	var icon_cluster: Control = modal.get_node_or_null("Center/IconCluster") as Control
+	var target_highlight: Control = modal.get_node_or_null("Center/TargetHighlight") as Control
 	assert_that(title.text).is_equal("Open Run")
-	assert_that(message.text).contains("will not qualify for the Pure leaderboard")
-	assert_that(message.text).contains("post this run to Open")
+	assert_that(message.text).contains("Open run")
+	assert_that(message.text).contains("Pure leaderboard scores stay separate")
 	assert_that(confirm.text).is_equal("Use Power-Up")
+	assert_that(panel).is_not_null()
+	assert_that(icon_cluster).is_not_null()
+	assert_that(target_highlight).is_not_null()
+	assert_that(panel.size.x).is_greater_equal(560.0)
+	assert_that(panel.get_global_rect().position.y).is_greater(panel.get_viewport_rect().size.y * 0.45)
+	assert_that(target_highlight.visible).is_true()
 
 	game.call("_on_open_mode_tip_dismissed", true)
 	assert_that(SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)).is_false()
