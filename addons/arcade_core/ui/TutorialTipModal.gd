@@ -104,6 +104,7 @@ func _style_controls() -> void:
 		message_label.add_theme_color_override("font_color", Color(0.96, 0.98, 1.0, 1.0))
 		message_label.add_theme_color_override("font_outline_color", Color(0.02, 0.04, 0.10, 0.94))
 		message_label.add_theme_constant_override("outline_size", 3)
+		message_label.add_theme_constant_override("line_spacing", -3)
 	if do_not_show_toggle:
 		do_not_show_toggle.focus_mode = Control.FOCUS_NONE
 		do_not_show_toggle.add_theme_color_override("font_color", Color(1.0, 1.0, 0.96, 1.0))
@@ -214,8 +215,8 @@ func _layout_desktop_content(panel_size: Vector2) -> void:
 		title_label.position = Vector2(text_x, 30.0)
 		title_label.size = Vector2(panel_size.x - text_x - side_margin, 58.0)
 	if message_label:
-		message_label.position = Vector2(text_x, 94.0)
-		message_label.size = Vector2(panel_size.x - text_x - right_lane_width - 20.0, 94.0)
+		message_label.position = Vector2(text_x, 90.0)
+		message_label.size = Vector2(panel_size.x - text_x - right_lane_width - 20.0, 80.0)
 	if do_not_show_toggle:
 		do_not_show_toggle.position = Vector2(side_margin, panel_size.y - bottom_margin - 44.0)
 		do_not_show_toggle.size = Vector2(370.0, 44.0)

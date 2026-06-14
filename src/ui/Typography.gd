@@ -280,7 +280,10 @@ func style_save_streak(scene: Control) -> void:
 
 func style_tutorial_tip(scene: Control) -> void:
 	style_label(scene.get_node_or_null("Center/Panel/VBox/Title"), 44.0, WEIGHT_BOLD)
-	style_label(scene.get_node_or_null("Center/Panel/VBox/Message"), 25.0, WEIGHT_REGULAR, false)
+	var message := scene.get_node_or_null("Center/Panel/VBox/Message") as Label
+	style_label(message, 25.0, WEIGHT_REGULAR, false)
+	if message:
+		message.add_theme_constant_override("line_spacing", -3)
 	style_button(scene.get_node_or_null("Center/Panel/VBox/Confirm"), 26.0, WEIGHT_BOLD)
 	var toggle := scene.get_node_or_null("Center/Panel/VBox/DoNotShow")
 	if toggle and toggle is BaseButton:
