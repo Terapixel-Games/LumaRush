@@ -17,7 +17,6 @@ var _target_rect: Rect2 = Rect2()
 var _icon_texture: Texture2D
 var _icon_cluster: Control
 var _target_highlight: Panel
-var _target_beam: ColorRect
 var _panel_tween: Tween
 var _panel_breath_tween: Tween
 var _button_tween: Tween
@@ -114,11 +113,6 @@ func _build_effect_nodes() -> void:
 		dust.color = Color(1.0, 0.88, 0.38, 0.0)
 		dust.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_icon_cluster.add_child(dust)
-	_target_beam = ColorRect.new()
-	_target_beam.name = "TargetBeam"
-	_target_beam.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_target_beam.color = Color(1.0, 0.72, 0.18, 0.0)
-	center_layer.add_child(_target_beam)
 	_target_highlight = Panel.new()
 	_target_highlight.name = "TargetHighlight"
 	_target_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -132,25 +126,27 @@ func _layout_tip() -> void:
 	if view_size == Vector2.ZERO:
 		view_size = size
 	var margin: float = clamp(view_size.x * 0.018, 18.0, 34.0)
-	var panel_width: float = clamp(view_size.x * 0.62, 560.0, 860.0)
+	var panel_width: float = clamp(view_size.x * 0.74, 620.0, 940.0)
 	if view_size.x < 720.0:
 		panel_width = max(320.0, view_size.x - (margin * 2.0))
-	var panel_height: float = clamp(view_size.y * 0.25, 228.0, 286.0)
+	var panel_height: float = clamp(view_size.y * 0.19, 172.0, 218.0)
 	if view_size.x < 720.0:
 		panel_height = clamp(view_size.y * 0.36, 292.0, 380.0)
 	var panel_x: float = (view_size.x - panel_width) * 0.5
-	var panel_y: float = view_size.y - _bottom_offset - panel_height
+	var panel_y: float = _target_rect.position.y - panel_height - clamp(view_size.y * 0.035, 22.0, 40.0) if _target_rect.size.y > 0.0 else view_size.y - _bottom_offset - panel_height
+	if panel_y < margin:
+		panel_y = view_size.y - _bottom_offset - panel_height
 	panel_y = clamp(panel_y, margin, max(margin, view_size.y - panel_height - margin))
 	panel.position = Vector2(panel_x, panel_y)
 	panel.size = Vector2(panel_width, panel_height)
 	panel.pivot_offset = panel.size * 0.5
 	if view_size.x >= 720.0:
 		content_box.offset_left = 132.0
-		content_box.offset_top = 24.0
+		content_box.offset_top = 18.0
 		content_box.offset_right = -28.0
-		content_box.offset_bottom = -24.0
-		_icon_cluster.position = panel.position + Vector2(28.0, 28.0)
-		_icon_cluster.size = Vector2(84.0, 84.0)
+		content_box.offset_bottom = -18.0
+		_icon_cluster.position = panel.position + Vector2(30.0, 22.0)
+		_icon_cluster.size = Vector2(78.0, 78.0)
 	else:
 		content_box.offset_left = 24.0
 		content_box.offset_top = 104.0
@@ -178,22 +174,17 @@ func _layout_icon_children() -> void:
 			)
 
 func _layout_target_effects(panel_position: Vector2, panel_size: Vector2) -> void:
-	if _target_highlight == null or _target_beam == null:
+	if _target_highlight == null:
 		return
 	var has_target := _target_rect.size.x > 0.0 and _target_rect.size.y > 0.0
 	_target_highlight.visible = has_target
-	_target_beam.visible = has_target
 	if not has_target:
 		return
-	var grown := _target_rect.grow(12.0)
+	var grow_amount: float = clamp(min(_target_rect.size.x, _target_rect.size.y) * 0.12, 6.0, 12.0)
+	var grown := _target_rect.grow(grow_amount)
 	_target_highlight.global_position = grown.position
 	_target_highlight.size = grown.size
 	_target_highlight.pivot_offset = grown.size * 0.5
-	var beam_width: float = max(grown.size.x * 1.24, 96.0)
-	var beam_top: float = min(panel_position.y + panel_size.y - 24.0, grown.position.y - 170.0)
-	var beam_height: float = max(120.0, grown.position.y - beam_top + 20.0)
-	_target_beam.global_position = Vector2(grown.get_center().x - (beam_width * 0.5), beam_top)
-	_target_beam.size = Vector2(beam_width, beam_height)
 
 func _apply_icon_texture() -> void:
 	var icon := _icon_cluster.get_node_or_null("Icon") as TextureRect if _icon_cluster else null
@@ -233,12 +224,6 @@ func _play_idle_motion() -> void:
 		_target_tween.parallel().tween_property(_target_highlight, "modulate:a", 0.68, 0.52)
 		_target_tween.tween_property(_target_highlight, "scale", Vector2.ONE, 0.52).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		_target_tween.parallel().tween_property(_target_highlight, "modulate:a", 1.0, 0.52)
-	if _target_beam and _target_beam.visible:
-		var beam_tween := _target_beam.create_tween()
-		beam_tween.set_loops()
-		beam_tween.tween_property(_target_beam, "color:a", 0.16, 0.42)
-		beam_tween.tween_property(_target_beam, "color:a", 0.02, 0.58)
-		_dust_tweens.append(beam_tween)
 	_play_dust_motion()
 
 func _play_dust_motion() -> void:

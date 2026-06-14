@@ -159,6 +159,8 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	var panel: Control = modal.get_node_or_null("Center/Panel") as Control
 	var icon_cluster: Control = modal.get_node_or_null("Center/IconCluster") as Control
 	var target_highlight: Control = modal.get_node_or_null("Center/TargetHighlight") as Control
+	var target_beam: Control = modal.get_node_or_null("Center/TargetBeam") as Control
+	var checkbox: Control = modal.get_node_or_null("Center/Panel/VBox/DoNotShow") as Control
 	assert_that(title.text).is_equal("Open Run")
 	assert_that(message.text).contains("Open run")
 	assert_that(message.text).contains("Pure leaderboard scores stay separate")
@@ -166,9 +168,21 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	assert_that(panel).is_not_null()
 	assert_that(icon_cluster).is_not_null()
 	assert_that(target_highlight).is_not_null()
-	assert_that(panel.size.x).is_greater_equal(560.0)
-	assert_that(panel.get_global_rect().position.y).is_greater(panel.get_viewport_rect().size.y * 0.45)
+	assert_that(target_beam).is_null()
+	assert_that(checkbox).is_not_null()
+	assert_that(panel.size.x).is_greater_equal(620.0)
 	assert_that(target_highlight.visible).is_true()
+	var panel_rect: Rect2 = panel.get_global_rect()
+	var message_rect: Rect2 = message.get_global_rect()
+	var checkbox_rect: Rect2 = checkbox.get_global_rect()
+	var confirm_rect: Rect2 = confirm.get_global_rect()
+	var target_rect: Rect2 = target_highlight.get_global_rect()
+	_assert_rect_inside(message_rect, panel_rect)
+	_assert_rect_inside(checkbox_rect, panel_rect)
+	_assert_rect_inside(confirm_rect, panel_rect)
+	assert_that(message_rect.end.y).is_less_equal(checkbox_rect.position.y + 1.0)
+	assert_that(checkbox_rect.end.y).is_less_equal(confirm_rect.position.y + 1.0)
+	assert_that(panel_rect.end.y).is_less_equal(target_rect.position.y - 6.0)
 
 	game.call("_on_open_mode_tip_dismissed", true)
 	assert_that(SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)).is_false()
