@@ -166,6 +166,18 @@ func test_legacy_tile_design_uses_squarer_shader_profile() -> void:
 	view.queue_free()
 	ProjectSettings.set_setting("lumarush/tile_design_mode", FeatureFlags.TileDesignMode.MODERN)
 
+func test_modern_tile_palette_has_distinct_color_families() -> void:
+	_assert_palette_is_distinct(BoardView.TILE_PALETTE_MODERN)
+	for theme_id in [ThemeManager.THEME_DEFAULT, ThemeManager.THEME_NEON]:
+		var config: Dictionary = ThemeManager.get_theme_config(theme_id)
+		_assert_palette_is_distinct(config.get("tile_palette", []))
+
+func test_tile_symbols_use_contrasting_foreground_colors() -> void:
+	var view := BoardView.new()
+	for color in BoardView.TILE_PALETTE_MODERN:
+		var symbol_color: Color = view.call("_symbol_color_for_tile", color)
+		assert_that(_contrast_ratio(color, symbol_color)).is_greater_equal(3.0)
+
 func test_match_haptic_signal_emits_when_enabled() -> void:
 	ProjectSettings.set_setting("lumarush/haptics_enabled", true)
 	ProjectSettings.set_setting("lumarush/match_haptic_duration_ms", 20)
@@ -217,3 +229,27 @@ func test_match_click_haptic_signal_emits_when_enabled() -> void:
 	assert_that(emitted_ms[0]).is_equal(12)
 	assert_that(emitted_amp[0]).is_equal(0.3)
 	view.queue_free()
+
+func _assert_palette_is_distinct(palette: Array) -> void:
+	assert_that(palette.size()).is_equal(5)
+	assert_that((palette[1] as Color).g).is_less(0.36)
+	assert_that((palette[1] as Color).b).is_less(0.18)
+	assert_that((palette[4] as Color).r).is_less(0.36)
+	assert_that((palette[4] as Color).b).is_greater(0.90)
+	for i in range(palette.size()):
+		for j in range(i + 1, palette.size()):
+			assert_that(_rgb_distance(palette[i] as Color, palette[j] as Color)).is_greater_equal(0.45)
+
+func _rgb_distance(a: Color, b: Color) -> float:
+	var dr: float = a.r - b.r
+	var dg: float = a.g - b.g
+	var db: float = a.b - b.b
+	return sqrt((dr * dr) + (dg * dg) + (db * db))
+
+func _relative_luminance(color: Color) -> float:
+	return (color.r * 0.2126) + (color.g * 0.7152) + (color.b * 0.0722)
+
+func _contrast_ratio(a: Color, b: Color) -> float:
+	var high: float = max(_relative_luminance(a), _relative_luminance(b))
+	var low: float = min(_relative_luminance(a), _relative_luminance(b))
+	return (high + 0.05) / (low + 0.05)
