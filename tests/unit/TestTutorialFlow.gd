@@ -191,10 +191,11 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	_assert_rect_inside(confirm_rect, panel_rect)
 	assert_that(message_rect.end.y).is_less_equal(checkbox_rect.position.y + 1.0)
 	assert_that(checkbox_rect.end.y).is_less_equal(confirm_rect.position.y + 1.0)
-	assert_that(panel_rect.intersects(board_rect)).is_false()
 	assert_that(panel_rect.intersects(target_rect)).is_false()
 	assert_that(target_rect.intersects(hint_rect)).is_true()
-	assert_that(panel_rect.end.x <= board_rect.position.x or panel_rect.position.x >= board_rect.end.x).is_true()
+	assert_that(absf(panel_rect.get_center().x - board_rect.get_center().x)).is_less_equal(2.0)
+	assert_that(panel_rect.end.y).is_less_equal(target_rect.position.y - 6.0)
+	assert_that(panel_rect.position.y).is_less(board_rect.end.y)
 
 	game.call("_on_open_mode_tip_dismissed", true)
 	assert_that(SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)).is_false()

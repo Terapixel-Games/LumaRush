@@ -138,12 +138,6 @@ func _layout_tip() -> void:
 	var panel_y: float = _target_rect.position.y - panel_height - clamp(view_size.y * 0.035, 22.0, 40.0) if _target_rect.size.y > 0.0 else view_size.y - _bottom_offset - panel_height
 	if panel_y < margin:
 		panel_y = view_size.y - _bottom_offset - panel_height
-	var proposed_rect := Rect2(Vector2(panel_x, panel_y), Vector2(panel_width, panel_height))
-	if _should_side_place(proposed_rect, view_size, margin):
-		var side_layout := _side_layout(view_size, margin, panel_width, panel_height)
-		panel_x = side_layout.position.x
-		panel_y = side_layout.position.y
-		panel_width = side_layout.size.x
 	panel_y = clamp(panel_y, margin, max(margin, view_size.y - panel_height - margin))
 	panel.position = Vector2(panel_x, panel_y)
 	panel.size = Vector2(panel_width, panel_height)
@@ -164,28 +158,6 @@ func _layout_tip() -> void:
 		_icon_cluster.size = Vector2(76.0, 76.0)
 	_layout_icon_children()
 	_layout_target_effects(panel.position, panel.size)
-
-func _should_side_place(proposed_rect: Rect2, view_size: Vector2, margin: float) -> bool:
-	if view_size.x < 960.0:
-		return false
-	if _avoid_rect.size == Vector2.ZERO:
-		return false
-	if not proposed_rect.intersects(_avoid_rect):
-		return false
-	var left_space: float = _avoid_rect.position.x - margin
-	var right_space: float = view_size.x - _avoid_rect.end.x - margin
-	return max(left_space, right_space) >= 420.0
-
-func _side_layout(view_size: Vector2, margin: float, panel_width: float, panel_height: float) -> Rect2:
-	var side_gap: float = clamp(view_size.x * 0.024, 28.0, 52.0)
-	var left_space: float = _avoid_rect.position.x - side_gap - margin
-	var right_space: float = view_size.x - _avoid_rect.end.x - side_gap - margin
-	var place_right := right_space >= left_space
-	var width: float = min(panel_width, max(420.0, right_space if place_right else left_space))
-	var x: float = _avoid_rect.end.x + side_gap if place_right else _avoid_rect.position.x - side_gap - width
-	var target_center_y: float = _target_rect.get_center().y if _target_rect.size != Vector2.ZERO else _avoid_rect.end.y
-	var y: float = clamp(target_center_y - (panel_height * 0.68), margin, max(margin, view_size.y - _bottom_offset - panel_height))
-	return Rect2(Vector2(x, y), Vector2(width, panel_height))
 
 func _layout_icon_children() -> void:
 	if _icon_cluster == null:
