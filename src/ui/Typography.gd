@@ -20,9 +20,12 @@ const WEIGHT_MEDIUM: int = 500
 const WEIGHT_SEMIBOLD: int = 600
 const WEIGHT_BOLD: int = 700
 
-const BASE_FONT_PATH := "res://assets/fonts/SpaceGrotesk.ttf"
+const FONT_FACE_INTERFACE := "interface"
+const FONT_FACE_BODY := "body"
+const INTERFACE_FONT_PATH := "res://assets/fonts/SpaceGrotesk.ttf"
+const BODY_FONT_PATH := "res://assets/fonts/Chivo.ttf"
 
-var _base_font: Font
+var _base_fonts: Dictionary = {}
 var _font_cache: Dictionary = {}
 
 func scale_factor() -> float:
@@ -42,38 +45,49 @@ func scale_factor_for_size(viewport_size: Vector2) -> float:
 func px(reference_size: float) -> int:
 	return int(round(reference_size * scale_factor() * GLOBAL_TEXT_SCALE))
 
-func _font_for_weight(weight: int) -> Font:
-	if _font_cache.has(weight):
-		return _font_cache[weight]
+func interface_font(weight: int = WEIGHT_REGULAR) -> Font:
+	return _font_for_weight(weight, FONT_FACE_INTERFACE)
+
+func body_font(weight: int = WEIGHT_REGULAR) -> Font:
+	return _font_for_weight(weight, FONT_FACE_BODY)
+
+func _font_for_weight(weight: int, face: String = FONT_FACE_INTERFACE) -> Font:
+	var cache_key := "%s:%d" % [face, weight]
+	if _font_cache.has(cache_key):
+		return _font_cache[cache_key]
 	var variation := FontVariation.new()
-	variation.base_font = _ensure_base_font()
+	variation.base_font = _ensure_base_font(face)
 	variation.variation_opentype = {"wght": weight}
-	_font_cache[weight] = variation
+	_font_cache[cache_key] = variation
 	return variation
 
-func _ensure_base_font() -> Font:
-	if _base_font != null:
-		return _base_font
-	var loaded: Resource = load(BASE_FONT_PATH)
+func _ensure_base_font(face: String = FONT_FACE_INTERFACE) -> Font:
+	if _base_fonts.has(face):
+		return _base_fonts[face]
+	var path := BODY_FONT_PATH if face == FONT_FACE_BODY else INTERFACE_FONT_PATH
+	var loaded: Resource = load(path)
 	if loaded is Font:
-		_base_font = loaded as Font
+		_base_fonts[face] = loaded as Font
 	else:
-		_base_font = ThemeDB.fallback_font
-	return _base_font
+		_base_fonts[face] = ThemeDB.fallback_font
+	return _base_fonts[face]
 
-func style_label(label: Label, reference_size: float, weight: int, secondary: bool = false) -> void:
+func style_label(label: Label, reference_size: float, weight: int, secondary: bool = false, face: String = FONT_FACE_INTERFACE) -> void:
 	if label == null:
 		return
-	label.add_theme_font_override("font", _font_for_weight(weight))
+	label.add_theme_font_override("font", _font_for_weight(weight, face))
 	label.add_theme_font_size_override("font_size", px(reference_size))
 	label.add_theme_color_override("font_color", SECONDARY_TEXT if secondary else PRIMARY_TEXT)
 	label.add_theme_color_override("font_outline_color", SHADOW_TEXT)
 	label.add_theme_constant_override("outline_size", max(1, int(round(2.0 * scale_factor()))))
 
+func style_body_label(label: Label, reference_size: float, weight: int = WEIGHT_REGULAR, secondary: bool = false) -> void:
+	style_label(label, reference_size, weight, secondary, FONT_FACE_BODY)
+
 func style_button(button: BaseButton, reference_size: float, weight: int = WEIGHT_SEMIBOLD) -> void:
 	if button == null:
 		return
-	button.add_theme_font_override("font", _font_for_weight(weight))
+	button.add_theme_font_override("font", interface_font(weight))
 	button.add_theme_font_size_override("font_size", px(reference_size))
 	button.add_theme_color_override("font_color", PRIMARY_TEXT)
 	button.add_theme_color_override("font_hover_color", PRIMARY_TEXT)
@@ -93,7 +107,7 @@ func style_main_menu(scene: Control) -> void:
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Title",
 		"UI/VBox/Title",
 	]) as Label, 48.0, WEIGHT_BOLD)
-	style_label(_node_from_paths(scene, [
+	style_body_label(_node_from_paths(scene, [
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Subtitle",
 		"UI/VBox/Subtitle",
 	]) as Label, 18.0, WEIGHT_REGULAR, true)
@@ -103,7 +117,7 @@ func style_main_menu(scene: Control) -> void:
 	style_label(_node_from_paths(scene, [
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchTitle",
 	]) as Label, 24.0, WEIGHT_BOLD)
-	style_label(_node_from_paths(scene, [
+	style_body_label(_node_from_paths(scene, [
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchMeta",
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/LaunchNote",
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/LaunchNote",
@@ -135,7 +149,7 @@ func style_main_menu(scene: Control) -> void:
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/DailyCard/Margin/VBox/DailyMeta",
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/WeeklyCard/Margin/VBox/WeeklyMeta",
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/IntelGrid/PromoCard/Margin/VBox/PromoMeta",
-	], 13.0, WEIGHT_MEDIUM, true)
+	], 13.0, WEIGHT_MEDIUM, true, FONT_FACE_BODY)
 	style_button(_node_from_paths(scene, [
 		"UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/VBox/TrackSelector/VBox/CollapsedPill",
 	]) as BaseButton, 20.0, WEIGHT_MEDIUM)
@@ -226,9 +240,9 @@ func style_results(scene: Control) -> void:
 	style_label(scene.get_node_or_null("%s/ModeBadge" % base_path), 20.0, WEIGHT_SEMIBOLD, true)
 	style_label(scene.get_node_or_null("%s/Best" % base_path), 34.0, WEIGHT_BOLD, false)
 	style_label(scene.get_node_or_null("%s/Streak" % base_path), 34.0, WEIGHT_BOLD, false)
-	style_label(scene.get_node_or_null("%s/OnlineStatus" % base_path), 30.0, WEIGHT_BOLD, false)
+	style_body_label(scene.get_node_or_null("%s/OnlineStatus" % base_path), 30.0, WEIGHT_BOLD, false)
 	var leaderboard := scene.get_node_or_null("%s/Leaderboard" % base_path)
-	style_label(leaderboard, 28.0, WEIGHT_SEMIBOLD, false)
+	style_body_label(leaderboard, 28.0, WEIGHT_SEMIBOLD, false)
 	style_label(scene.get_node_or_null("%s/CoinsEarned" % base_path), 26.0, WEIGHT_BOLD, false)
 	style_label(scene.get_node_or_null("%s/CoinBalance" % base_path), 24.0, WEIGHT_SEMIBOLD, false)
 	if leaderboard != null:
@@ -251,7 +265,7 @@ func style_save_streak(scene: Control) -> void:
 	# Compact defaults for modal layouts on narrow mobile viewports.
 	style_label(scene.get_node_or_null("Panel/VBox/Title"), 26.0, WEIGHT_BOLD)
 	style_label(scene.get_node_or_null("Panel/VBox/Header/Title"), 26.0, WEIGHT_BOLD)
-	style_label(scene.get_node_or_null("Panel/VBox/Status"), 16.0, WEIGHT_REGULAR, true)
+	style_body_label(scene.get_node_or_null("Panel/VBox/Status"), 16.0, WEIGHT_REGULAR, true)
 	style_button(scene.get_node_or_null("Panel/VBox/SaveButton"), 18.0, WEIGHT_SEMIBOLD)
 	style_button(scene.get_node_or_null("Panel/VBox/Close"), 18.0, WEIGHT_MEDIUM)
 	style_button(scene.get_node_or_null("Panel/VBox/Header/Back"), 18.0, WEIGHT_BOLD)
@@ -274,14 +288,14 @@ func style_save_streak(scene: Control) -> void:
 	style_label(scene.get_node_or_null("Panel/VBox/Scroll/Content/ThemesHeader/Label"), 17.0, WEIGHT_SEMIBOLD)
 	style_label(scene.get_node_or_null("Panel/VBox/Scroll/Content/PowerupsHeader/Label"), 17.0, WEIGHT_SEMIBOLD)
 	style_label(scene.get_node_or_null("Center/Panel/VBox/Title"), 26.0, WEIGHT_BOLD)
-	style_label(scene.get_node_or_null("Center/Panel/VBox/Status"), 16.0, WEIGHT_REGULAR, true)
+	style_body_label(scene.get_node_or_null("Center/Panel/VBox/Status"), 16.0, WEIGHT_REGULAR, true)
 	style_button(scene.get_node_or_null("Center/Panel/VBox/SaveButton"), 18.0, WEIGHT_SEMIBOLD)
 	style_button(scene.get_node_or_null("Center/Panel/VBox/Close"), 18.0, WEIGHT_MEDIUM)
 
 func style_tutorial_tip(scene: Control) -> void:
 	style_label(scene.get_node_or_null("Center/Panel/VBox/Title"), 46.0, WEIGHT_BOLD)
 	var message := scene.get_node_or_null("Center/Panel/VBox/Message") as Label
-	style_label(message, 26.0, WEIGHT_REGULAR, false)
+	style_body_label(message, 26.0, WEIGHT_REGULAR, false)
 	if message:
 		message.add_theme_constant_override("line_spacing", max(6, int(round(8.0 * scale_factor()))))
 	style_button(scene.get_node_or_null("Center/Panel/VBox/Confirm"), 26.0, WEIGHT_BOLD)
@@ -296,11 +310,11 @@ func _node_from_paths(scene: Node, paths: Array[String]) -> Node:
 			return node
 	return null
 
-func _style_labels(scene: Node, paths: Array[String], reference_size: float, weight: int, secondary: bool = false) -> void:
+func _style_labels(scene: Node, paths: Array[String], reference_size: float, weight: int, secondary: bool = false, face: String = FONT_FACE_INTERFACE) -> void:
 	for path in paths:
 		var node := scene.get_node_or_null(path)
 		if node is Label:
-			style_label(node as Label, reference_size, weight, secondary)
+			style_label(node as Label, reference_size, weight, secondary, face)
 
 func _style_buttons(scene: Node, paths: Array[String], reference_size: float, weight: int) -> void:
 	for path in paths:

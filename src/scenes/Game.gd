@@ -716,6 +716,7 @@ func _set_badge_centered(panel: PanelContainer, label: Label) -> void:
 	panel.offset_top = 6.0
 	panel.offset_right = -8.0
 	panel.offset_bottom = -6.0
+	label.add_theme_font_override("font", Typography.interface_font(Typography.WEIGHT_SEMIBOLD))
 	label.add_theme_font_size_override("font_size", int(round(clamp(panel.size.y * 0.34, Typography.px(13.0), Typography.px(22.0)))))
 
 func _fit_badge_font_size(label: Label) -> void:
@@ -1037,6 +1038,7 @@ func _setup_combo_label() -> void:
 	_combo_label.text = ""
 	_combo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_combo_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_combo_label.add_theme_font_override("font", Typography.interface_font(Typography.WEIGHT_BOLD))
 	_combo_label.add_theme_color_override("font_color", Color(1.0, 0.94, 0.5, 0.98))
 	_combo_label.add_theme_color_override("font_outline_color", Color(0.08, 0.12, 0.22, 0.95))
 	_combo_label.add_theme_constant_override("outline_size", 3)
@@ -1060,6 +1062,7 @@ func _setup_cabinet_hud() -> void:
 		_cabinet_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_cabinet_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_cabinet_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_cabinet_title_label.add_theme_font_override("font", Typography.interface_font(Typography.WEIGHT_BOLD))
 		_cabinet_title_label.add_theme_color_override("font_color", Color(0.92, 0.98, 1.0, 1.0))
 		_cabinet_title_label.add_theme_color_override("font_shadow_color", Color(0.1, 0.85, 1.0, 0.95))
 		_cabinet_title_label.add_theme_color_override("font_outline_color", Color(0.95, 0.18, 1.0, 0.72))
@@ -1082,6 +1085,7 @@ func _make_hud_pod(node_name: String, color: Color) -> Label:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.clip_text = true
+	label.add_theme_font_override("font", Typography.interface_font(Typography.WEIGHT_SEMIBOLD))
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_outline_color", Color(0.02, 0.01, 0.08, 0.98))
 	label.add_theme_constant_override("outline_size", 4)
@@ -1162,6 +1166,7 @@ func _setup_pressure_hud() -> void:
 	_score_burst_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_score_burst_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_score_burst_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_score_burst_label.add_theme_font_override("font", Typography.interface_font(Typography.WEIGHT_BOLD))
 	_score_burst_label.add_theme_color_override("font_color", Color(1.0, 0.94, 0.42, 1.0))
 	_score_burst_label.add_theme_color_override("font_outline_color", Color(0.04, 0.02, 0.12, 0.96))
 	_score_burst_label.add_theme_constant_override("outline_size", 4)
@@ -1173,6 +1178,7 @@ func _make_pressure_label(node_name: String) -> Label:
 	label.clip_text = true
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_override("font", Typography.interface_font(Typography.WEIGHT_MEDIUM))
 	label.add_theme_color_override("font_color", Color(0.86, 0.96, 1.0, 0.96))
 	label.add_theme_color_override("font_outline_color", Color(0.0, 0.03, 0.08, 0.9))
 	label.add_theme_constant_override("outline_size", 2)
@@ -1292,6 +1298,7 @@ func _show_match_center_score(center_global: Vector2, gained: int, next_combo: i
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.text = "+%d" % gained
+	label.add_theme_font_override("font", Typography.interface_font(Typography.WEIGHT_BOLD))
 	if next_combo >= 3:
 		label.text = "+%d\nCHAIN x%d" % [gained, next_combo]
 	elif group_size >= 5:
@@ -1643,6 +1650,7 @@ func _add_highlight_rect(rect: Rect2, index: int) -> void:
 	marker.text = str(index)
 	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	marker.add_theme_font_override("font", Typography.interface_font(Typography.WEIGHT_BOLD))
 	marker.add_theme_font_size_override("font_size", Typography.px(22.0))
 	marker.add_theme_color_override("font_color", Color(0.06, 0.05, 0.03, 1.0))
 	marker.set_anchors_preset(Control.PRESET_TOP_LEFT)

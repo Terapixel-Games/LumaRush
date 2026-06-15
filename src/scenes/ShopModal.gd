@@ -880,7 +880,7 @@ func _configure_coin_pack_row(index: int, row: Dictionary) -> void:
 		subtitle_label.text = "$0.00"
 	button.text = "Buy"
 	Typography.style_label(title_label, 19.0, Typography.WEIGHT_BOLD)
-	Typography.style_label(subtitle_label, 14.0, Typography.WEIGHT_MEDIUM, true)
+	Typography.style_body_label(subtitle_label, 14.0, Typography.WEIGHT_MEDIUM, true)
 	Typography.style_button(button, 16.0, Typography.WEIGHT_SEMIBOLD)
 
 func _apply_header_hierarchy() -> void:
@@ -898,7 +898,7 @@ func _apply_static_shop_styling() -> void:
 	status_label.add_theme_color_override("font_color", Color(0.94, 0.97, 1.0, 0.9))
 	status_label.add_theme_color_override("font_outline_color", Color(0.08, 0.14, 0.28, 0.92))
 	status_label.add_theme_constant_override("outline_size", 2)
-	Typography.style_label(status_label, 14.0, Typography.WEIGHT_MEDIUM, true)
+	Typography.style_body_label(status_label, 14.0, Typography.WEIGHT_MEDIUM, true)
 	for header_path in [
 		"Panel/VBox/Scroll/Content/CoinPacksHeader/Label",
 		"Panel/VBox/Scroll/Content/ThemesHeader/Label",
@@ -963,7 +963,7 @@ func _apply_powerup_typography() -> void:
 		if title != null:
 			Typography.style_label(title, 18.0, Typography.WEIGHT_BOLD)
 		if subtitle != null:
-			Typography.style_label(subtitle, 14.0, Typography.WEIGHT_MEDIUM, true)
+			Typography.style_body_label(subtitle, 14.0, Typography.WEIGHT_MEDIUM, true)
 		if button != null:
 			Typography.style_button(button, 16.0, Typography.WEIGHT_SEMIBOLD)
 

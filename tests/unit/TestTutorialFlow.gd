@@ -32,6 +32,8 @@ func test_first_run_tutorial_teaches_board_music_and_powerups() -> void:
 	assert_that(title.text).is_equal("Tap a Group")
 	assert_that(message.text).contains("glowing group")
 	assert_that(message.text).contains("advances after your move")
+	assert_that(title.get_theme_font("font")).is_equal(Typography.interface_font(Typography.WEIGHT_BOLD))
+	assert_that(message.get_theme_font("font")).is_equal(Typography.body_font(Typography.WEIGHT_REGULAR))
 	assert_that(message.get_theme_constant("line_spacing")).is_greater_equal(6)
 
 	var next_button: Button = overlay.get_node_or_null("Panel/Margin/VBox/Buttons/Next") as Button
@@ -42,6 +44,8 @@ func test_first_run_tutorial_teaches_board_music_and_powerups() -> void:
 	assert_that(skip_button.custom_minimum_size.x).is_greater_equal(160.0)
 	assert_that(next_button.custom_minimum_size.x).is_less(150.0)
 	assert_that(next_button.size_flags_horizontal & Control.SIZE_EXPAND).is_equal(0)
+	assert_that(skip_button.get_theme_font("font")).is_equal(Typography.interface_font(Typography.WEIGHT_SEMIBOLD))
+	assert_that(next_button.get_theme_font("font")).is_equal(Typography.interface_font(Typography.WEIGHT_BOLD))
 
 	next_button.pressed.emit()
 	assert_that(title.text).is_equal("Keep the Beat")
@@ -172,6 +176,9 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	assert_that(message.text).contains("Open run")
 	assert_that(message.text).contains("Pure scores stay separate")
 	assert_that(confirm.text).is_equal("Use Power-Up")
+	assert_that(title.get_theme_font("font")).is_equal(Typography.interface_font(Typography.WEIGHT_BOLD))
+	assert_that(message.get_theme_font("font")).is_equal(Typography.body_font(Typography.WEIGHT_REGULAR))
+	assert_that(confirm.get_theme_font("font")).is_equal(Typography.interface_font(Typography.WEIGHT_BOLD))
 	assert_that(panel).is_not_null()
 	assert_that(icon_cluster).is_not_null()
 	assert_that(target_highlight).is_not_null()

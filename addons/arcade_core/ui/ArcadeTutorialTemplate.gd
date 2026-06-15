@@ -13,6 +13,10 @@ const DEFAULT_TEMPLATE := {
 	"message_font_size": 22.0,
 	"button_font_size": 16.0,
 	"secondary_button_font_size": 15.0,
+	"title_font_weight": 700,
+	"message_font_weight": 400,
+	"button_font_weight": 700,
+	"secondary_button_font_weight": 600,
 	"button_height": 56.0,
 	"primary_button_width": 136.0,
 	"secondary_button_width": 166.0,
@@ -58,6 +62,7 @@ static func style_label(label: Label, is_title: bool, template: Dictionary = {})
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		label.add_theme_constant_override("line_spacing", _font_px(float(template["message_line_spacing"])))
+	label.add_theme_font_override("font", _font_for_role(not is_title, int(template["message_font_weight"] if not is_title else template["title_font_weight"])))
 	label.add_theme_font_size_override("font_size", _font_px(float(template["title_font_size"] if is_title else template["message_font_size"])))
 	label.add_theme_color_override("font_color", Color(1.0, 0.96, 0.76, 1.0) if is_title else Color(0.93, 0.97, 1.0, 0.98))
 
@@ -72,6 +77,7 @@ static func style_button(button: Button, primary: bool, template: Dictionary = {
 		float(template["button_height"])
 	)
 	button.size_flags_horizontal = Control.SIZE_SHRINK_END if primary else Control.SIZE_SHRINK_BEGIN
+	button.add_theme_font_override("font", _font_for_role(false, int(template["button_font_weight"] if primary else template["secondary_button_font_weight"])))
 	button.add_theme_font_size_override("font_size", _font_px(float(template["button_font_size"] if primary else template["secondary_button_font_size"])))
 	button.add_theme_color_override("font_color", Color(0.06, 0.08, 0.12, 1.0) if primary else Color(0.88, 0.96, 1.0, 1.0))
 	button.add_theme_color_override("font_hover_color", Color(0.03, 0.05, 0.08, 1.0) if primary else Color(1.0, 1.0, 1.0, 1.0))
@@ -185,10 +191,29 @@ static func style_highlight(highlight: Panel) -> void:
 	highlight.add_theme_stylebox_override("panel", style)
 
 static func _font_px(value: float) -> int:
-	var main_loop := Engine.get_main_loop()
-	var typography: Node = null
-	if main_loop is SceneTree:
-		typography = (main_loop as SceneTree).root.get_node_or_null("/root/Typography")
+	var typography := _typography()
 	if typography and typography.has_method("px"):
 		return int(typography.call("px", value))
 	return int(round(value))
+
+static func _font_for_role(is_body: bool, weight: int) -> Font:
+	var typography := _typography()
+	var method := "body_font" if is_body else "interface_font"
+	if typography and typography.has_method(method):
+		var role_font: Variant = typography.call(method, weight)
+		if role_font is Font:
+			return role_font as Font
+	var path := "res://assets/fonts/Chivo.ttf" if is_body else "res://assets/fonts/SpaceGrotesk.ttf"
+	var loaded: Resource = load(path)
+	if loaded is Font:
+		var variation := FontVariation.new()
+		variation.base_font = loaded as Font
+		variation.variation_opentype = {"wght": weight}
+		return variation
+	return ThemeDB.fallback_font
+
+static func _typography() -> Node:
+	var main_loop := Engine.get_main_loop()
+	if main_loop is SceneTree:
+		return (main_loop as SceneTree).root.get_node_or_null("/root/Typography")
+	return null

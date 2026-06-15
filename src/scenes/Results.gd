@@ -649,6 +649,7 @@ func _ensure_dynamic_stats() -> void:
 		_powerups_label = Label.new()
 		_powerups_label.name = "PowerupsUsed"
 		_powerups_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		Typography.style_body_label(_powerups_label, 20.0, Typography.WEIGHT_MEDIUM)
 		box.add_child(_powerups_label)
 		_move_before_spacer(_powerups_label)
 	if _encouragement_label == null:
@@ -656,6 +657,7 @@ func _ensure_dynamic_stats() -> void:
 		_encouragement_label.name = "Encouragement"
 		_encouragement_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_encouragement_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		Typography.style_body_label(_encouragement_label, 20.0, Typography.WEIGHT_REGULAR)
 		_encouragement_label.add_theme_color_override("font_color", Color(0.92, 0.97, 1.0, 0.96))
 		box.add_child(_encouragement_label)
 		_move_before_spacer(_encouragement_label)
@@ -673,6 +675,7 @@ func _ensure_dynamic_stats() -> void:
 		_dual_leaderboard_label.name = "AltLeaderboard"
 		_dual_leaderboard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_dual_leaderboard_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		Typography.style_body_label(_dual_leaderboard_label, 20.0, Typography.WEIGHT_REGULAR)
 		box.add_child(_dual_leaderboard_label)
 		_move_before_spacer(_dual_leaderboard_label)
 	if _weekly_ladder_label == null:
@@ -680,6 +683,7 @@ func _ensure_dynamic_stats() -> void:
 		_weekly_ladder_label.name = "WeeklyLadder"
 		_weekly_ladder_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_weekly_ladder_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		Typography.style_body_label(_weekly_ladder_label, 20.0, Typography.WEIGHT_REGULAR)
 		_weekly_ladder_label.add_theme_color_override("font_color", Color(0.92, 0.97, 1.0, 0.96))
 		box.add_child(_weekly_ladder_label)
 		_move_before_spacer(_weekly_ladder_label)
@@ -688,6 +692,7 @@ func _ensure_dynamic_stats() -> void:
 		_rival_target_label.name = "WeeklyRival"
 		_rival_target_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_rival_target_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		Typography.style_body_label(_rival_target_label, 20.0, Typography.WEIGHT_REGULAR)
 		box.add_child(_rival_target_label)
 		_move_before_spacer(_rival_target_label)
 	if _grade_label == null:
@@ -695,6 +700,7 @@ func _ensure_dynamic_stats() -> void:
 		_grade_label.name = "RunGrade"
 		_grade_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_grade_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		Typography.style_label(_grade_label, 22.0, Typography.WEIGHT_BOLD)
 		_grade_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.48, 1.0))
 		_grade_label.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.12, 0.96))
 		_grade_label.add_theme_constant_override("outline_size", 3)
@@ -763,6 +769,7 @@ func _make_reward_card(node_name: String, accent: Color) -> Label:
 	label.clip_text = true
 	label.custom_minimum_size = Vector2(0.0, 78.0)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Typography.style_label(label, 22.0, Typography.WEIGHT_BOLD)
 	label.add_theme_color_override("font_color", accent)
 	label.add_theme_color_override("font_outline_color", Color(0.02, 0.01, 0.08, 0.98))
 	label.add_theme_constant_override("outline_size", 4)

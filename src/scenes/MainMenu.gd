@@ -421,6 +421,7 @@ func _make_status_chip(node_name: String, text_value: String) -> Label:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.clip_text = true
 	label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	label.add_theme_font_override("font", Typography.interface_font(Typography.WEIGHT_BOLD))
 	label.add_theme_font_size_override("font_size", Typography.px(12.0))
 	label.add_theme_color_override("font_outline_color", Color(0.0, 0.02, 0.08, 0.92))
 	label.add_theme_constant_override("outline_size", 2)

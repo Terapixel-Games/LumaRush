@@ -283,6 +283,7 @@ static func _style_button(node: Node, kind: String) -> void:
 	button.add_theme_color_override("font_disabled_color", TEXT_SOFT)
 	button.add_theme_color_override("font_outline_color", outline_color)
 	button.add_theme_constant_override("outline_size", 1 if kind == "primary" else 2)
+	_apply_role_font(button, "interface", 700 if kind == "primary" else 600)
 	_apply_arcade_node(button, kind)
 	if button.has_method("_sync_glass_state"):
 		button.call_deferred("_sync_glass_state")
@@ -307,8 +308,26 @@ static func _style_line_edits(scene: Node) -> void:
 		edit.add_theme_stylebox_override("focus", make_style("reward"))
 		edit.add_theme_color_override("font_color", TEXT_MAIN)
 		edit.add_theme_color_override("font_placeholder_color", TEXT_DIM)
+		_apply_role_font(edit, "body", 400)
 		edit.add_theme_font_size_override("font_size", 26)
 		edit.custom_minimum_size.y = max(edit.custom_minimum_size.y, 64.0)
+
+static func _apply_role_font(control: Control, role: String, weight: int) -> void:
+	var typography := _typography()
+	if typography == null:
+		return
+	var method := "body_font" if role == "body" else "interface_font"
+	if not typography.has_method(method):
+		return
+	var role_font: Variant = typography.call(method, weight)
+	if role_font is Font:
+		control.add_theme_font_override("font", role_font as Font)
+
+static func _typography() -> Node:
+	var main_loop := Engine.get_main_loop()
+	if main_loop is SceneTree:
+		return (main_loop as SceneTree).root.get_node_or_null("Typography")
+	return null
 
 static func _style_arcade_surfaces(scene: Node) -> void:
 	for node in scene.find_children("*", "ColorRect", true, false):
