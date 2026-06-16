@@ -409,6 +409,13 @@ func test_pause_overlay_suppresses_hint_indicator_and_badges() -> void:
 	assert_that(undo_badge_panel.visible).is_false()
 	assert_that(prism_badge_panel.visible).is_false()
 	assert_that(hint_badge_panel.visible).is_false()
+	assert_that(board_view.is_board_input_enabled()).is_false()
+	var pause_snapshot: Array = board_view.capture_snapshot()
+	var pause_cell: Vector2i = _first_playable_cell(board_view)
+	assert_that(pause_cell.x).is_greater_equal(0)
+	_click_board_cell(board_view, pause_cell)
+	await get_tree().process_frame
+	assert_that(board_view.capture_snapshot()).is_equal(pause_snapshot)
 
 	var pause_overlay: Control = game.get_node_or_null("PauseOverlay") as Control
 	game.call("_on_resume")
@@ -419,6 +426,7 @@ func test_pause_overlay_suppresses_hint_indicator_and_badges() -> void:
 	assert_that(undo_badge_panel.visible).is_true()
 	assert_that(prism_badge_panel.visible).is_true()
 	assert_that(hint_badge_panel.visible).is_true()
+	assert_that(board_view.is_board_input_enabled()).is_true()
 
 	get_tree().paused = false
 	game.queue_free()
@@ -435,6 +443,8 @@ func test_account_modal_suppresses_powerup_badges_until_closed() -> void:
 	var undo_badge_panel: Control = game.get_node_or_null("UI/Powerups/Undo/Badge") as Control
 	var prism_badge_panel: Control = game.get_node_or_null("UI/Powerups/RemoveColor/Badge") as Control
 	var hint_badge_panel: Control = game.get_node_or_null("UI/Powerups/Hint/Badge") as Control
+	var board_view: BoardView = game.get_node_or_null("BoardView") as BoardView
+	assert_that(board_view).is_not_null()
 	game.set("_undo_charges", 1)
 	game.set("_remove_color_charges", 1)
 	game.set("_hint_charges", 1)
@@ -450,6 +460,13 @@ func test_account_modal_suppresses_powerup_badges_until_closed() -> void:
 	assert_that(undo_badge_panel.visible).is_false()
 	assert_that(prism_badge_panel.visible).is_false()
 	assert_that(hint_badge_panel.visible).is_false()
+	assert_that(board_view.is_board_input_enabled()).is_false()
+	var modal_snapshot: Array = board_view.capture_snapshot()
+	var modal_cell: Vector2i = _first_playable_cell(board_view)
+	assert_that(modal_cell.x).is_greater_equal(0)
+	_click_board_cell(board_view, modal_cell)
+	await get_tree().process_frame
+	assert_that(board_view.capture_snapshot()).is_equal(modal_snapshot)
 
 	account_modal.queue_free()
 	await get_tree().process_frame
@@ -457,6 +474,7 @@ func test_account_modal_suppresses_powerup_badges_until_closed() -> void:
 	assert_that(undo_badge_panel.visible).is_true()
 	assert_that(prism_badge_panel.visible).is_true()
 	assert_that(hint_badge_panel.visible).is_true()
+	assert_that(board_view.is_board_input_enabled()).is_true()
 
 	game.queue_free()
 
@@ -487,6 +505,13 @@ func _screen_pos_for_cell(board_view: BoardView, cell: Vector2i) -> Vector2:
 		(float(cell.x) + 0.5) * board_view.tile_size,
 		(float(cell.y) + 0.5) * board_view.tile_size
 	))
+
+func _click_board_cell(board_view: BoardView, cell: Vector2i) -> void:
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = _screen_pos_for_cell(board_view, cell)
+	board_view._input(click)
 
 func _highlight_count(overlay: Control) -> int:
 	var count := 0

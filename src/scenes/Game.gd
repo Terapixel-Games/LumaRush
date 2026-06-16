@@ -247,7 +247,7 @@ func _on_pause_pressed() -> void:
 	_hide_tutorial_for_overlay()
 	_clear_board_hint_indicator()
 	_set_prism_selection(false)
-	_update_powerup_buttons()
+	_sync_gameplay_overlay_state()
 	var pause := preload("res://src/scenes/PauseOverlay.tscn").instantiate()
 	_pause_overlay = pause
 	add_child(pause)
@@ -255,17 +255,17 @@ func _on_pause_pressed() -> void:
 	pause.tree_exited.connect(func() -> void:
 		if _pause_overlay == pause:
 			_pause_overlay = null
-			_update_powerup_buttons()
+			_sync_gameplay_overlay_state()
 	)
 	get_tree().paused = true
 	pause.connect("resume", Callable(self, "_on_resume"))
 	pause.connect("quit", Callable(self, "_on_quit"))
 	pause.connect("tutorial_requested", Callable(self, "_on_tutorial_requested"))
-	_update_powerup_buttons()
+	_sync_gameplay_overlay_state()
 
 func _on_resume() -> void:
 	get_tree().paused = false
-	_update_powerup_buttons()
+	_sync_gameplay_overlay_state()
 
 func _on_quit() -> void:
 	_close_audio_overlay()
@@ -600,12 +600,12 @@ func _confirm_open_mode_powerup(powerup_type: String) -> bool:
 		board.set_board_input_enabled(false)
 	_open_tip_modal = modal
 	add_child(modal)
-	_update_powerup_buttons()
+	_sync_gameplay_overlay_state()
 	await modal.tree_exited
 	_open_tip_modal = null
-	_update_powerup_buttons()
+	_sync_gameplay_overlay_state()
 	if board != null and is_instance_valid(board):
-		board.set_board_input_enabled(board_input_was_enabled)
+		board.set_board_input_enabled(board_input_was_enabled and not _gameplay_affordances_blocked())
 	if bool(result.get("do_not_show_again", false)):
 		_on_open_mode_tip_dismissed(true)
 	if bool(result.get("accepted", false)):
@@ -668,7 +668,7 @@ func _on_audio_pressed() -> void:
 		return
 	add_child(overlay)
 	_audio_overlay = overlay
-	_update_powerup_buttons()
+	_sync_gameplay_overlay_state()
 	overlay.setup(_track_names_from_tracks(tracks), _selected_track_index_for_current(tracks))
 	overlay.track_selected.connect(_on_audio_overlay_track_selected)
 	overlay.closed.connect(_on_audio_overlay_closed)
@@ -678,7 +678,7 @@ func _on_audio_overlay_track_selected(_track_name: String, index: int) -> void:
 
 func _on_audio_overlay_closed() -> void:
 	_audio_overlay = null
-	_update_powerup_buttons()
+	_sync_gameplay_overlay_state()
 
 func _close_audio_overlay() -> void:
 	if not is_instance_valid(_audio_overlay):
@@ -686,7 +686,7 @@ func _close_audio_overlay() -> void:
 		return
 	_audio_overlay.queue_free()
 	_audio_overlay = null
-	_update_powerup_buttons()
+	_sync_gameplay_overlay_state()
 
 func _music_tracks() -> Array[Dictionary]:
 	return MusicManager.get_available_tracks()
@@ -1535,12 +1535,18 @@ func _hide_tutorial_for_overlay() -> void:
 	_close_tutorial(false)
 
 func _track_gameplay_overlay_modal(modal: Node) -> void:
-	_update_powerup_buttons()
+	_sync_gameplay_overlay_state()
 	if modal == null:
 		return
 	modal.tree_exited.connect(func() -> void:
-		_update_powerup_buttons()
+		call_deferred("_sync_gameplay_overlay_state")
 	)
+
+func _sync_gameplay_overlay_state() -> void:
+	var blocked := _gameplay_affordances_blocked()
+	if board != null and is_instance_valid(board):
+		board.set_board_input_enabled(not blocked)
+	_update_powerup_buttons()
 
 func _gameplay_affordances_blocked() -> bool:
 	if get_tree().paused:
