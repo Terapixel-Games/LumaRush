@@ -207,7 +207,6 @@ func _on_match_made(group: Array) -> void:
 	_update_score()
 	_update_pressure_hud()
 	UiFx.pop(score_value_label, 1.04, 0.14)
-	_show_score_burst(gained)
 	_show_combo_escalation()
 	_kick_screen_shake(min(11.0, 2.0 + float(group.size()) + (combo * 0.35)))
 	_update_gameplay_mood_from_matches()
