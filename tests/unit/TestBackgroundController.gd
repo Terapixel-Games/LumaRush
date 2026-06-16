@@ -80,17 +80,26 @@ func test_match_burst_survives_pulse_taper_so_particles_can_exit_view() -> void:
 	await get_tree().process_frame
 
 	controller.pulse_starfield(1.4, Color(0.0, 1.0, 0.18, 1.0))
-	await get_tree().create_timer(FeatureFlags.starfield_match_pulse_seconds() * 2.4).timeout
-
 	var boost_particles: GPUParticles2D = controller.get_node_or_null("BoostParticles") as GPUParticles2D
 	var boost_streak_particles: GPUParticles2D = controller.get_node_or_null("BoostStreakParticles") as GPUParticles2D
 	var boost_long_streak_particles: GPUParticles2D = controller.get_node_or_null("BoostLongStreakParticles") as GPUParticles2D
 	assert_that(boost_particles).is_not_null()
 	assert_that(boost_streak_particles).is_not_null()
 	assert_that(boost_long_streak_particles).is_not_null()
+	var burst_particle_amount: int = boost_particles.amount
+	var burst_streak_amount: int = boost_streak_particles.amount
+	var burst_long_streak_amount: int = boost_long_streak_particles.amount
+	await get_tree().create_timer(FeatureFlags.starfield_match_pulse_seconds() * 2.4).timeout
+
 	assert_that(boost_particles.emitting).is_true()
 	assert_that(boost_streak_particles.emitting).is_true()
 	assert_that(boost_long_streak_particles.emitting).is_true()
+	assert_that(boost_particles.amount).is_equal(burst_particle_amount)
+	assert_that(boost_streak_particles.amount).is_equal(burst_streak_amount)
+	assert_that(boost_long_streak_particles.amount).is_equal(burst_long_streak_amount)
+	assert_that(boost_particles.amount).is_greater(1000)
+	assert_that(boost_streak_particles.amount).is_greater(300)
+	assert_that(boost_long_streak_particles.amount).is_greater(100)
 	assert_that(boost_streak_particles.lifetime).is_greater(FeatureFlags.starfield_match_pulse_seconds() * 6.0)
 	assert_that(boost_long_streak_particles.lifetime).is_greater(FeatureFlags.starfield_match_pulse_seconds() * 6.0)
 	controller.queue_free()

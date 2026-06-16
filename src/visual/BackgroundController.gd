@@ -43,6 +43,9 @@ var _base_point_color: Color = Color(1, 1, 1, 1)
 var _base_streak_color: Color = Color(1, 1, 1, 1)
 var _boost_point_color: Color = Color(1, 1, 1, 1)
 var _boost_streak_color: Color = Color(1, 1, 1, 1)
+var _boost_density_mul: float = 1.0
+var _boost_speed_mul: float = 1.0
+var _boost_brightness_mul: float = 1.0
 var _viewport_size: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
@@ -181,6 +184,9 @@ func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0,
 	_match_density_mul = 1.0 + ((FeatureFlags.starfield_match_pulse_density_mult() - 1.0) * hit)
 	_match_speed_mul = 1.0 + ((FeatureFlags.starfield_match_pulse_speed_mult() - 1.0) * hit)
 	_match_brightness_mul = 1.0 + ((FeatureFlags.starfield_match_pulse_brightness_mult() - 1.0) * hit)
+	_boost_density_mul = _match_density_mul
+	_boost_speed_mul = _match_speed_mul
+	_boost_brightness_mul = _match_brightness_mul
 	_apply_match_boost_color(match_color)
 	_update_starfield_runtime()
 	_pulse_tween = create_tween()
@@ -443,30 +449,30 @@ func _prepare_boost_process_material(material: ParticleProcessMaterial, streak: 
 func _update_boost_emitters() -> void:
 	if _boost_particles == null or _boost_streak_particles == null or _boost_long_streak_particles == null:
 		return
-	var extra_density: float = max(0.0, _match_density_mul - 1.0)
+	var extra_density: float = max(0.0, _boost_density_mul - 1.0)
 	_boost_particles.amount = max(1, int(round(720.0 * _star_density * extra_density)))
 	_boost_streak_particles.amount = max(1, int(round(260.0 * _star_density * extra_density)))
 	_boost_long_streak_particles.amount = max(1, int(round(96.0 * _star_density * extra_density)))
-	_boost_particles.speed_scale = _star_speed * _match_speed_mul
-	_boost_streak_particles.speed_scale = _star_speed * _match_speed_mul
-	_boost_long_streak_particles.speed_scale = _star_speed * _match_speed_mul
+	_boost_particles.speed_scale = _star_speed * _boost_speed_mul
+	_boost_streak_particles.speed_scale = _star_speed * _boost_speed_mul
+	_boost_long_streak_particles.speed_scale = _star_speed * _boost_speed_mul
 	_boost_particles.modulate = Color(
 		_boost_point_color.r,
 		_boost_point_color.g,
 		_boost_point_color.b,
-		min(1.0, 1.35 * _star_brightness * _match_brightness_mul)
+		min(1.0, 1.35 * _star_brightness * _boost_brightness_mul)
 	)
 	_boost_streak_particles.modulate = Color(
 		_boost_streak_color.r,
 		_boost_streak_color.g,
 		_boost_streak_color.b,
-		min(1.0, 1.55 * _star_brightness * _match_brightness_mul)
+		min(1.0, 1.55 * _star_brightness * _boost_brightness_mul)
 	)
 	_boost_long_streak_particles.modulate = Color(
 		_boost_streak_color.r,
 		_boost_streak_color.g,
 		_boost_streak_color.b,
-		min(1.0, 1.45 * _star_brightness * _match_brightness_mul)
+		min(1.0, 1.45 * _star_brightness * _boost_brightness_mul)
 	)
 	_apply_boost_material_color(_boost_particles, _boost_point_color, 0.96)
 	_apply_boost_material_color(_boost_streak_particles, _boost_streak_color, 1.0)
