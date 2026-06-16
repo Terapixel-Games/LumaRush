@@ -25,6 +25,8 @@ func test_remove_color_and_undo_restore_board() -> void:
 	game._on_remove_color_pressed()
 	assert_that(prism_badge.text).is_equal("Tap Color")
 	await game._on_prism_color_selected(0)
+	var powerup_flash: ColorRect = game.get_node("UI/PowerupFlash") as ColorRect
+	assert_that(powerup_flash.visible).is_false()
 	for _i in range(90):
 		await get_tree().process_frame
 		if prism_badge.text != "Tap Color":

@@ -205,18 +205,10 @@ func apply_remove_color_powerup(color_idx: int = -1) -> Dictionary:
 		return {"removed": 0, "color_idx": -1}
 	_animating = true
 	_clear_hint()
-	VFXManager.play_prism_clear(removed_cells, tile_size, global_position, target_color)
-	var fade: Tween = create_tween()
-	fade.set_parallel(true)
-	for p in removed_cells:
-		var tile: ColorRect = tiles[p.y][p.x]
-		fade.tween_property(tile, "scale", Vector2(1.25, 1.25), 0.14)
-		fade.tween_property(tile, "modulate:a", 0.0, 0.18)
-	await fade.finished
+	var snapshot: Array = board.grid.duplicate(true)
 	var removed: int = board.remove_color(target_color, _palette_size())
 	_normalize_board_color_ids()
-	_rebuild_tiles_from_grid()
-	await _animate_powerup_release()
+	await _animate_resolution(removed_cells, snapshot)
 	_check_no_moves_and_emit()
 	_animating = false
 	return {"removed": removed, "color_idx": target_color}

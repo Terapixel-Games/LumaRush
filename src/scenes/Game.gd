@@ -368,7 +368,6 @@ func _on_prism_color_selected(color_idx: int) -> void:
 	_update_gameplay_mood_from_matches(0.3)
 	_update_powerup_buttons()
 	MusicManager.on_match_made()
-	_play_powerup_juice(Color(1.0, 0.92, 0.7, FeatureFlags.powerup_flash_alpha()))
 
 func _on_hint_pressed() -> void:
 	if _prism_selecting:
