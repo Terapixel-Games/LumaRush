@@ -85,6 +85,7 @@ var _combo_pod_label: Label
 var _rival_pod_label: Label
 var _combo_drain_ring: HudDrainRing
 var _combo_warning_tween: Tween
+var _pending_match_undo_state: Dictionary = {}
 const COMBO_BREAK_TIMEOUT_SECONDS: float = 1.8
 
 const ICON_UNDO: Texture2D = preload("res://assets/ui/icons/atlas/powerup_undo.tres")
@@ -210,10 +211,18 @@ func _process(delta: float) -> void:
 	if board:
 		board.position = _board_position_for_scale(board.scale, jitter)
 
-func _on_match_made(group: Array) -> void:
+func _on_match_made(_group: Array) -> void:
+	if _tutorial_overlay and is_instance_valid(_tutorial_overlay) and _tutorial_step <= 1:
+		_advance_tutorial_step()
+
+func _on_match_feedback(group: Array, center_global: Vector2, color_idx: int = -1) -> void:
+	_pending_match_undo_state = {
+		"score": score,
+		"combo": combo,
+	}
 	combo += 1
 	_arm_combo_timeout()
-	var gained := group.size() * 10 * combo
+	var gained: int = group.size() * 10 * combo
 	score += gained
 	_update_score()
 	_update_pressure_hud()
@@ -223,22 +232,22 @@ func _on_match_made(group: Array) -> void:
 	_update_gameplay_mood_from_matches()
 	BackgroundMood.reset_starfield_emission_taper()
 	_play_feedback_tier(group.size())
-	if _tutorial_overlay and is_instance_valid(_tutorial_overlay) and _tutorial_step <= 1:
-		_advance_tutorial_step()
-
-func _on_match_feedback(group: Array, center_global: Vector2, color_idx: int = -1) -> void:
-	var next_combo: int = combo + 1
-	var gained: int = group.size() * 10 * next_combo
-	var intensity: float = _match_feedback_intensity(group.size(), next_combo)
+	var intensity: float = _match_feedback_intensity(group.size(), combo)
 	var match_color := Color(0, 0, 0, 0)
 	if board != null and color_idx >= 0:
 		match_color = board.tile_color_for_index(color_idx)
-	_show_match_center_score(center_global, gained, next_combo, group.size(), intensity, match_color)
+	_show_match_center_score(center_global, gained, combo, group.size(), intensity, match_color)
 	BackgroundMood.pulse_starfield(intensity, match_color)
 	_pulse_match_chrome(intensity)
 
 func _on_move_committed(_group: Array, snapshot: Array) -> void:
-	_push_undo(snapshot, score, combo)
+	var undo_score: int = score
+	var undo_combo: int = combo
+	if not _pending_match_undo_state.is_empty():
+		undo_score = int(_pending_match_undo_state.get("score", score))
+		undo_combo = int(_pending_match_undo_state.get("combo", combo))
+		_pending_match_undo_state.clear()
+	_push_undo(snapshot, undo_score, undo_combo)
 
 func _on_non_match_tapped(_cell: Vector2i) -> void:
 	_break_combo()

@@ -11,8 +11,12 @@ func test_normal_match_shows_single_score_popup() -> void:
 	var ui: Control = game.get_node("UI") as Control
 	var group: Array = [Vector2i.ZERO, Vector2i.RIGHT, Vector2i(2, 0)]
 	game.call("_on_match_feedback", group, Vector2(320.0, 360.0), 0)
+	assert_that(game.get("combo")).is_equal(1)
+	assert_that(game.get("score")).is_equal(30)
 	game.call("_on_match_made", group)
 	await get_tree().process_frame
+	assert_that(game.get("combo")).is_equal(1)
+	assert_that(game.get("score")).is_equal(30)
 
 	var score_burst: Label = ui.get_node_or_null("ScoreBurst") as Label
 	assert_that(score_burst).is_not_null()
@@ -32,6 +36,8 @@ func test_chain_match_score_uses_burst_badge_ribbon() -> void:
 	game.set("combo", 2)
 	game.call("_on_match_feedback", group, Vector2(320.0, 360.0), 0)
 	await get_tree().process_frame
+	assert_that(game.get("combo")).is_equal(3)
+	assert_that(game.get("score")).is_equal(90)
 
 	assert_that(_count_match_score_bursts(ui)).is_equal(1)
 	var burst: Control = _first_match_score_burst(ui)
@@ -49,6 +55,8 @@ func test_big_clear_match_score_uses_burst_badge_ribbon() -> void:
 	var group: Array = [Vector2i.ZERO, Vector2i.RIGHT, Vector2i(2, 0), Vector2i(3, 0), Vector2i(4, 0)]
 	game.call("_on_match_feedback", group, Vector2(320.0, 360.0), 0)
 	await get_tree().process_frame
+	assert_that(game.get("combo")).is_equal(1)
+	assert_that(game.get("score")).is_equal(50)
 
 	assert_that(_count_match_score_bursts(ui)).is_equal(1)
 	var burst: Control = _first_match_score_burst(ui)

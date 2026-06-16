@@ -221,6 +221,58 @@ func test_board_input_can_be_disabled() -> void:
 	assert_that(view.is_board_input_enabled()).is_true()
 	view.queue_free()
 
+func test_click_during_match_animation_replays_after_settle() -> void:
+	ProjectSettings.set_setting("lumarush/min_match_size", 3)
+	var view := BoardView.new()
+	view.width = 6
+	view.height = 4
+	view.colors = 5
+	view.tile_size = 16.0
+	get_tree().root.add_child(view)
+	view.board.grid = [
+		[0, 0, 0, 1, 2, 3],
+		[1, 2, 3, 0, 1, 2],
+		[2, 3, 1, 1, 2, 3],
+		[3, 4, 2, 4, 4, 4],
+	]
+	view._refresh_tiles()
+	var feedback_count: Array[int] = [0]
+	view.connect("match_feedback", func(_group: Array, _center: Vector2, _color_idx: int) -> void:
+		feedback_count[0] += 1
+	)
+
+	view._input(_make_mouse_click(Vector2(8.0, 8.0)))
+	assert_that(feedback_count[0]).is_equal(1)
+	view._input(_make_mouse_click(Vector2(16.0 * 3.0 + 8.0, 16.0 * 3.0 + 8.0)))
+
+	await get_tree().create_timer(1.4).timeout
+	assert_that(feedback_count[0]).is_equal(2)
+	assert_that(view.get("_queued_click_pending")).is_false()
+	view.queue_free()
+
+func test_disabling_board_input_clears_queued_animation_click() -> void:
+	ProjectSettings.set_setting("lumarush/min_match_size", 3)
+	var view := BoardView.new()
+	view.width = 3
+	view.height = 3
+	view.colors = 3
+	view.tile_size = 16.0
+	get_tree().root.add_child(view)
+	view.board.grid = [
+		[0, 0, 0],
+		[1, 2, 1],
+		[2, 1, 2],
+	]
+	view._refresh_tiles()
+	view.set("_animating", true)
+	view.set("_queue_clicks_after_animation", true)
+	view._input(_make_mouse_click(Vector2(8.0, 8.0)))
+	assert_that(view.get("_queued_click_pending")).is_true()
+
+	view.set_board_input_enabled(false)
+	assert_that(view.get("_queued_click_pending")).is_false()
+	view.queue_free()
+
 func test_legacy_tile_design_uses_squarer_shader_profile() -> void:
 	ProjectSettings.set_setting("lumarush/tile_design_mode", FeatureFlags.TileDesignMode.LEGACY)
 	var view := BoardView.new()
@@ -325,3 +377,10 @@ func _contrast_ratio(a: Color, b: Color) -> float:
 	var high: float = max(_relative_luminance(a), _relative_luminance(b))
 	var low: float = min(_relative_luminance(a), _relative_luminance(b))
 	return (high + 0.05) / (low + 0.05)
+
+func _make_mouse_click(position: Vector2) -> InputEventMouseButton:
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = position
+	return click

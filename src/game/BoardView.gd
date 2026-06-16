@@ -42,6 +42,9 @@ var _tile_gap_px: float = 8.0
 var _prism_pick_mode: bool = false
 var _theme_tile_palette: Array = []
 var _board_input_enabled: bool = true
+var _queued_click_pending: bool = false
+var _queued_click_position: Vector2 = Vector2.ZERO
+var _queue_clicks_after_animation: bool = false
 
 func _ready() -> void:
 	_tile_gap_px = _gap_for_tile_size(tile_size)
@@ -92,6 +95,8 @@ func has_active_hint_indicator() -> bool:
 
 func set_board_input_enabled(enabled: bool) -> void:
 	_board_input_enabled = enabled
+	if not _board_input_enabled:
+		_clear_queued_click()
 	set_process_input(enabled)
 
 func is_board_input_enabled() -> bool:
@@ -119,12 +124,48 @@ func _create_tiles() -> void:
 func _input(event: InputEvent) -> void:
 	if not _board_input_enabled:
 		return
-	if _animating:
+	var click_position: Variant = _click_position_from_event(event)
+	if click_position == null:
 		return
+	if _animating:
+		if _queue_clicks_after_animation:
+			_queue_click(click_position)
+		return
+	_handle_click(click_position)
+
+func _click_position_from_event(event: InputEvent) -> Variant:
 	if event is InputEventScreenTouch and event.pressed:
-		_handle_click(event.position)
+		return event.position
 	if event is InputEventMouseButton and event.pressed:
-		_handle_click(event.position)
+		return event.position
+	return null
+
+func _queue_click(pos: Vector2) -> void:
+	if _prism_pick_mode:
+		return
+	var cell: Vector2i = _cell_from_screen_pos(pos)
+	if cell.x < 0 or cell.x >= width or cell.y < 0 or cell.y >= height:
+		return
+	_queued_click_position = pos
+	_queued_click_pending = true
+
+func _clear_queued_click() -> void:
+	_queued_click_pending = false
+	_queued_click_position = Vector2.ZERO
+
+func _replay_queued_click() -> void:
+	if not _queued_click_pending:
+		return
+	var pos: Vector2 = _queued_click_position
+	_clear_queued_click()
+	if not _board_input_enabled or _prism_pick_mode or _animating:
+		return
+	call_deferred("_handle_queued_click", pos)
+
+func _handle_queued_click(pos: Vector2) -> void:
+	if not _board_input_enabled or _prism_pick_mode or _animating:
+		return
+	_handle_click(pos)
 
 func _handle_click(pos: Vector2) -> void:
 	var cell: Vector2i = _cell_from_screen_pos(pos)
@@ -148,6 +189,7 @@ func _handle_click(pos: Vector2) -> void:
 	var match_color_idx: int = posmod(int(board.grid[y][x]), _palette_size())
 	_trigger_match_click_haptic()
 	_animating = true
+	_queue_clicks_after_animation = true
 	var snapshot := board.grid.duplicate(true)
 	var resolved := board.resolve_move(Vector2i(x, y))
 	if resolved.size() >= _min_match_size:
@@ -161,6 +203,8 @@ func _handle_click(pos: Vector2) -> void:
 		emit_signal("match_made", group)
 		_check_no_moves_and_emit()
 	_animating = false
+	_queue_clicks_after_animation = false
+	_replay_queued_click()
 
 func _cell_from_screen_pos(screen_pos: Vector2) -> Vector2i:
 	# Convert viewport/screen point to this CanvasItem's local coordinates using
@@ -204,6 +248,8 @@ func apply_remove_color_powerup(color_idx: int = -1) -> Dictionary:
 	if removed_cells.is_empty():
 		return {"removed": 0, "color_idx": -1}
 	_animating = true
+	_queue_clicks_after_animation = false
+	_clear_queued_click()
 	_clear_hint()
 	var snapshot: Array = board.grid.duplicate(true)
 	var removed: int = board.remove_color(target_color, _palette_size())
