@@ -68,6 +68,14 @@ layout_mode = 1
 size_flags_horizontal = 3
 text = "Don't show this again"
 
+[node name="Cancel" type="Button" parent="Center/Panel/VBox"]
+visible = false
+layout_mode = 1
+size_flags_horizontal = 3
+mouse_filter = 0
+text = "Cancel"
+custom_minimum_size = Vector2(0, 64)
+
 [node name="Confirm" type="Button" parent="Center/Panel/VBox"]
 layout_mode = 1
 size_flags_horizontal = 3
@@ -76,4 +84,5 @@ text = "Got it"
 custom_minimum_size = Vector2(0, 64)
 
 [connection signal="gui_input" from="Dim" to="." method="_on_dim_gui_input"]
+[connection signal="pressed" from="Center/Panel/VBox/Cancel" to="." method="_on_cancel_pressed"]
 [connection signal="pressed" from="Center/Panel/VBox/Confirm" to="." method="_on_confirm_pressed"]

@@ -299,6 +299,7 @@ func style_tutorial_tip(scene: Control) -> void:
 	if message:
 		message.add_theme_constant_override("line_spacing", max(6, int(round(8.0 * scale_factor()))))
 	style_button(scene.get_node_or_null("Center/Panel/VBox/Confirm"), 26.0, WEIGHT_BOLD)
+	style_button(scene.get_node_or_null("Center/Panel/VBox/Cancel"), 24.0, WEIGHT_SEMIBOLD)
 	var toggle := scene.get_node_or_null("Center/Panel/VBox/DoNotShow")
 	if toggle and toggle is BaseButton:
 		style_button(toggle as BaseButton, 22.0, WEIGHT_MEDIUM)

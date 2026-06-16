@@ -156,13 +156,17 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	await get_tree().process_frame
 	await get_tree().process_frame
 
-	game.call("_record_powerup_use", "hint")
-	await get_tree().process_frame
+	var starting_hints := int(game.get("_hint_charges"))
+	assert_that(starting_hints).is_greater(0)
+	game.call("_on_hint_pressed")
+	for i in range(3):
+		await get_tree().process_frame
 	var modal: Control = game.get_node_or_null("TutorialTipModal") as Control
 	assert_that(modal).is_not_null()
 	var title: Label = modal.get_node_or_null("Center/Panel/VBox/Title") as Label
 	var message: Label = modal.get_node_or_null("Center/Panel/VBox/Message") as Label
 	var confirm: Button = modal.get_node_or_null("Center/Panel/VBox/Confirm") as Button
+	var cancel: Button = modal.get_node_or_null("Center/Panel/VBox/Cancel") as Button
 	var panel: Control = modal.get_node_or_null("Center/Panel") as Control
 	var icon_cluster: Control = modal.get_node_or_null("Center/IconCluster") as Control
 	var target_highlight: Control = modal.get_node_or_null("Center/TargetHighlight") as Control
@@ -176,9 +180,14 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	assert_that(message.text).contains("Open run")
 	assert_that(message.text).contains("Pure scores stay separate")
 	assert_that(confirm.text).is_equal("Use Power-Up")
+	assert_that(cancel.text).is_equal("Cancel")
+	assert_that(cancel.visible).is_true()
+	assert_that(game.get("_current_mode")).is_equal("PURE")
+	assert_that(int(game.get("_hint_charges"))).is_equal(starting_hints)
 	assert_that(title.get_theme_font("font")).is_equal(Typography.interface_font(Typography.WEIGHT_BOLD))
 	assert_that(message.get_theme_font("font")).is_equal(Typography.body_font(Typography.WEIGHT_REGULAR))
 	assert_that(confirm.get_theme_font("font")).is_equal(Typography.interface_font(Typography.WEIGHT_BOLD))
+	assert_that(cancel.get_theme_font("font")).is_equal(Typography.interface_font(Typography.WEIGHT_SEMIBOLD))
 	assert_that(panel).is_not_null()
 	assert_that(icon_cluster).is_not_null()
 	assert_that(target_highlight).is_not_null()
@@ -196,6 +205,7 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	var message_rect: Rect2 = message.get_global_rect()
 	var checkbox_rect: Rect2 = checkbox.get_global_rect()
 	var confirm_rect: Rect2 = confirm.get_global_rect()
+	var cancel_rect: Rect2 = cancel.get_global_rect()
 	var icon_rect: Rect2 = icon_cluster.get_global_rect()
 	var target_rect: Rect2 = target_highlight.get_global_rect()
 	var board_rect := Rect2(
@@ -207,6 +217,7 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	_assert_rect_inside(message_rect, panel_rect)
 	_assert_rect_inside(checkbox_rect, panel_rect)
 	_assert_rect_inside(confirm_rect, panel_rect)
+	_assert_rect_inside(cancel_rect, panel_rect)
 	assert_that(message_rect.position.y).is_greater(title_rect.position.y)
 	assert_that(message_rect.position.y - title_rect.end.y).is_greater_equal(24.0)
 	assert_that(title_rect.position.x).is_greater_equal(icon_rect.end.x + 70.0)
@@ -214,12 +225,15 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	assert_that(message_rect.size.x).is_greater_equal(560.0)
 	assert_that(message.get_theme_constant("line_spacing")).is_greater_equal(6)
 	assert_that(checkbox_rect.position.x).is_less(message_rect.position.x)
-	assert_that(confirm_rect.position.x).is_greater(checkbox_rect.end.x)
+	assert_that(cancel_rect.position.x).is_greater(checkbox_rect.end.x)
+	assert_that(confirm_rect.position.x).is_greater(cancel_rect.end.x)
 	assert_that(message_rect.end.y).is_less_equal(checkbox_rect.position.y - 32.0)
 	assert_that(checkbox_rect.position.y).is_greater_equal(icon_rect.end.y + 8.0)
 	assert_that(panel_rect.end.y - checkbox_rect.end.y).is_greater_equal(40.0)
+	assert_that(panel_rect.end.y - cancel_rect.end.y).is_greater_equal(40.0)
 	assert_that(panel_rect.end.y - confirm_rect.end.y).is_greater_equal(40.0)
 	assert_that(absf(confirm_rect.get_center().y - checkbox_rect.get_center().y)).is_less_equal(16.0)
+	assert_that(absf(cancel_rect.get_center().y - checkbox_rect.get_center().y)).is_less_equal(16.0)
 	assert_that(panel_rect.intersects(target_rect)).is_false()
 	assert_that(target_rect.intersects(hint_rect)).is_true()
 	assert_that(absf(panel_rect.get_center().x - board_rect.get_center().x)).is_less_equal(2.0)
@@ -227,6 +241,12 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	assert_that(panel_rect.position.y).is_less(board_rect.end.y)
 	assert_that(absf(pointer_outer.polygon[2].x - target_rect.get_center().x)).is_less_equal(2.0)
 
+	cancel.pressed.emit()
+	await get_tree().process_frame
+	assert_that(game.get_node_or_null("TutorialTipModal")).is_null()
+	assert_that(game.get("_current_mode")).is_equal("PURE")
+	assert_that(int(game.get("_hint_charges"))).is_equal(starting_hints)
+	assert_that(int(game.get("_run_powerups_used_total"))).is_equal(0)
 	game.call("_on_open_mode_tip_dismissed", true)
 	assert_that(SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)).is_false()
 	game.call("_on_tutorial_requested")

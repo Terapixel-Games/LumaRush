@@ -1,10 +1,13 @@
 extends Control
 
 signal dismissed(do_not_show_again: bool)
+signal confirmed(do_not_show_again: bool)
+signal canceled(do_not_show_again: bool)
 
 @onready var title_label: Label = $Center/Panel/VBox/Title
 @onready var message_label: Label = $Center/Panel/VBox/Message
 @onready var confirm_button: Button = $Center/Panel/VBox/Confirm
+@onready var cancel_button: Button = $Center/Panel/VBox/Cancel
 @onready var do_not_show_toggle: CheckButton = $Center/Panel/VBox/DoNotShow
 @onready var center_layer: Control = $Center
 @onready var panel: Panel = $Center/Panel
@@ -46,7 +49,7 @@ func _notification(what: int) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_emit_and_close()
+		_cancel_and_close()
 		get_viewport().set_input_as_handled()
 
 func configure(config: Dictionary) -> void:
@@ -64,6 +67,9 @@ func _apply_config(config: Dictionary) -> void:
 		message_label.text = str(config.get("message", ""))
 	if confirm_button:
 		confirm_button.text = str(config.get("confirm_text", "Got it"))
+	if cancel_button:
+		cancel_button.text = str(config.get("cancel_text", "Cancel"))
+		cancel_button.visible = bool(config.get("show_cancel", false))
 	if do_not_show_toggle:
 		do_not_show_toggle.text = str(config.get("checkbox_text", "Don't show this again"))
 		do_not_show_toggle.visible = bool(config.get("show_checkbox", true))
@@ -72,19 +78,35 @@ func _apply_config(config: Dictionary) -> void:
 	_layout_tip()
 
 func _on_confirm_pressed() -> void:
-	_emit_and_close()
+	_confirm_and_close()
+
+func _on_cancel_pressed() -> void:
+	_cancel_and_close()
 
 func _on_dim_gui_input(event: InputEvent) -> void:
 	var click: bool = event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT
 	var touch: bool = event is InputEventScreenTouch and event.pressed
 	if click or touch:
-		_emit_and_close()
+		_cancel_and_close()
 
 func _emit_and_close() -> void:
+	_confirm_and_close()
+
+func _confirm_and_close() -> void:
+	_close_with_result(true)
+
+func _cancel_and_close() -> void:
+	_close_with_result(false)
+
+func _close_with_result(accepted: bool) -> void:
 	_stop_motion()
 	var do_not_show_again := false
 	if do_not_show_toggle and do_not_show_toggle.visible:
 		do_not_show_again = do_not_show_toggle.button_pressed
+	if accepted:
+		confirmed.emit(do_not_show_again)
+	else:
+		canceled.emit(do_not_show_again)
 	dismissed.emit(do_not_show_again)
 	queue_free()
 
@@ -123,6 +145,17 @@ func _style_controls() -> void:
 		confirm_button.add_theme_stylebox_override("normal", _button_style(Color(1.0, 0.78, 0.22, 1.0), Color(1.0, 0.91, 0.44, 1.0)))
 		confirm_button.add_theme_stylebox_override("hover", _button_style(Color(1.0, 0.86, 0.30, 1.0), Color(1.0, 0.98, 0.60, 1.0)))
 		confirm_button.add_theme_stylebox_override("pressed", _button_style(Color(0.86, 0.55, 0.10, 1.0), Color(1.0, 0.78, 0.20, 1.0)))
+	if cancel_button:
+		cancel_button.focus_mode = Control.FOCUS_NONE
+		cancel_button.clip_text = false
+		cancel_button.add_theme_color_override("font_color", Color(0.88, 0.96, 1.0, 1.0))
+		cancel_button.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0, 1.0))
+		cancel_button.add_theme_color_override("font_pressed_color", Color(0.78, 0.88, 0.96, 1.0))
+		cancel_button.add_theme_color_override("font_outline_color", Color(0.0, 0.02, 0.06, 0.95))
+		cancel_button.add_theme_constant_override("outline_size", 2)
+		cancel_button.add_theme_stylebox_override("normal", _button_style(Color(0.025, 0.055, 0.105, 0.96), Color(0.38, 0.74, 0.96, 0.64)))
+		cancel_button.add_theme_stylebox_override("hover", _button_style(Color(0.035, 0.085, 0.155, 1.0), Color(0.72, 0.94, 1.0, 0.86)))
+		cancel_button.add_theme_stylebox_override("pressed", _button_style(Color(0.015, 0.035, 0.075, 1.0), Color(0.34, 0.72, 0.94, 0.74)))
 
 func _build_effect_nodes() -> void:
 	if panel == null or center_layer == null:
@@ -226,6 +259,11 @@ func _layout_desktop_content(panel_size: Vector2) -> void:
 		confirm_button.position = Vector2(panel_size.x - side_margin - 308.0, panel_size.y - bottom_margin - 60.0)
 		confirm_button.size = Vector2(308.0, 60.0)
 		confirm_button.pivot_offset = confirm_button.size * 0.5
+	if cancel_button:
+		cancel_button.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		cancel_button.position = Vector2(panel_size.x - side_margin - 308.0 - 18.0 - 208.0, panel_size.y - bottom_margin - 60.0)
+		cancel_button.size = Vector2(208.0, 60.0)
+		cancel_button.pivot_offset = cancel_button.size * 0.5
 
 func _layout_mobile_content(panel_size: Vector2) -> void:
 	if title_label:
@@ -242,9 +280,21 @@ func _layout_mobile_content(panel_size: Vector2) -> void:
 		do_not_show_toggle.size = Vector2(panel_size.x - 48.0, 48.0)
 	if confirm_button:
 		confirm_button.set_anchors_preset(Control.PRESET_TOP_LEFT)
-		confirm_button.position = Vector2(24.0, panel_size.y - 68.0)
-		confirm_button.size = Vector2(panel_size.x - 48.0, 54.0)
+		var button_y := panel_size.y - 68.0
+		if cancel_button and cancel_button.visible:
+			var button_gap := 12.0
+			var cancel_width := clamp((panel_size.x - 60.0) * 0.36, 112.0, 148.0)
+			confirm_button.position = Vector2(24.0 + cancel_width + button_gap, button_y)
+			confirm_button.size = Vector2(panel_size.x - 48.0 - cancel_width - button_gap, 54.0)
+		else:
+			confirm_button.position = Vector2(24.0, button_y)
+			confirm_button.size = Vector2(panel_size.x - 48.0, 54.0)
 		confirm_button.pivot_offset = confirm_button.size * 0.5
+	if cancel_button:
+		cancel_button.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		cancel_button.position = Vector2(24.0, panel_size.y - 68.0)
+		cancel_button.size = Vector2(clamp((panel_size.x - 60.0) * 0.36, 112.0, 148.0), 54.0)
+		cancel_button.pivot_offset = cancel_button.size * 0.5
 
 func _layout_pointer(panel_position: Vector2, panel_size: Vector2) -> void:
 	if _pointer_outer == null or _pointer_inner == null:

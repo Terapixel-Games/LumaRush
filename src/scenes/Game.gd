@@ -44,6 +44,7 @@ var _powerup_usage := {"undo": 0, "prism": 0, "hint": 0}
 var _run_powerups_used_total: int = 0
 var _run_coins_spent: int = 0
 var _open_tip_shown_this_run: bool = false
+var _open_tip_modal: Control
 var _audio_overlay
 var _current_mode: String = "PURE"
 var _combo_label: Label
@@ -281,6 +282,9 @@ func _on_undo_pressed() -> void:
 		return
 	if _ending_transition_started:
 		return
+	var open_confirmed: bool = await _confirm_open_mode_powerup("undo")
+	if not open_confirmed:
+		return
 	var state: Dictionary = _undo_stack.pop_back()
 	board.restore_snapshot(state["grid"] as Array)
 	score = int(state["score"])
@@ -309,6 +313,9 @@ func _on_remove_color_pressed() -> void:
 			_request_powerup_refill("prism")
 			return
 	if _ending_transition_started:
+		return
+	var open_confirmed: bool = await _confirm_open_mode_powerup("prism")
+	if not open_confirmed:
 		return
 	_set_prism_selection(true)
 	_update_powerup_buttons()
@@ -352,6 +359,9 @@ func _on_hint_pressed() -> void:
 			_request_powerup_refill("hint")
 			return
 	if _ending_transition_started:
+		return
+	var open_confirmed: bool = await _confirm_open_mode_powerup("hint")
+	if not open_confirmed:
 		return
 	var changed: bool = await board.apply_hint_powerup()
 	if not changed:
@@ -505,15 +515,17 @@ func _record_powerup_use(powerup_type: String) -> void:
 	_run_powerups_used_total += 1
 	_current_mode = "OPEN"
 	Telemetry.mark_powerup_used(powerup_type, "OPEN", _remaining_powerup_charges(powerup_type))
-	_maybe_show_open_mode_tip(powerup_type)
 
-func _maybe_show_open_mode_tip(powerup_type: String) -> void:
+func _confirm_open_mode_powerup(powerup_type: String) -> bool:
+	if _current_mode == "OPEN":
+		return true
 	if _open_tip_shown_this_run:
-		return
+		return true
 	if not SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true):
 		_open_tip_shown_this_run = true
-		return
-	_open_tip_shown_this_run = true
+		return true
+	if _open_tip_modal != null and is_instance_valid(_open_tip_modal):
+		return false
 	_hide_tutorial_for_overlay()
 	var modal := TUTORIAL_TIP_SCENE.instantiate()
 	if modal.has_method("configure"):
@@ -521,6 +533,8 @@ func _maybe_show_open_mode_tip(powerup_type: String) -> void:
 			"title": "Open Run",
 			"message": "Power-ups start an Open run.\nPure scores stay separate.",
 			"confirm_text": "Use Power-Up",
+			"cancel_text": "Cancel",
+			"show_cancel": true,
 			"checkbox_text": "Don't show again",
 			"show_checkbox": true,
 			"icon_texture": _powerup_icon_for_type(powerup_type),
@@ -528,9 +542,30 @@ func _maybe_show_open_mode_tip(powerup_type: String) -> void:
 			"avoid_rect": _board_control_rect(),
 			"bottom_offset": _open_tip_bottom_offset(),
 		})
-	if modal.has_signal("dismissed"):
-		modal.dismissed.connect(_on_open_mode_tip_dismissed)
+	var result := {
+		"accepted": false,
+		"do_not_show_again": false,
+	}
+	if modal.has_signal("confirmed"):
+		modal.confirmed.connect(func(do_not_show_again: bool) -> void:
+			result["accepted"] = true
+			result["do_not_show_again"] = do_not_show_again
+		)
+	if modal.has_signal("canceled"):
+		modal.canceled.connect(func(do_not_show_again: bool) -> void:
+			result["accepted"] = false
+			result["do_not_show_again"] = do_not_show_again
+		)
+	_open_tip_modal = modal
 	add_child(modal)
+	await modal.tree_exited
+	_open_tip_modal = null
+	if bool(result.get("do_not_show_again", false)):
+		_on_open_mode_tip_dismissed(true)
+	if bool(result.get("accepted", false)):
+		_open_tip_shown_this_run = true
+		return true
+	return false
 
 func _on_open_mode_tip_dismissed(do_not_show_again: bool) -> void:
 	if do_not_show_again:
