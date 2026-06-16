@@ -84,6 +84,12 @@ func is_prism_pick_mode() -> bool:
 func tile_color_for_index(idx: int) -> Color:
 	return _color_from_index(idx)
 
+func clear_hint_indicator() -> void:
+	_clear_hint()
+
+func has_active_hint_indicator() -> bool:
+	return not _hint_group.is_empty()
+
 func set_board_input_enabled(enabled: bool) -> void:
 	_board_input_enabled = enabled
 	set_process_input(enabled)

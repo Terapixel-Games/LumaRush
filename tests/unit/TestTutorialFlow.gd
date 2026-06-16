@@ -372,6 +372,94 @@ func test_opening_modal_hides_tutorial_without_marking_seen() -> void:
 
 	game.queue_free()
 
+func test_pause_overlay_suppresses_hint_indicator_and_badges() -> void:
+	SaveStore.set_tutorial_seen(true)
+	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
+	var game: Control = scene.instantiate() as Control
+	assert_that(game).is_not_null()
+	get_tree().root.add_child(game)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var board_view: BoardView = game.get_node_or_null("BoardView") as BoardView
+	var undo_badge_panel: Control = game.get_node_or_null("UI/Powerups/Undo/Badge") as Control
+	var prism_badge_panel: Control = game.get_node_or_null("UI/Powerups/RemoveColor/Badge") as Control
+	var hint_badge_panel: Control = game.get_node_or_null("UI/Powerups/Hint/Badge") as Control
+	assert_that(board_view).is_not_null()
+	assert_that(undo_badge_panel).is_not_null()
+	assert_that(prism_badge_panel).is_not_null()
+	assert_that(hint_badge_panel).is_not_null()
+
+	game.set("_undo_charges", 1)
+	game.set("_remove_color_charges", 1)
+	game.set("_hint_charges", 1)
+	game.call("_update_powerup_buttons")
+	assert_that(undo_badge_panel.visible).is_true()
+	assert_that(prism_badge_panel.visible).is_true()
+	assert_that(hint_badge_panel.visible).is_true()
+
+	var hint_applied: bool = await board_view.apply_hint_powerup()
+	assert_that(hint_applied).is_true()
+	assert_that(board_view.has_active_hint_indicator()).is_true()
+
+	game.call("_on_pause_pressed")
+	await get_tree().process_frame
+	assert_that(game.get_node_or_null("PauseOverlay")).is_not_null()
+	assert_that(board_view.has_active_hint_indicator()).is_false()
+	assert_that(undo_badge_panel.visible).is_false()
+	assert_that(prism_badge_panel.visible).is_false()
+	assert_that(hint_badge_panel.visible).is_false()
+
+	var pause_overlay: Control = game.get_node_or_null("PauseOverlay") as Control
+	game.call("_on_resume")
+	if pause_overlay:
+		pause_overlay.queue_free()
+	await get_tree().process_frame
+	game.call("_update_powerup_buttons")
+	assert_that(undo_badge_panel.visible).is_true()
+	assert_that(prism_badge_panel.visible).is_true()
+	assert_that(hint_badge_panel.visible).is_true()
+
+	get_tree().paused = false
+	game.queue_free()
+
+func test_account_modal_suppresses_powerup_badges_until_closed() -> void:
+	SaveStore.set_tutorial_seen(true)
+	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
+	var game: Control = scene.instantiate() as Control
+	assert_that(game).is_not_null()
+	get_tree().root.add_child(game)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var undo_badge_panel: Control = game.get_node_or_null("UI/Powerups/Undo/Badge") as Control
+	var prism_badge_panel: Control = game.get_node_or_null("UI/Powerups/RemoveColor/Badge") as Control
+	var hint_badge_panel: Control = game.get_node_or_null("UI/Powerups/Hint/Badge") as Control
+	game.set("_undo_charges", 1)
+	game.set("_remove_color_charges", 1)
+	game.set("_hint_charges", 1)
+	game.call("_update_powerup_buttons")
+	assert_that(undo_badge_panel.visible).is_true()
+	assert_that(prism_badge_panel.visible).is_true()
+	assert_that(hint_badge_panel.visible).is_true()
+
+	game.call("_on_account_pressed")
+	await get_tree().process_frame
+	var account_modal: Control = game.get_node_or_null("AccountModal") as Control
+	assert_that(account_modal).is_not_null()
+	assert_that(undo_badge_panel.visible).is_false()
+	assert_that(prism_badge_panel.visible).is_false()
+	assert_that(hint_badge_panel.visible).is_false()
+
+	account_modal.queue_free()
+	await get_tree().process_frame
+	game.call("_update_powerup_buttons")
+	assert_that(undo_badge_panel.visible).is_true()
+	assert_that(prism_badge_panel.visible).is_true()
+	assert_that(hint_badge_panel.visible).is_true()
+
+	game.queue_free()
+
 func test_pause_overlay_can_request_tutorial_reenable() -> void:
 	var scene: PackedScene = load("res://src/scenes/PauseOverlay.tscn") as PackedScene
 	var pause_overlay: Control = scene.instantiate() as Control

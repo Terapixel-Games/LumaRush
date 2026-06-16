@@ -46,6 +46,7 @@ var _run_coins_spent: int = 0
 var _open_tip_shown_this_run: bool = false
 var _open_tip_modal: Control
 var _audio_overlay
+var _pause_overlay: Control
 var _current_mode: String = "PURE"
 var _combo_label: Label
 var _tutorial_overlay: Control
@@ -244,18 +245,27 @@ func _update_score() -> void:
 func _on_pause_pressed() -> void:
 	_close_audio_overlay()
 	_hide_tutorial_for_overlay()
+	_clear_board_hint_indicator()
 	_set_prism_selection(false)
 	_update_powerup_buttons()
 	var pause := preload("res://src/scenes/PauseOverlay.tscn").instantiate()
+	_pause_overlay = pause
 	add_child(pause)
 	pause.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	pause.tree_exited.connect(func() -> void:
+		if _pause_overlay == pause:
+			_pause_overlay = null
+			_update_powerup_buttons()
+	)
 	get_tree().paused = true
 	pause.connect("resume", Callable(self, "_on_resume"))
 	pause.connect("quit", Callable(self, "_on_quit"))
 	pause.connect("tutorial_requested", Callable(self, "_on_tutorial_requested"))
+	_update_powerup_buttons()
 
 func _on_resume() -> void:
 	get_tree().paused = false
+	_update_powerup_buttons()
 
 func _on_quit() -> void:
 	_close_audio_overlay()
@@ -270,11 +280,15 @@ func _on_tutorial_requested() -> void:
 
 func _on_account_pressed() -> void:
 	_hide_tutorial_for_overlay()
-	ModalManager.open_scene(ACCOUNT_MODAL_SCENE, self)
+	_clear_board_hint_indicator()
+	var modal := ModalManager.open_scene(ACCOUNT_MODAL_SCENE, self)
+	_track_gameplay_overlay_modal(modal)
 
 func _on_shop_pressed() -> void:
 	_hide_tutorial_for_overlay()
-	ModalManager.open_scene(SHOP_MODAL_SCENE, self)
+	_clear_board_hint_indicator()
+	var modal := ModalManager.open_scene(SHOP_MODAL_SCENE, self)
+	_track_gameplay_overlay_modal(modal)
 
 func _on_undo_pressed() -> void:
 	if _prism_selecting:
@@ -550,6 +564,7 @@ func _confirm_open_mode_powerup(powerup_type: String) -> bool:
 	if _open_tip_modal != null and is_instance_valid(_open_tip_modal):
 		return false
 	_hide_tutorial_for_overlay()
+	_clear_board_hint_indicator()
 	var modal := TUTORIAL_TIP_SCENE.instantiate()
 	if modal.has_method("configure"):
 		modal.configure({
@@ -585,8 +600,10 @@ func _confirm_open_mode_powerup(powerup_type: String) -> bool:
 		board.set_board_input_enabled(false)
 	_open_tip_modal = modal
 	add_child(modal)
+	_update_powerup_buttons()
 	await modal.tree_exited
 	_open_tip_modal = null
+	_update_powerup_buttons()
 	if board != null and is_instance_valid(board):
 		board.set_board_input_enabled(board_input_was_enabled)
 	if bool(result.get("do_not_show_again", false)):
@@ -645,11 +662,13 @@ func _on_audio_pressed() -> void:
 	if tracks.is_empty():
 		return
 	_hide_tutorial_for_overlay()
+	_clear_board_hint_indicator()
 	var overlay := AUDIO_TRACK_OVERLAY_SCENE.instantiate()
 	if overlay == null:
 		return
 	add_child(overlay)
 	_audio_overlay = overlay
+	_update_powerup_buttons()
 	overlay.setup(_track_names_from_tracks(tracks), _selected_track_index_for_current(tracks))
 	overlay.track_selected.connect(_on_audio_overlay_track_selected)
 	overlay.closed.connect(_on_audio_overlay_closed)
@@ -659,6 +678,7 @@ func _on_audio_overlay_track_selected(_track_name: String, index: int) -> void:
 
 func _on_audio_overlay_closed() -> void:
 	_audio_overlay = null
+	_update_powerup_buttons()
 
 func _close_audio_overlay() -> void:
 	if not is_instance_valid(_audio_overlay):
@@ -666,6 +686,7 @@ func _close_audio_overlay() -> void:
 		return
 	_audio_overlay.queue_free()
 	_audio_overlay = null
+	_update_powerup_buttons()
 
 func _music_tracks() -> Array[Dictionary]:
 	return MusicManager.get_available_tracks()
@@ -726,6 +747,10 @@ func _update_badge(panel: PanelContainer, label: Label, charges: int, is_loading
 	if panel == null or label == null:
 		return
 	_style_badge_panel(panel)
+	if _gameplay_affordances_blocked():
+		panel.visible = false
+		label.visible = false
+		return
 	label.visible = true
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1508,6 +1533,29 @@ func _hide_tutorial_for_overlay() -> void:
 	if _tutorial_overlay == null or not is_instance_valid(_tutorial_overlay):
 		return
 	_close_tutorial(false)
+
+func _track_gameplay_overlay_modal(modal: Node) -> void:
+	_update_powerup_buttons()
+	if modal == null:
+		return
+	modal.tree_exited.connect(func() -> void:
+		_update_powerup_buttons()
+	)
+
+func _gameplay_affordances_blocked() -> bool:
+	if get_tree().paused:
+		return true
+	if is_instance_valid(_pause_overlay):
+		return true
+	if is_instance_valid(_open_tip_modal):
+		return true
+	if is_instance_valid(_audio_overlay):
+		return true
+	return ModalManager.get_open_count() > 0
+
+func _clear_board_hint_indicator() -> void:
+	if board != null and is_instance_valid(board):
+		board.clear_hint_indicator()
 
 func _close_tutorial(mark_seen: bool) -> void:
 	_clear_tutorial_highlights()
