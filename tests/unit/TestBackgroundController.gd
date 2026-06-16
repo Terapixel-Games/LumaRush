@@ -24,18 +24,32 @@ func test_match_pulse_tints_boost_particles_without_recoloring_ambient_particles
 
 	var ambient_particles: GPUParticles2D = controller.get_node_or_null("Particles") as GPUParticles2D
 	var boost_particles: GPUParticles2D = controller.get_node_or_null("BoostParticles") as GPUParticles2D
+	var boost_streak_particles: GPUParticles2D = controller.get_node_or_null("BoostStreakParticles") as GPUParticles2D
 	assert_that(ambient_particles).is_not_null()
 	assert_that(boost_particles).is_not_null()
+	assert_that(boost_streak_particles).is_not_null()
 	var ambient_before: Color = ambient_particles.modulate
+	var ambient_material: ParticleProcessMaterial = ambient_particles.process_material as ParticleProcessMaterial
+	var ambient_material_color_before: Color = ambient_material.color
 	var match_color := Color(1.0, 0.12, 0.02, 0.98)
 	controller.pulse_starfield(1.4, match_color)
 	await get_tree().process_frame
 
 	var boost_color: Color = boost_particles.modulate
+	var boost_material: ParticleProcessMaterial = boost_particles.process_material as ParticleProcessMaterial
+	var boost_streak_material: ParticleProcessMaterial = boost_streak_particles.process_material as ParticleProcessMaterial
 	var ambient_after: Color = ambient_particles.modulate
+	assert_that(boost_particles.emitting).is_true()
+	assert_that(boost_streak_particles.emitting).is_true()
+	assert_that(boost_particles.amount).is_greater(ambient_particles.amount / 2)
 	assert_that(boost_color.r).is_greater_equal(match_color.r - 0.001)
 	assert_that(boost_color.g).is_greater(boost_color.b)
+	assert_that(boost_material.color.r).is_greater_equal(match_color.r - 0.001)
+	assert_that(boost_material.color.g).is_greater(boost_material.color.b)
+	assert_that(boost_streak_material.color.r).is_greater_equal(match_color.r - 0.001)
+	assert_that(boost_streak_material.color.g).is_greater(boost_streak_material.color.b)
 	assert_that(ambient_after.r).is_equal(ambient_before.r)
 	assert_that(ambient_after.g).is_equal(ambient_before.g)
 	assert_that(ambient_after.b).is_equal(ambient_before.b)
+	assert_that(ambient_material.color).is_equal(ambient_material_color_before)
 	controller.queue_free()
