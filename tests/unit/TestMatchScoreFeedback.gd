@@ -25,8 +25,11 @@ func test_normal_match_shows_single_score_popup() -> void:
 	var burst: Control = _first_match_score_burst(ui)
 	assert_that(burst).is_not_null()
 	assert_that(burst.get_node_or_null("ShockRing")).is_not_null()
-	assert_that(burst.get_node_or_null("Badge")).is_not_null()
-	assert_that(burst.find_child("Score", true, false)).is_not_null()
+	var badge: Control = burst.get_node_or_null("Badge") as Control
+	var score_label: Label = burst.find_child("Score", true, false) as Label
+	assert_that(badge).is_not_null()
+	assert_that(score_label).is_not_null()
+	_assert_control_inside(score_label, badge)
 	game.queue_free()
 
 func test_chain_match_score_uses_burst_badge_ribbon() -> void:
@@ -41,12 +44,16 @@ func test_chain_match_score_uses_burst_badge_ribbon() -> void:
 
 	assert_that(_count_match_score_bursts(ui)).is_equal(1)
 	var burst: Control = _first_match_score_burst(ui)
+	var badge: Control = burst.get_node_or_null("Badge") as Control
 	var score_label: Label = burst.find_child("Score", true, false) as Label
 	var ribbon: Label = burst.find_child("Ribbon", true, false) as Label
+	assert_that(badge).is_not_null()
 	assert_that(score_label).is_not_null()
 	assert_that(ribbon).is_not_null()
 	assert_that(score_label.text).is_equal("+90")
 	assert_that(ribbon.text).is_equal("CHAIN x3")
+	_assert_control_inside(score_label, badge)
+	_assert_control_inside(ribbon, badge)
 	game.queue_free()
 
 func test_big_clear_match_score_uses_burst_badge_ribbon() -> void:
@@ -60,12 +67,16 @@ func test_big_clear_match_score_uses_burst_badge_ribbon() -> void:
 
 	assert_that(_count_match_score_bursts(ui)).is_equal(1)
 	var burst: Control = _first_match_score_burst(ui)
+	var badge: Control = burst.get_node_or_null("Badge") as Control
 	var score_label: Label = burst.find_child("Score", true, false) as Label
 	var ribbon: Label = burst.find_child("Ribbon", true, false) as Label
+	assert_that(badge).is_not_null()
 	assert_that(score_label).is_not_null()
 	assert_that(ribbon).is_not_null()
 	assert_that(score_label.text).is_equal("+50")
 	assert_that(ribbon.text).is_equal("BIG CLEAR")
+	_assert_control_inside(score_label, badge)
+	_assert_control_inside(ribbon, badge)
 	game.queue_free()
 
 func _load_game() -> Control:
@@ -88,3 +99,11 @@ func _first_match_score_burst(root: Node) -> Control:
 		if child.name == "MatchScoreBurst":
 			return child as Control
 	return null
+
+func _assert_control_inside(child: Control, parent: Control) -> void:
+	var child_rect: Rect2 = child.get_global_rect()
+	var parent_rect: Rect2 = parent.get_global_rect().grow(0.5)
+	assert_that(child_rect.position.x).is_greater_equal(parent_rect.position.x)
+	assert_that(child_rect.position.y).is_greater_equal(parent_rect.position.y)
+	assert_that(child_rect.position.x + child_rect.size.x).is_less_equal(parent_rect.position.x + parent_rect.size.x)
+	assert_that(child_rect.position.y + child_rect.size.y).is_less_equal(parent_rect.position.y + parent_rect.size.y)

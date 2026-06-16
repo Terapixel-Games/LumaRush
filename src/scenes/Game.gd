@@ -1557,11 +1557,17 @@ func _show_combo_escalation() -> void:
 	)
 
 func _show_match_center_score(center_global: Vector2, gained: int, next_combo: int, group_size: int, intensity: float, match_color: Color = Color(0, 0, 0, 0)) -> void:
+	var ribbon_text := ""
+	if next_combo >= 3:
+		ribbon_text = "CHAIN x%d" % next_combo
+	elif group_size >= 5:
+		ribbon_text = "BIG CLEAR"
+
 	var burst := Control.new()
 	burst.name = "MatchScoreBurst"
 	burst.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	burst.z_index = 80
-	burst.size = Vector2(320.0, 116.0)
+	burst.size = Vector2(320.0, 152.0 if not ribbon_text.is_empty() else 136.0)
 	burst.pivot_offset = burst.size * 0.5
 	burst.scale = Vector2(0.68, 0.68)
 	$UI.add_child(burst)
@@ -1593,9 +1599,9 @@ func _show_match_center_score(center_global: Vector2, gained: int, next_combo: i
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	badge.set_anchors_preset(Control.PRESET_FULL_RECT)
 	badge.offset_left = 18.0
-	badge.offset_top = 18.0
+	badge.offset_top = 20.0
 	badge.offset_right = -18.0
-	badge.offset_bottom = -18.0
+	badge.offset_bottom = -20.0
 	badge.add_theme_stylebox_override("panel", _match_burst_badge_style(primary, accent, intensity))
 	burst.add_child(badge)
 
@@ -1603,15 +1609,17 @@ func _show_match_center_score(center_global: Vector2, gained: int, next_combo: i
 	margin.name = "Margin"
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 18)
-	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_top", 12)
 	margin.add_theme_constant_override("margin_right", 18)
-	margin.add_theme_constant_override("margin_bottom", 8)
+	margin.add_theme_constant_override("margin_bottom", 12)
 	badge.add_child(margin)
 
 	var stack := VBoxContainer.new()
 	stack.name = "TextStack"
 	stack.alignment = BoxContainer.ALIGNMENT_CENTER
-	stack.add_theme_constant_override("separation", 0)
+	stack.add_theme_constant_override("separation", 2)
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	margin.add_child(stack)
 
 	var score_label := Label.new()
@@ -1627,11 +1635,6 @@ func _show_match_center_score(center_global: Vector2, gained: int, next_combo: i
 	score_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	stack.add_child(score_label)
 
-	var ribbon_text := ""
-	if next_combo >= 3:
-		ribbon_text = "CHAIN x%d" % next_combo
-	elif group_size >= 5:
-		ribbon_text = "BIG CLEAR"
 	if not ribbon_text.is_empty():
 		var ribbon := Label.new()
 		ribbon.name = "Ribbon"
