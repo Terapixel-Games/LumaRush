@@ -154,6 +154,40 @@ func test_cell_from_screen_pos_accounts_for_board_position() -> void:
 	assert_that(cell).is_equal(Vector2i(2, 3))
 	view.queue_free()
 
+func test_board_input_can_be_disabled() -> void:
+	ProjectSettings.set_setting("lumarush/min_match_size", 3)
+	var view := BoardView.new()
+	view.width = 3
+	view.height = 3
+	view.colors = 3
+	view.tile_size = 16.0
+	get_tree().root.add_child(view)
+	view.board.grid = [
+		[0, 0, 0],
+		[1, 2, 1],
+		[2, 1, 2],
+	]
+	view._refresh_tiles()
+	var snapshot: Array = view.capture_snapshot()
+	var committed: Array[bool] = [false]
+	view.connect("move_committed", func(_group: Array, _snapshot: Array) -> void:
+		committed[0] = true
+	)
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = Vector2(8, 8)
+	view.set_board_input_enabled(false)
+	view._input(click)
+	await get_tree().process_frame
+
+	assert_that(view.is_board_input_enabled()).is_false()
+	assert_that(committed[0]).is_false()
+	assert_that(view.capture_snapshot()).is_equal(snapshot)
+	view.set_board_input_enabled(true)
+	assert_that(view.is_board_input_enabled()).is_true()
+	view.queue_free()
+
 func test_legacy_tile_design_uses_squarer_shader_profile() -> void:
 	ProjectSettings.set_setting("lumarush/tile_design_mode", FeatureFlags.TileDesignMode.LEGACY)
 	var view := BoardView.new()

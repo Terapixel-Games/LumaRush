@@ -240,10 +240,24 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	assert_that(panel_rect.end.y).is_less_equal(target_rect.position.y - 6.0)
 	assert_that(panel_rect.position.y).is_less(board_rect.end.y)
 	assert_that(absf(pointer_outer.polygon[2].x - target_rect.get_center().x)).is_less_equal(2.0)
+	assert_that(board_view.is_board_input_enabled()).is_false()
+	var board_snapshot: Array = board_view.capture_snapshot()
+	var playable_cell: Vector2i = _first_playable_cell(board_view)
+	assert_that(playable_cell.x).is_greater_equal(0)
+	assert_that(playable_cell.y).is_greater_equal(0)
+	var board_click := InputEventMouseButton.new()
+	board_click.button_index = MOUSE_BUTTON_LEFT
+	board_click.pressed = true
+	board_click.position = _screen_pos_for_cell(board_view, playable_cell)
+	board_view._input(board_click)
+	await get_tree().process_frame
+	assert_that(board_view.capture_snapshot()).is_equal(board_snapshot)
+	assert_that(game.get_node_or_null("TutorialTipModal")).is_not_null()
 
 	cancel.pressed.emit()
 	await get_tree().process_frame
 	assert_that(game.get_node_or_null("TutorialTipModal")).is_null()
+	assert_that(board_view.is_board_input_enabled()).is_true()
 	assert_that(game.get("_current_mode")).is_equal("PURE")
 	assert_that(int(game.get("_hint_charges"))).is_equal(starting_hints)
 	assert_that(int(game.get("_run_powerups_used_total"))).is_equal(0)
@@ -369,6 +383,22 @@ func test_pause_overlay_can_request_tutorial_reenable() -> void:
 	assert_that(tutorial_button).is_not_null()
 	assert_that(tutorial_button.text).is_equal("Enable Tutorial")
 	pause_overlay.queue_free()
+
+func _first_playable_cell(board_view: BoardView) -> Vector2i:
+	var min_match_size: int = int(board_view.get("_min_match_size"))
+	for y in range(board_view.height):
+		for x in range(board_view.width):
+			var cell := Vector2i(x, y)
+			var group: Array = board_view.board.find_group(cell)
+			if group.size() >= min_match_size:
+				return cell
+	return Vector2i(-1, -1)
+
+func _screen_pos_for_cell(board_view: BoardView, cell: Vector2i) -> Vector2:
+	return board_view.to_global(Vector2(
+		(float(cell.x) + 0.5) * board_view.tile_size,
+		(float(cell.y) + 0.5) * board_view.tile_size
+	))
 
 func _highlight_count(overlay: Control) -> int:
 	var count := 0

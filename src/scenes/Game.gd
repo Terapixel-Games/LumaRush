@@ -556,10 +556,16 @@ func _confirm_open_mode_powerup(powerup_type: String) -> bool:
 			result["accepted"] = false
 			result["do_not_show_again"] = do_not_show_again
 		)
+	var board_input_was_enabled: bool = true
+	if board != null and is_instance_valid(board):
+		board_input_was_enabled = board.is_board_input_enabled()
+		board.set_board_input_enabled(false)
 	_open_tip_modal = modal
 	add_child(modal)
 	await modal.tree_exited
 	_open_tip_modal = null
+	if board != null and is_instance_valid(board):
+		board.set_board_input_enabled(board_input_was_enabled)
 	if bool(result.get("do_not_show_again", false)):
 		_on_open_mode_tip_dismissed(true)
 	if bool(result.get("accepted", false)):

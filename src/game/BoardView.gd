@@ -41,6 +41,7 @@ var _hint_group: Array = []
 var _tile_gap_px: float = 8.0
 var _prism_pick_mode: bool = false
 var _theme_tile_palette: Array = []
+var _board_input_enabled: bool = true
 
 func _ready() -> void:
 	_tile_gap_px = _gap_for_tile_size(tile_size)
@@ -80,6 +81,13 @@ func set_prism_pick_mode(enabled: bool) -> void:
 func is_prism_pick_mode() -> bool:
 	return _prism_pick_mode
 
+func set_board_input_enabled(enabled: bool) -> void:
+	_board_input_enabled = enabled
+	set_process_input(enabled)
+
+func is_board_input_enabled() -> bool:
+	return _board_input_enabled
+
 func set_theme_palette(theme_palette: Array) -> void:
 	_theme_tile_palette = theme_palette.duplicate(true)
 	colors = _palette_size()
@@ -100,6 +108,8 @@ func _create_tiles() -> void:
 		tiles.append(row)
 
 func _input(event: InputEvent) -> void:
+	if not _board_input_enabled:
+		return
 	if _animating:
 		return
 	if event is InputEventScreenTouch and event.pressed:
