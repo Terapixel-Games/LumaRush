@@ -226,10 +226,7 @@ func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0,
 	, _match_brightness_mul, 1.0, max(0.22, FeatureFlags.starfield_match_pulse_seconds() * 1.8))
 
 func _should_coalesce_match_burst(now_msec: int) -> bool:
-	if not _is_boost_burst_active():
-		return false
-	var coalesce_msec: int = int(round(max(120.0, FeatureFlags.starfield_match_pulse_seconds() * 1000.0 * 1.25)))
-	return now_msec - _boost_burst_started_msec <= coalesce_msec
+	return _is_boost_burst_active()
 
 func _is_boost_burst_active() -> bool:
 	return (
