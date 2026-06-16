@@ -47,6 +47,7 @@ var _boost_density_mul: float = 1.0
 var _boost_speed_mul: float = 1.0
 var _boost_brightness_mul: float = 1.0
 var _boost_burst_started_msec: int = -100000
+var _boost_burst_lockout_until_msec: int = -100000
 var _boost_burst_serial: int = 0
 var _viewport_size: Vector2 = Vector2.ZERO
 
@@ -203,6 +204,7 @@ func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0,
 	# Keep match hits sharp: spike immediately, hold briefly, then taper.
 	_pulse_tween.tween_interval(FeatureFlags.starfield_match_pulse_seconds() * min(hit, 1.8))
 	_boost_burst_started_msec = now_msec
+	_boost_burst_lockout_until_msec = now_msec + _boost_visual_lockout_msec()
 	_boost_burst_serial += 1
 	if _boost_particles:
 		_boost_particles.restart()
@@ -226,14 +228,17 @@ func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0,
 	, _match_brightness_mul, 1.0, max(0.22, FeatureFlags.starfield_match_pulse_seconds() * 1.8))
 
 func _should_coalesce_match_burst(now_msec: int) -> bool:
-	return _is_boost_burst_active()
+	return now_msec < _boost_burst_lockout_until_msec
 
-func _is_boost_burst_active() -> bool:
-	return (
-		(_boost_particles != null and _boost_particles.emitting)
-		or (_boost_streak_particles != null and _boost_streak_particles.emitting)
-		or (_boost_long_streak_particles != null and _boost_long_streak_particles.emitting)
-	)
+func _boost_visual_lockout_msec() -> int:
+	var lifetime: float = 0.0
+	if _boost_particles:
+		lifetime = max(lifetime, _boost_particles.lifetime)
+	if _boost_streak_particles:
+		lifetime = max(lifetime, _boost_streak_particles.lifetime)
+	if _boost_long_streak_particles:
+		lifetime = max(lifetime, _boost_long_streak_particles.lifetime)
+	return int(round(max(0.25, lifetime + 0.12) * 1000.0))
 
 func _apply_match_boost_color(match_color: Color) -> void:
 	if match_color.a <= 0.0:

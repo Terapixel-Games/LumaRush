@@ -120,14 +120,14 @@ func test_rapid_match_pulses_coalesce_into_single_background_burst() -> void:
 	var first_particle_amount: int = boost_particles.amount
 	var first_streak_amount: int = boost_streak_particles.amount
 	await get_tree().create_timer(FeatureFlags.starfield_match_pulse_seconds() * 1.8).timeout
-	assert_that(boost_long_streak_particles.emitting).is_true()
+	boost_particles.emitting = false
+	boost_streak_particles.emitting = false
+	boost_long_streak_particles.emitting = false
 
 	controller.pulse_starfield(2.0, Color(0.0, 1.0, 0.18, 1.0))
 	await get_tree().process_frame
 
 	assert_that(controller._boost_burst_serial).is_equal(first_serial)
-	assert_that(boost_particles.emitting).is_true()
-	assert_that(boost_streak_particles.emitting).is_true()
 	assert_that(boost_particles.amount).is_greater_equal(first_particle_amount)
 	assert_that(boost_streak_particles.amount).is_greater_equal(first_streak_amount)
 	controller.queue_free()
