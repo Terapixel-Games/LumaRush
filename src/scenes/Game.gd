@@ -62,6 +62,7 @@ var _tutorial_step: int = 0
 var _shake_strength: float = 0.0
 var _shake_time_left: float = 0.0
 var _board_anchor_pos: Vector2 = Vector2.ZERO
+var _powerup_juice_tween: Tween
 var _scene_opened_msec: int = Time.get_ticks_msec()
 var _combo_timeout_remaining: float = -1.0
 var _pressure_hud: PanelContainer
@@ -212,12 +213,15 @@ func _on_match_made(group: Array) -> void:
 	if _tutorial_overlay and is_instance_valid(_tutorial_overlay) and _tutorial_step <= 1:
 		_advance_tutorial_step()
 
-func _on_match_feedback(group: Array, center_global: Vector2) -> void:
+func _on_match_feedback(group: Array, center_global: Vector2, color_idx: int = -1) -> void:
 	var next_combo: int = combo + 1
 	var gained: int = group.size() * 10 * next_combo
 	var intensity: float = _match_feedback_intensity(group.size(), next_combo)
 	_show_match_center_score(center_global, gained, next_combo, group.size(), intensity)
-	BackgroundMood.pulse_starfield(intensity)
+	var match_color := Color(0, 0, 0, 0)
+	if board != null and color_idx >= 0:
+		match_color = board.tile_color_for_index(color_idx)
+	BackgroundMood.pulse_starfield(intensity, match_color)
 	_pulse_match_chrome(intensity)
 
 func _on_move_committed(_group: Array, snapshot: Array) -> void:
@@ -426,18 +430,29 @@ func _push_undo(snapshot: Array, score_snapshot: int, combo_snapshot: int) -> vo
 	_update_powerup_buttons()
 
 func _play_powerup_juice(flash_color: Color) -> void:
+	if is_instance_valid(_powerup_juice_tween):
+		_powerup_juice_tween.kill()
+		_powerup_juice_tween = null
+	if board == null or not is_instance_valid(board):
+		return
+	_set_board_scale_centered(Vector2.ONE)
 	powerup_flash.visible = true
 	powerup_flash.color = flash_color
-	var board_scale_start: Vector2 = board.scale
+	var board_scale_start: Vector2 = Vector2.ONE
 	var board_scale_peak: Vector2 = board_scale_start * Vector2(1.03, 1.03)
 	var t: Tween = create_tween()
+	_powerup_juice_tween = t
 	t.set_parallel(true)
 	t.tween_method(Callable(self, "_set_board_scale_centered"), board_scale_start, board_scale_peak, 0.1).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	t.tween_property(powerup_flash, "color:a", FeatureFlags.powerup_flash_alpha(), 0.08)
 	t.chain().tween_method(Callable(self, "_set_board_scale_centered"), board_scale_peak, board_scale_start, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	t.parallel().tween_property(powerup_flash, "color:a", 0.0, FeatureFlags.powerup_flash_seconds())
 	t.finished.connect(func() -> void:
+		if board != null and is_instance_valid(board):
+			_set_board_scale_centered(Vector2.ONE)
 		powerup_flash.visible = false
+		if _powerup_juice_tween == t:
+			_powerup_juice_tween = null
 	)
 
 func _set_board_scale_centered(target_scale: Vector2) -> void:

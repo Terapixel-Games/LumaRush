@@ -63,6 +63,8 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 	assert_that(audio_button).is_not_null()
 	assert_that(powerups_row).is_not_null()
 	assert_that(undo_button).is_not_null()
+	assert_that(board.width).is_equal(8)
+	assert_that(board.height).is_equal(8)
 
 	var viewport_sizes: Array[Vector2] = [
 		Vector2(573.0, 967.0),
@@ -150,6 +152,28 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		assert_that(board_rect.position.y + board_rect.size.y).is_less_equal(powerups_rect.position.y + 1.0)
 
 	DisplayServer.window_set_size(original_window_size)
+	game.queue_free()
+
+func test_powerup_juice_resets_board_scale_after_rapid_retrigger() -> void:
+	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
+	var game: Control = scene.instantiate() as Control
+	assert_that(game).is_not_null()
+	get_tree().root.add_child(game)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var board: BoardView = game.get_node_or_null("BoardView") as BoardView
+	assert_that(board).is_not_null()
+	game.call("_play_powerup_juice", Color(1.0, 0.84, 0.18, 0.28))
+	await get_tree().process_frame
+	game.call("_play_powerup_juice", Color(0.0, 0.96, 1.0, 0.28))
+	await get_tree().process_frame
+	game.call("_play_powerup_juice", Color(0.30, 0.20, 1.0, 0.28))
+	for _i in range(40):
+		await get_tree().process_frame
+
+	assert_that(absf(board.scale.x - 1.0)).is_less_equal(0.001)
+	assert_that(absf(board.scale.y - 1.0)).is_less_equal(0.001)
 	game.queue_free()
 
 func test_gameplay_top_right_opens_account_and_shop_modals() -> void:

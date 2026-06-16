@@ -2,7 +2,7 @@ extends Node2D
 class_name BoardView
 
 signal match_made(group: Array)
-signal match_feedback(group: Array, center_global: Vector2)
+signal match_feedback(group: Array, center_global: Vector2, color_idx: int)
 signal no_moves
 signal move_committed(group: Array, snapshot: Array)
 signal match_click_haptic_triggered(duration_ms: int, amplitude: float)
@@ -11,16 +11,16 @@ signal prism_color_selected(color_idx: int)
 signal non_match_tapped(cell: Vector2i)
 
 @export var width := 8
-@export var height := 10
+@export var height := 8
 @export var colors := 5
 @export var tile_size := 100.0
 
 const TILE_PALETTE_MODERN := [
-	Color(0.00, 0.78, 1.00, 0.96), # cyan
-	Color(1.00, 0.24, 0.06, 0.96), # vermilion
-	Color(0.24, 1.00, 0.12, 0.96), # green
-	Color(1.00, 0.82, 0.00, 0.96), # gold
-	Color(0.26, 0.18, 1.00, 0.96), # blue violet
+	Color(0.00, 0.96, 1.00, 0.98), # neon cyan
+	Color(1.00, 0.12, 0.02, 0.98), # neon red
+	Color(0.18, 1.00, 0.18, 0.98), # neon green
+	Color(1.00, 0.88, 0.00, 0.98), # neon gold
+	Color(0.30, 0.20, 1.00, 0.98), # neon violet
 ]
 
 const TILE_PALETTE_LEGACY := [
@@ -81,6 +81,9 @@ func set_prism_pick_mode(enabled: bool) -> void:
 func is_prism_pick_mode() -> bool:
 	return _prism_pick_mode
 
+func tile_color_for_index(idx: int) -> Color:
+	return _color_from_index(idx)
+
 func set_board_input_enabled(enabled: bool) -> void:
 	_board_input_enabled = enabled
 	set_process_input(enabled)
@@ -136,6 +139,7 @@ func _handle_click(pos: Vector2) -> void:
 	if group.size() < _min_match_size:
 		emit_signal("non_match_tapped", Vector2i(x, y))
 		return
+	var match_color_idx: int = posmod(int(board.grid[y][x]), _palette_size())
 	_trigger_match_click_haptic()
 	_animating = true
 	var snapshot := board.grid.duplicate(true)
@@ -144,7 +148,7 @@ func _handle_click(pos: Vector2) -> void:
 		# Keep color ids strictly in palette bounds before visual refresh/animation.
 		_normalize_board_color_ids()
 		_clear_hint()
-		emit_signal("match_feedback", group, _group_center_global(group))
+		emit_signal("match_feedback", group, _group_center_global(group), match_color_idx)
 		await _animate_resolution(group, snapshot)
 		_trigger_match_haptic(group.size())
 		emit_signal("move_committed", group, snapshot)
@@ -375,7 +379,7 @@ func _tile_symbol(color_idx: int) -> String:
 
 func _symbol_color_for_tile(color: Color) -> Color:
 	var luma: float = (color.r * 0.2126) + (color.g * 0.7152) + (color.b * 0.0722)
-	return Color(0.04, 0.03, 0.09, 1.0) if luma >= 0.32 else Color(1.0, 0.98, 0.88, 1.0)
+	return Color(0.04, 0.03, 0.09, 1.0) if luma >= 0.24 else Color(1.0, 0.98, 0.88, 1.0)
 
 func _blur_radius() -> float:
 	return 2.0 if FeatureFlags.tile_blur_mode() == FeatureFlags.TileBlurMode.LITE else 6.0

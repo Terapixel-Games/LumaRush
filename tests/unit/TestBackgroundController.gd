@@ -16,3 +16,26 @@ func test_new_mood_change_cancels_previous_fade() -> void:
 	assert_that(color_a.g).is_less_equal(0.35)
 	assert_that(color_a.b).is_greater_equal(0.45)
 	controller.queue_free()
+
+func test_match_pulse_tints_boost_particles_without_recoloring_ambient_particles() -> void:
+	var controller: BackgroundController = preload("res://src/visual/BackgroundController.tscn").instantiate()
+	get_tree().root.add_child(controller)
+	await get_tree().process_frame
+
+	var ambient_particles: GPUParticles2D = controller.get_node_or_null("Particles") as GPUParticles2D
+	var boost_particles: GPUParticles2D = controller.get_node_or_null("BoostParticles") as GPUParticles2D
+	assert_that(ambient_particles).is_not_null()
+	assert_that(boost_particles).is_not_null()
+	var ambient_before: Color = ambient_particles.modulate
+	var match_color := Color(1.0, 0.12, 0.02, 0.98)
+	controller.pulse_starfield(1.4, match_color)
+	await get_tree().process_frame
+
+	var boost_color: Color = boost_particles.modulate
+	var ambient_after: Color = ambient_particles.modulate
+	assert_that(boost_color.r).is_greater_equal(match_color.r - 0.001)
+	assert_that(boost_color.g).is_greater(boost_color.b)
+	assert_that(ambient_after.r).is_equal(ambient_before.r)
+	assert_that(ambient_after.g).is_equal(ambient_before.g)
+	assert_that(ambient_after.b).is_equal(ambient_before.b)
+	controller.queue_free()

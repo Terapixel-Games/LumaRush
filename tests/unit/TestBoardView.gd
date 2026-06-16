@@ -1,5 +1,11 @@
 extends GdUnitTestSuite
 
+func test_default_board_is_8_by_8() -> void:
+	var view := BoardView.new()
+	assert_that(view.width).is_equal(8)
+	assert_that(view.height).is_equal(8)
+	view.free()
+
 func test_emits_no_moves_once_when_board_is_stalled() -> void:
 	ProjectSettings.set_setting("lumarush/min_match_size", 3)
 	var view := BoardView.new()
@@ -123,6 +129,33 @@ func test_prism_pick_mode_emits_selected_color() -> void:
 	assert_that(selected_color[0]).is_equal(2)
 	view.queue_free()
 
+func test_match_feedback_emits_matched_color_index() -> void:
+	ProjectSettings.set_setting("lumarush/min_match_size", 3)
+	var view := BoardView.new()
+	view.width = 3
+	view.height = 3
+	view.colors = 3
+	view.tile_size = 16.0
+	get_tree().root.add_child(view)
+	view.board.grid = [
+		[2, 2, 2],
+		[1, 0, 1],
+		[0, 1, 0],
+	]
+	view._refresh_tiles()
+	var emitted_color_idx: Array[int] = [-1]
+	view.connect("match_feedback", func(_group: Array, _center: Vector2, color_idx: int) -> void:
+		emitted_color_idx[0] = color_idx
+	)
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = Vector2(8, 8)
+	get_tree().root.push_input(click)
+	await get_tree().process_frame
+	assert_that(emitted_color_idx[0]).is_equal(2)
+	view.queue_free()
+
 func test_board_view_normalizes_to_palette_and_matches_exact_color() -> void:
 	ProjectSettings.set_setting("lumarush/min_match_size", 3)
 	var view := BoardView.new()
@@ -205,6 +238,11 @@ func test_modern_tile_palette_has_distinct_color_families() -> void:
 	for theme_id in [ThemeManager.THEME_DEFAULT, ThemeManager.THEME_NEON]:
 		var config: Dictionary = ThemeManager.get_theme_config(theme_id)
 		_assert_palette_is_distinct(config.get("tile_palette", []))
+
+func test_default_and_neon_themes_use_modern_neon_tile_palette() -> void:
+	for theme_id in [ThemeManager.THEME_DEFAULT, ThemeManager.THEME_NEON]:
+		var config: Dictionary = ThemeManager.get_theme_config(theme_id)
+		assert_that(config.get("tile_palette", [])).is_equal(BoardView.TILE_PALETTE_MODERN)
 
 func test_tile_symbols_use_contrasting_foreground_colors() -> void:
 	var view := BoardView.new()

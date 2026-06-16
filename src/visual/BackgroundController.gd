@@ -169,7 +169,7 @@ func set_deterministic(enabled: bool) -> void:
 		if is_instance_valid(_emission_tween):
 			_emission_tween.kill()
 
-func pulse_starfield(intensity: float = 1.0) -> void:
+func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0, 0)) -> void:
 	if _deterministic:
 		return
 	if is_instance_valid(_pulse_tween):
@@ -178,6 +178,7 @@ func pulse_starfield(intensity: float = 1.0) -> void:
 	_match_density_mul = 1.0 + ((FeatureFlags.starfield_match_pulse_density_mult() - 1.0) * hit)
 	_match_speed_mul = 1.0 + ((FeatureFlags.starfield_match_pulse_speed_mult() - 1.0) * hit)
 	_match_brightness_mul = 1.0 + ((FeatureFlags.starfield_match_pulse_brightness_mult() - 1.0) * hit)
+	_apply_match_boost_color(match_color)
 	_update_starfield_runtime()
 	_pulse_tween = create_tween()
 	# Keep match hits sharp: spike immediately, hold briefly, then taper.
@@ -205,6 +206,14 @@ func pulse_starfield(intensity: float = 1.0) -> void:
 		if _boost_streak_particles:
 			_boost_streak_particles.emitting = false
 	)
+
+func _apply_match_boost_color(match_color: Color) -> void:
+	if match_color.a <= 0.0:
+		return
+	var point_color := Color(match_color.r, match_color.g, match_color.b, 1.0).lightened(0.08)
+	var streak_color := Color(match_color.r, match_color.g, match_color.b, 1.0).lightened(0.22)
+	_boost_point_color = point_color
+	_boost_streak_color = streak_color
 
 func reset_starfield_emission_taper(ramp_up_seconds: float = -1.0) -> void:
 	if _deterministic:
