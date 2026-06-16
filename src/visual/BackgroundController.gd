@@ -22,6 +22,7 @@ var _particle_tex: Texture2D
 var _streak_tex: Texture2D
 var _boost_particles: GPUParticles2D
 var _boost_streak_particles: GPUParticles2D
+var _boost_long_streak_particles: GPUParticles2D
 var _star_density: float = 1.0
 var _star_speed: float = 1.0
 var _star_brightness: float = 0.4
@@ -166,6 +167,8 @@ func set_deterministic(enabled: bool) -> void:
 			_boost_particles.emitting = false
 		if _boost_streak_particles:
 			_boost_streak_particles.emitting = false
+		if _boost_long_streak_particles:
+			_boost_long_streak_particles.emitting = false
 		if is_instance_valid(_emission_tween):
 			_emission_tween.kill()
 
@@ -189,6 +192,9 @@ func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0,
 	if _boost_streak_particles:
 		_boost_streak_particles.restart()
 		_boost_streak_particles.emitting = true
+	if _boost_long_streak_particles:
+		_boost_long_streak_particles.restart()
+		_boost_long_streak_particles.emitting = true
 	_pulse_tween.set_parallel(true)
 	_pulse_tween.tween_method(func(v: float) -> void:
 		_match_speed_mul = v
@@ -205,6 +211,8 @@ func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0,
 			_boost_particles.emitting = false
 		if _boost_streak_particles:
 			_boost_streak_particles.emitting = false
+		if _boost_long_streak_particles:
+			_boost_long_streak_particles.emitting = false
 	)
 
 func _apply_match_boost_color(match_color: Color) -> void:
@@ -216,6 +224,7 @@ func _apply_match_boost_color(match_color: Color) -> void:
 	_boost_streak_color = streak_color
 	_apply_boost_material_color(_boost_particles, point_color, 0.96)
 	_apply_boost_material_color(_boost_streak_particles, streak_color, 1.0)
+	_apply_boost_material_color(_boost_long_streak_particles, streak_color, 1.0)
 
 func _apply_boost_material_color(emitter: GPUParticles2D, color: Color, alpha: float) -> void:
 	if emitter == null:
@@ -401,47 +410,89 @@ func _setup_boost_emitters(center: Vector2) -> void:
 	_prepare_boost_process_material(_boost_streak_particles.process_material as ParticleProcessMaterial, true)
 	add_child(_boost_streak_particles)
 
-func _prepare_boost_process_material(material: ParticleProcessMaterial, streak: bool) -> void:
+	_boost_long_streak_particles = GPUParticles2D.new()
+	_boost_long_streak_particles.name = "BoostLongStreakParticles"
+	_boost_long_streak_particles.position = center
+	_boost_long_streak_particles.local_coords = true
+	_boost_long_streak_particles.one_shot = true
+	_boost_long_streak_particles.explosiveness = 1.0
+	_boost_long_streak_particles.lifetime = min(2.35, long_streak_particles.lifetime)
+	_boost_long_streak_particles.preprocess = 0.0
+	_boost_long_streak_particles.texture = _streak_tex
+	_boost_long_streak_particles.process_material = (long_streak_particles.process_material as ParticleProcessMaterial).duplicate(true)
+	_prepare_boost_process_material(_boost_long_streak_particles.process_material as ParticleProcessMaterial, true, true)
+	add_child(_boost_long_streak_particles)
+	_configure_boost_emission_area()
+
+func _prepare_boost_process_material(material: ParticleProcessMaterial, streak: bool, long_streak: bool = false) -> void:
 	if material == null:
 		return
-	material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_POINT
+	material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
 	material.direction = Vector3(1.0, 0.0, 0.0)
 	material.spread = 180.0
 	material.gravity = Vector3.ZERO
-	material.radial_accel_min = 190.0 if streak else 260.0
-	material.radial_accel_max = 430.0 if streak else 560.0
-	material.linear_accel_min = 160.0 if streak else 100.0
-	material.linear_accel_max = 340.0 if streak else 240.0
-	material.initial_velocity_min = 760.0 if streak else 360.0
-	material.initial_velocity_max = 1320.0 if streak else 760.0
-	material.scale_min = 0.5 if streak else 0.24
-	material.scale_max = 1.18 if streak else 0.64
+	material.radial_accel_min = 260.0 if streak else 300.0
+	material.radial_accel_max = 620.0 if streak else 680.0
+	material.linear_accel_min = 240.0 if streak else 140.0
+	material.linear_accel_max = 520.0 if streak else 300.0
+	material.initial_velocity_min = 980.0 if streak else 420.0
+	material.initial_velocity_max = 1720.0 if streak else 920.0
+	material.scale_min = 0.72 if streak else 0.32
+	material.scale_max = 1.65 if streak else 0.86
+	if long_streak:
+		material.initial_velocity_min = 1180.0
+		material.initial_velocity_max = 2100.0
+		material.linear_accel_min = 320.0
+		material.linear_accel_max = 680.0
+		material.radial_accel_min = 340.0
+		material.radial_accel_max = 820.0
+		material.scale_min = 1.05
+		material.scale_max = 2.2
+
+func _configure_boost_emission_area() -> void:
+	var extents := Vector3(_viewport_size.x * 0.56, _viewport_size.y * 0.56, 0.0)
+	for emitter in [_boost_particles, _boost_streak_particles, _boost_long_streak_particles]:
+		if emitter == null:
+			continue
+		var material: ParticleProcessMaterial = emitter.process_material as ParticleProcessMaterial
+		if material:
+			material.emission_box_extents = extents
 
 func _update_boost_emitters() -> void:
-	if _boost_particles == null or _boost_streak_particles == null:
+	if _boost_particles == null or _boost_streak_particles == null or _boost_long_streak_particles == null:
 		return
 	var extra_density: float = max(0.0, _match_density_mul - 1.0)
-	_boost_particles.amount = max(1, int(round(360.0 * _star_density * extra_density)))
-	_boost_streak_particles.amount = max(1, int(round(120.0 * _star_density * extra_density)))
+	_boost_particles.amount = max(1, int(round(720.0 * _star_density * extra_density)))
+	_boost_streak_particles.amount = max(1, int(round(260.0 * _star_density * extra_density)))
+	_boost_long_streak_particles.amount = max(1, int(round(96.0 * _star_density * extra_density)))
 	_boost_particles.speed_scale = _star_speed * _match_speed_mul
 	_boost_streak_particles.speed_scale = _star_speed * _match_speed_mul
+	_boost_long_streak_particles.speed_scale = _star_speed * _match_speed_mul
 	_boost_particles.modulate = Color(
 		_boost_point_color.r,
 		_boost_point_color.g,
 		_boost_point_color.b,
-		min(1.0, 1.15 * _star_brightness * _match_brightness_mul)
+		min(1.0, 1.35 * _star_brightness * _match_brightness_mul)
 	)
 	_boost_streak_particles.modulate = Color(
 		_boost_streak_color.r,
 		_boost_streak_color.g,
 		_boost_streak_color.b,
-		min(1.0, 1.25 * _star_brightness * _match_brightness_mul)
+		min(1.0, 1.55 * _star_brightness * _match_brightness_mul)
+	)
+	_boost_long_streak_particles.modulate = Color(
+		_boost_streak_color.r,
+		_boost_streak_color.g,
+		_boost_streak_color.b,
+		min(1.0, 1.45 * _star_brightness * _match_brightness_mul)
 	)
 	_apply_boost_material_color(_boost_particles, _boost_point_color, 0.96)
 	_apply_boost_material_color(_boost_streak_particles, _boost_streak_color, 1.0)
+	_apply_boost_material_color(_boost_long_streak_particles, _boost_streak_color, 1.0)
 	if _emission_activity <= 0.01:
 		_boost_particles.emitting = false
 		_boost_streak_particles.emitting = false
+		_boost_long_streak_particles.emitting = false
 
 func _set_emission_activity(v: float) -> void:
 	_emission_activity = clamp(v, 0.0, 1.0)
@@ -464,6 +515,9 @@ func _sync_layout() -> void:
 		_boost_particles.position = center
 	if _boost_streak_particles:
 		_boost_streak_particles.position = center
+	if _boost_long_streak_particles:
+		_boost_long_streak_particles.position = center
+	_configure_boost_emission_area()
 
 func _build_soft_particle_texture(size: int, softness: float) -> Texture2D:
 	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)

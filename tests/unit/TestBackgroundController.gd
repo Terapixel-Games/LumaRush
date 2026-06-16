@@ -25,9 +25,11 @@ func test_match_pulse_tints_boost_particles_without_recoloring_ambient_particles
 	var ambient_particles: GPUParticles2D = controller.get_node_or_null("Particles") as GPUParticles2D
 	var boost_particles: GPUParticles2D = controller.get_node_or_null("BoostParticles") as GPUParticles2D
 	var boost_streak_particles: GPUParticles2D = controller.get_node_or_null("BoostStreakParticles") as GPUParticles2D
+	var boost_long_streak_particles: GPUParticles2D = controller.get_node_or_null("BoostLongStreakParticles") as GPUParticles2D
 	assert_that(ambient_particles).is_not_null()
 	assert_that(boost_particles).is_not_null()
 	assert_that(boost_streak_particles).is_not_null()
+	assert_that(boost_long_streak_particles).is_not_null()
 	var ambient_before: Color = ambient_particles.modulate
 	var ambient_material: ParticleProcessMaterial = ambient_particles.process_material as ParticleProcessMaterial
 	var ambient_material_color_before: Color = ambient_material.color
@@ -38,16 +40,30 @@ func test_match_pulse_tints_boost_particles_without_recoloring_ambient_particles
 	var boost_color: Color = boost_particles.modulate
 	var boost_material: ParticleProcessMaterial = boost_particles.process_material as ParticleProcessMaterial
 	var boost_streak_material: ParticleProcessMaterial = boost_streak_particles.process_material as ParticleProcessMaterial
+	var boost_long_streak_material: ParticleProcessMaterial = boost_long_streak_particles.process_material as ParticleProcessMaterial
 	var ambient_after: Color = ambient_particles.modulate
 	assert_that(boost_particles.emitting).is_true()
 	assert_that(boost_streak_particles.emitting).is_true()
-	assert_that(boost_particles.amount).is_greater(ambient_particles.amount / 2)
+	assert_that(boost_long_streak_particles.emitting).is_true()
+	assert_that(boost_particles.amount).is_greater(ambient_particles.amount)
+	assert_that(boost_streak_particles.amount).is_greater(streak_particles_amount_floor(controller))
+	assert_that(boost_long_streak_particles.amount).is_greater(80)
 	var viewport_radius: float = controller.get_viewport_rect().size.length() * 0.5
 	var streak_travel_budget: float = (
 		boost_streak_material.initial_velocity_max * boost_streak_particles.lifetime
 		+ (0.5 * boost_streak_material.linear_accel_max * boost_streak_particles.lifetime * boost_streak_particles.lifetime)
 	) * boost_streak_particles.speed_scale
+	var long_streak_travel_budget: float = (
+		boost_long_streak_material.initial_velocity_max * boost_long_streak_particles.lifetime
+		+ (0.5 * boost_long_streak_material.linear_accel_max * boost_long_streak_particles.lifetime * boost_long_streak_particles.lifetime)
+	) * boost_long_streak_particles.speed_scale
 	assert_that(streak_travel_budget).is_greater_equal(viewport_radius)
+	assert_that(long_streak_travel_budget).is_greater_equal(viewport_radius * 2.0)
+	assert_that(boost_material.emission_shape).is_equal(ParticleProcessMaterial.EMISSION_SHAPE_BOX)
+	assert_that(boost_streak_material.emission_shape).is_equal(ParticleProcessMaterial.EMISSION_SHAPE_BOX)
+	assert_that(boost_long_streak_material.emission_shape).is_equal(ParticleProcessMaterial.EMISSION_SHAPE_BOX)
+	assert_that(boost_long_streak_material.emission_box_extents.x).is_greater_equal(controller.get_viewport_rect().size.x * 0.5)
+	assert_that(boost_long_streak_material.emission_box_extents.y).is_greater_equal(controller.get_viewport_rect().size.y * 0.5)
 	assert_that(boost_color.r).is_greater_equal(match_color.r - 0.001)
 	assert_that(boost_color.g).is_greater(boost_color.b)
 	assert_that(boost_material.color.r).is_greater_equal(match_color.r - 0.001)
@@ -59,3 +75,9 @@ func test_match_pulse_tints_boost_particles_without_recoloring_ambient_particles
 	assert_that(ambient_after.b).is_equal(ambient_before.b)
 	assert_that(ambient_material.color).is_equal(ambient_material_color_before)
 	controller.queue_free()
+
+func streak_particles_amount_floor(controller: BackgroundController) -> int:
+	var streak_particles: GPUParticles2D = controller.get_node_or_null("StreakParticles") as GPUParticles2D
+	if streak_particles == null:
+		return 1
+	return streak_particles.amount
