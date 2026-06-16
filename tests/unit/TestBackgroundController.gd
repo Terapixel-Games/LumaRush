@@ -104,6 +104,30 @@ func test_match_burst_survives_pulse_taper_so_particles_can_exit_view() -> void:
 	assert_that(boost_long_streak_particles.lifetime).is_greater(FeatureFlags.starfield_match_pulse_seconds() * 6.0)
 	controller.queue_free()
 
+func test_rapid_match_pulses_coalesce_into_single_background_burst() -> void:
+	var controller: BackgroundController = preload("res://src/visual/BackgroundController.tscn").instantiate()
+	get_tree().root.add_child(controller)
+	await get_tree().process_frame
+
+	controller.pulse_starfield(1.2, Color(1.0, 0.1, 0.02, 1.0))
+	var first_serial: int = controller._boost_burst_serial
+	var boost_particles: GPUParticles2D = controller.get_node_or_null("BoostParticles") as GPUParticles2D
+	var boost_streak_particles: GPUParticles2D = controller.get_node_or_null("BoostStreakParticles") as GPUParticles2D
+	assert_that(boost_particles).is_not_null()
+	assert_that(boost_streak_particles).is_not_null()
+	var first_particle_amount: int = boost_particles.amount
+	var first_streak_amount: int = boost_streak_particles.amount
+
+	controller.pulse_starfield(2.0, Color(0.0, 1.0, 0.18, 1.0))
+	await get_tree().process_frame
+
+	assert_that(controller._boost_burst_serial).is_equal(first_serial)
+	assert_that(boost_particles.emitting).is_true()
+	assert_that(boost_streak_particles.emitting).is_true()
+	assert_that(boost_particles.amount).is_greater_equal(first_particle_amount)
+	assert_that(boost_streak_particles.amount).is_greater_equal(first_streak_amount)
+	controller.queue_free()
+
 func streak_particles_amount_floor(controller: BackgroundController) -> int:
 	var streak_particles: GPUParticles2D = controller.get_node_or_null("StreakParticles") as GPUParticles2D
 	if streak_particles == null:

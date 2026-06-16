@@ -46,6 +46,8 @@ var _boost_streak_color: Color = Color(1, 1, 1, 1)
 var _boost_density_mul: float = 1.0
 var _boost_speed_mul: float = 1.0
 var _boost_brightness_mul: float = 1.0
+var _boost_burst_started_msec: int = -100000
+var _boost_burst_serial: int = 0
 var _viewport_size: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
@@ -178,12 +180,20 @@ func set_deterministic(enabled: bool) -> void:
 func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0, 0)) -> void:
 	if _deterministic:
 		return
-	if is_instance_valid(_pulse_tween):
-		_pulse_tween.kill()
 	var hit: float = clamp(intensity, 1.0, 2.8)
 	_match_density_mul = 1.0 + ((FeatureFlags.starfield_match_pulse_density_mult() - 1.0) * hit)
 	_match_speed_mul = 1.0 + ((FeatureFlags.starfield_match_pulse_speed_mult() - 1.0) * hit)
 	_match_brightness_mul = 1.0 + ((FeatureFlags.starfield_match_pulse_brightness_mult() - 1.0) * hit)
+	var now_msec: int = Time.get_ticks_msec()
+	if _should_coalesce_match_burst(now_msec):
+		_boost_density_mul = max(_boost_density_mul, _match_density_mul)
+		_boost_speed_mul = max(_boost_speed_mul, _match_speed_mul)
+		_boost_brightness_mul = max(_boost_brightness_mul, _match_brightness_mul)
+		_apply_match_boost_color(match_color)
+		_update_starfield_runtime()
+		return
+	if is_instance_valid(_pulse_tween):
+		_pulse_tween.kill()
 	_boost_density_mul = _match_density_mul
 	_boost_speed_mul = _match_speed_mul
 	_boost_brightness_mul = _match_brightness_mul
@@ -192,6 +202,8 @@ func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0,
 	_pulse_tween = create_tween()
 	# Keep match hits sharp: spike immediately, hold briefly, then taper.
 	_pulse_tween.tween_interval(FeatureFlags.starfield_match_pulse_seconds() * min(hit, 1.8))
+	_boost_burst_started_msec = now_msec
+	_boost_burst_serial += 1
 	if _boost_particles:
 		_boost_particles.restart()
 		_boost_particles.emitting = true
@@ -212,6 +224,19 @@ func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0,
 	_pulse_tween.tween_method(func(v: float) -> void:
 		_match_brightness_mul = v
 	, _match_brightness_mul, 1.0, max(0.22, FeatureFlags.starfield_match_pulse_seconds() * 1.8))
+
+func _should_coalesce_match_burst(now_msec: int) -> bool:
+	if not _is_boost_burst_active():
+		return false
+	var coalesce_msec: int = int(round(max(120.0, FeatureFlags.starfield_match_pulse_seconds() * 1000.0 * 1.25)))
+	return now_msec - _boost_burst_started_msec <= coalesce_msec
+
+func _is_boost_burst_active() -> bool:
+	return (
+		(_boost_particles != null and _boost_particles.emitting)
+		or (_boost_streak_particles != null and _boost_streak_particles.emitting)
+		or (_boost_long_streak_particles != null and _boost_long_streak_particles.emitting)
+	)
 
 func _apply_match_boost_color(match_color: Color) -> void:
 	if match_color.a <= 0.0:
