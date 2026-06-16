@@ -1546,6 +1546,8 @@ func _sync_gameplay_overlay_state() -> void:
 	var blocked := _gameplay_affordances_blocked()
 	if board != null and is_instance_valid(board):
 		board.set_board_input_enabled(not blocked)
+	if _pressure_hud != null and is_instance_valid(_pressure_hud):
+		_pressure_hud.visible = not blocked
 	_update_powerup_buttons()
 
 func _gameplay_affordances_blocked() -> bool:

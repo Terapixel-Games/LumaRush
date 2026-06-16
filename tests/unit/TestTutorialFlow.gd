@@ -176,6 +176,7 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	var checkbox: Control = modal.get_node_or_null("Center/Panel/VBox/DoNotShow") as Control
 	var board_view: BoardView = game.get_node_or_null("BoardView") as BoardView
 	var hint_button: Control = game.get_node_or_null("UI/Powerups/Hint") as Control
+	var pressure_hud: Control = game.get_node_or_null("UI/PressureHud") as Control
 	assert_that(title.text).is_equal("Open Run")
 	assert_that(message.text).contains("Open run")
 	assert_that(message.text).contains("Pure scores stay separate")
@@ -240,6 +241,8 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	assert_that(panel_rect.end.y).is_less_equal(target_rect.position.y - 6.0)
 	assert_that(panel_rect.position.y).is_less(board_rect.end.y)
 	assert_that(absf(pointer_outer.polygon[2].x - target_rect.get_center().x)).is_less_equal(2.0)
+	assert_that(pressure_hud).is_not_null()
+	assert_that(pressure_hud.visible).is_false()
 	assert_that(board_view.is_board_input_enabled()).is_false()
 	var board_snapshot: Array = board_view.capture_snapshot()
 	var playable_cell: Vector2i = _first_playable_cell(board_view)
@@ -258,6 +261,7 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	await get_tree().process_frame
 	assert_that(game.get_node_or_null("TutorialTipModal")).is_null()
 	assert_that(board_view.is_board_input_enabled()).is_true()
+	assert_that(pressure_hud.visible).is_true()
 	assert_that(game.get("_current_mode")).is_equal("PURE")
 	assert_that(int(game.get("_hint_charges"))).is_equal(starting_hints)
 	assert_that(int(game.get("_run_powerups_used_total"))).is_equal(0)
@@ -385,10 +389,12 @@ func test_pause_overlay_suppresses_hint_indicator_and_badges() -> void:
 	var undo_badge_panel: Control = game.get_node_or_null("UI/Powerups/Undo/Badge") as Control
 	var prism_badge_panel: Control = game.get_node_or_null("UI/Powerups/RemoveColor/Badge") as Control
 	var hint_badge_panel: Control = game.get_node_or_null("UI/Powerups/Hint/Badge") as Control
+	var pressure_hud: Control = game.get_node_or_null("UI/PressureHud") as Control
 	assert_that(board_view).is_not_null()
 	assert_that(undo_badge_panel).is_not_null()
 	assert_that(prism_badge_panel).is_not_null()
 	assert_that(hint_badge_panel).is_not_null()
+	assert_that(pressure_hud).is_not_null()
 
 	game.set("_undo_charges", 1)
 	game.set("_remove_color_charges", 1)
@@ -409,6 +415,7 @@ func test_pause_overlay_suppresses_hint_indicator_and_badges() -> void:
 	assert_that(undo_badge_panel.visible).is_false()
 	assert_that(prism_badge_panel.visible).is_false()
 	assert_that(hint_badge_panel.visible).is_false()
+	assert_that(pressure_hud.visible).is_false()
 	assert_that(board_view.is_board_input_enabled()).is_false()
 	var pause_snapshot: Array = board_view.capture_snapshot()
 	var pause_cell: Vector2i = _first_playable_cell(board_view)
@@ -426,6 +433,7 @@ func test_pause_overlay_suppresses_hint_indicator_and_badges() -> void:
 	assert_that(undo_badge_panel.visible).is_true()
 	assert_that(prism_badge_panel.visible).is_true()
 	assert_that(hint_badge_panel.visible).is_true()
+	assert_that(pressure_hud.visible).is_true()
 	assert_that(board_view.is_board_input_enabled()).is_true()
 
 	get_tree().paused = false
@@ -444,7 +452,9 @@ func test_account_modal_suppresses_powerup_badges_until_closed() -> void:
 	var prism_badge_panel: Control = game.get_node_or_null("UI/Powerups/RemoveColor/Badge") as Control
 	var hint_badge_panel: Control = game.get_node_or_null("UI/Powerups/Hint/Badge") as Control
 	var board_view: BoardView = game.get_node_or_null("BoardView") as BoardView
+	var pressure_hud: Control = game.get_node_or_null("UI/PressureHud") as Control
 	assert_that(board_view).is_not_null()
+	assert_that(pressure_hud).is_not_null()
 	game.set("_undo_charges", 1)
 	game.set("_remove_color_charges", 1)
 	game.set("_hint_charges", 1)
@@ -460,6 +470,7 @@ func test_account_modal_suppresses_powerup_badges_until_closed() -> void:
 	assert_that(undo_badge_panel.visible).is_false()
 	assert_that(prism_badge_panel.visible).is_false()
 	assert_that(hint_badge_panel.visible).is_false()
+	assert_that(pressure_hud.visible).is_false()
 	assert_that(board_view.is_board_input_enabled()).is_false()
 	var modal_snapshot: Array = board_view.capture_snapshot()
 	var modal_cell: Vector2i = _first_playable_cell(board_view)
@@ -470,10 +481,12 @@ func test_account_modal_suppresses_powerup_badges_until_closed() -> void:
 
 	account_modal.queue_free()
 	await get_tree().process_frame
+	await get_tree().process_frame
 	game.call("_update_powerup_buttons")
 	assert_that(undo_badge_panel.visible).is_true()
 	assert_that(prism_badge_panel.visible).is_true()
 	assert_that(hint_badge_panel.visible).is_true()
+	assert_that(pressure_hud.visible).is_true()
 	assert_that(board_view.is_board_input_enabled()).is_true()
 
 	game.queue_free()
