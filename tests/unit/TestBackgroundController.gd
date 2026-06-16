@@ -42,6 +42,12 @@ func test_match_pulse_tints_boost_particles_without_recoloring_ambient_particles
 	assert_that(boost_particles.emitting).is_true()
 	assert_that(boost_streak_particles.emitting).is_true()
 	assert_that(boost_particles.amount).is_greater(ambient_particles.amount / 2)
+	var viewport_radius: float = controller.get_viewport_rect().size.length() * 0.5
+	var streak_travel_budget: float = (
+		boost_streak_material.initial_velocity_max * boost_streak_particles.lifetime
+		+ (0.5 * boost_streak_material.linear_accel_max * boost_streak_particles.lifetime * boost_streak_particles.lifetime)
+	) * boost_streak_particles.speed_scale
+	assert_that(streak_travel_budget).is_greater_equal(viewport_radius)
 	assert_that(boost_color.r).is_greater_equal(match_color.r - 0.001)
 	assert_that(boost_color.g).is_greater(boost_color.b)
 	assert_that(boost_material.color.r).is_greater_equal(match_color.r - 0.001)

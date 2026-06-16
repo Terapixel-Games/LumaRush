@@ -381,7 +381,7 @@ func _setup_boost_emitters(center: Vector2) -> void:
 	_boost_particles.local_coords = true
 	_boost_particles.one_shot = true
 	_boost_particles.explosiveness = 1.0
-	_boost_particles.lifetime = min(1.2, particles.lifetime)
+	_boost_particles.lifetime = min(2.35, particles.lifetime)
 	_boost_particles.preprocess = 0.0
 	_boost_particles.texture = _particle_tex
 	_boost_particles.process_material = (particles.process_material as ParticleProcessMaterial).duplicate(true)
@@ -394,7 +394,7 @@ func _setup_boost_emitters(center: Vector2) -> void:
 	_boost_streak_particles.local_coords = true
 	_boost_streak_particles.one_shot = true
 	_boost_streak_particles.explosiveness = 1.0
-	_boost_streak_particles.lifetime = min(0.95, streak_particles.lifetime)
+	_boost_streak_particles.lifetime = min(2.0, streak_particles.lifetime)
 	_boost_streak_particles.preprocess = 0.0
 	_boost_streak_particles.texture = _streak_tex
 	_boost_streak_particles.process_material = (streak_particles.process_material as ParticleProcessMaterial).duplicate(true)
@@ -408,14 +408,14 @@ func _prepare_boost_process_material(material: ParticleProcessMaterial, streak: 
 	material.direction = Vector3(1.0, 0.0, 0.0)
 	material.spread = 180.0
 	material.gravity = Vector3.ZERO
-	material.radial_accel_min = 160.0 if streak else 220.0
-	material.radial_accel_max = 360.0 if streak else 480.0
-	material.linear_accel_min = 120.0 if streak else 80.0
-	material.linear_accel_max = 260.0 if streak else 190.0
-	material.initial_velocity_min = 520.0 if streak else 260.0
-	material.initial_velocity_max = 980.0 if streak else 560.0
-	material.scale_min = 0.46 if streak else 0.22
-	material.scale_max = 1.08 if streak else 0.56
+	material.radial_accel_min = 190.0 if streak else 260.0
+	material.radial_accel_max = 430.0 if streak else 560.0
+	material.linear_accel_min = 160.0 if streak else 100.0
+	material.linear_accel_max = 340.0 if streak else 240.0
+	material.initial_velocity_min = 760.0 if streak else 360.0
+	material.initial_velocity_max = 1320.0 if streak else 760.0
+	material.scale_min = 0.5 if streak else 0.24
+	material.scale_max = 1.18 if streak else 0.64
 
 func _update_boost_emitters() -> void:
 	if _boost_particles == null or _boost_streak_particles == null:
