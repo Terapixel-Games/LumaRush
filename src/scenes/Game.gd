@@ -187,14 +187,16 @@ func _notification(what: int) -> void:
 func _process(delta: float) -> void:
 	_tick_combo_timeout(delta)
 	if _shake_time_left <= 0.0:
-		if board and board.position != _board_anchor_pos:
-			board.position = _board_anchor_pos
+		if board:
+			var anchored_position := _board_position_for_scale(board.scale)
+			if board.position != anchored_position:
+				board.position = anchored_position
 		return
 	_shake_time_left = max(0.0, _shake_time_left - delta)
 	var amplitude : float = max(0.0, _shake_strength * (_shake_time_left / 0.12))
 	var jitter := Vector2(randf_range(-amplitude, amplitude), randf_range(-amplitude, amplitude))
 	if board:
-		board.position = _board_anchor_pos + jitter
+		board.position = _board_position_for_scale(board.scale, jitter)
 
 func _on_match_made(group: Array) -> void:
 	combo += 1
@@ -456,14 +458,20 @@ func _play_powerup_juice(flash_color: Color) -> void:
 	)
 
 func _set_board_scale_centered(target_scale: Vector2) -> void:
-	var board_center_local: Vector2 = Vector2(
-		float(board.width) * board.tile_size * 0.5,
-		float(board.height) * board.tile_size * 0.5
-	)
-	var center_before: Vector2 = board.to_global(board_center_local)
 	board.scale = target_scale
-	var center_after: Vector2 = board.to_global(board_center_local)
-	board.global_position += center_before - center_after
+	board.position = _board_position_for_scale(target_scale)
+
+func _board_position_for_scale(target_scale: Vector2, offset: Vector2 = Vector2.ZERO) -> Vector2:
+	if board == null:
+		return _board_anchor_pos + offset
+	var board_half_size: Vector2 = _board_unscaled_size() * 0.5
+	var center_anchor: Vector2 = _board_anchor_pos + board_half_size
+	return center_anchor - Vector2(board_half_size.x * target_scale.x, board_half_size.y * target_scale.y) + offset
+
+func _board_unscaled_size() -> Vector2:
+	if board == null:
+		return Vector2.ZERO
+	return Vector2(float(board.width) * board.tile_size, float(board.height) * board.tile_size)
 
 func _grant_bonus_powerup(powerup_type: String) -> void:
 	match powerup_type:

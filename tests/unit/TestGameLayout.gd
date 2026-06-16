@@ -164,7 +164,18 @@ func test_powerup_juice_resets_board_scale_after_rapid_retrigger() -> void:
 
 	var board: BoardView = game.get_node_or_null("BoardView") as BoardView
 	assert_that(board).is_not_null()
+	var center_before: Vector2 = _board_visual_center(board)
 	game.call("_play_powerup_juice", Color(1.0, 0.84, 0.18, 0.28))
+	var scaled_during_cue := false
+	for _i in range(12):
+		await get_tree().process_frame
+		if board.scale.x > 1.001:
+			scaled_during_cue = true
+			var center_during_cue: Vector2 = _board_visual_center(board)
+			assert_that(absf(center_during_cue.x - center_before.x)).is_less_equal(0.5)
+			assert_that(absf(center_during_cue.y - center_before.y)).is_less_equal(0.5)
+			break
+	assert_that(scaled_during_cue).is_true()
 	await get_tree().process_frame
 	game.call("_play_powerup_juice", Color(0.0, 0.96, 1.0, 0.28))
 	await get_tree().process_frame
@@ -215,3 +226,7 @@ func _rect_center_y(rect: Rect2) -> float:
 
 func _rect_center_x(rect: Rect2) -> float:
 	return rect.position.x + (rect.size.x * 0.5)
+
+func _board_visual_center(board: BoardView) -> Vector2:
+	var board_size := Vector2(float(board.width) * board.tile_size, float(board.height) * board.tile_size)
+	return board.global_position + Vector2(board_size.x * board.scale.x, board_size.y * board.scale.y) * 0.5
