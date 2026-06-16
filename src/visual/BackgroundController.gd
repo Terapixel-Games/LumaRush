@@ -422,12 +422,11 @@ func _setup_boost_emitters(center: Vector2) -> void:
 	_boost_long_streak_particles.process_material = (long_streak_particles.process_material as ParticleProcessMaterial).duplicate(true)
 	_prepare_boost_process_material(_boost_long_streak_particles.process_material as ParticleProcessMaterial, true, true)
 	add_child(_boost_long_streak_particles)
-	_configure_boost_emission_area()
 
 func _prepare_boost_process_material(material: ParticleProcessMaterial, streak: bool, long_streak: bool = false) -> void:
 	if material == null:
 		return
-	material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_POINT
 	material.direction = Vector3(1.0, 0.0, 0.0)
 	material.spread = 180.0
 	material.gravity = Vector3.ZERO
@@ -448,15 +447,6 @@ func _prepare_boost_process_material(material: ParticleProcessMaterial, streak: 
 		material.radial_accel_max = 820.0
 		material.scale_min = 1.05
 		material.scale_max = 2.2
-
-func _configure_boost_emission_area() -> void:
-	var extents := Vector3(_viewport_size.x * 0.56, _viewport_size.y * 0.56, 0.0)
-	for emitter in [_boost_particles, _boost_streak_particles, _boost_long_streak_particles]:
-		if emitter == null:
-			continue
-		var material: ParticleProcessMaterial = emitter.process_material as ParticleProcessMaterial
-		if material:
-			material.emission_box_extents = extents
 
 func _update_boost_emitters() -> void:
 	if _boost_particles == null or _boost_streak_particles == null or _boost_long_streak_particles == null:
@@ -517,7 +507,6 @@ func _sync_layout() -> void:
 		_boost_streak_particles.position = center
 	if _boost_long_streak_particles:
 		_boost_long_streak_particles.position = center
-	_configure_boost_emission_area()
 
 func _build_soft_particle_texture(size: int, softness: float) -> Texture2D:
 	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
