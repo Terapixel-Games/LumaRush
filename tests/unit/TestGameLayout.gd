@@ -28,11 +28,13 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 	var pressure_rival: Label = game.get_node_or_null("UI/PressureHud/Margin/Row/Rival") as Label
 	var pressure_matches: Label = game.get_node_or_null("UI/PressureHud/Margin/Row/Matches") as Label
 	var pressure_meter: ProgressBar = game.get_node_or_null("UI/PressureHud/Margin/Row/RivalMeter") as ProgressBar
+	var pressure_glow: ColorRect = game.get_node_or_null("UI/PressureHud/Margin/Row/RivalMeter/PressureGlow") as ColorRect
 	var account_button: Control = game.get_node_or_null("UI/TopRightBar/Account") as Control
 	var shop_button: Control = game.get_node_or_null("UI/TopRightBar/Shop") as Control
 	var audio_button: Control = game.get_node_or_null("UI/TopRightBar/Audio") as Control
 	var powerups_row: Control = game.get_node_or_null("UI/Powerups") as Control
 	var undo_button: Control = game.get_node_or_null("UI/Powerups/Undo") as Control
+	var combo_drain_ring: Control = game.get_node_or_null("UI/TopBar/ComboPod/ComboDrainRing") as Control
 	assert_that(board).is_not_null()
 	assert_that(board_frame).is_not_null()
 	assert_that(top_bar_bg).is_not_null()
@@ -55,6 +57,9 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 	assert_that(pressure_rival).is_not_null()
 	assert_that(pressure_matches).is_not_null()
 	assert_that(pressure_meter).is_not_null()
+	assert_that(pressure_glow).is_not_null()
+	assert_that(combo_drain_ring).is_not_null()
+	assert_that(combo_drain_ring.visible).is_false()
 	assert_that(pressure_heat.text).contains("HEAT")
 	assert_that(pressure_rival.text).contains("RIVAL")
 	assert_that(pressure_matches.text).contains("LIVE MATCHES")
@@ -152,6 +157,52 @@ func test_gameplay_layout_stays_inside_wide_short_viewports() -> void:
 		assert_that(board_rect.position.y + board_rect.size.y).is_less_equal(powerups_rect.position.y + 1.0)
 
 	DisplayServer.window_set_size(original_window_size)
+	game.queue_free()
+
+func test_pressure_glow_and_combo_drain_ring_track_hud_state() -> void:
+	ProjectSettings.set_setting("lumarush/visual_test_mode", true)
+	var scene: PackedScene = load("res://src/scenes/Game.tscn") as PackedScene
+	var game: Control = scene.instantiate() as Control
+	assert_that(game).is_not_null()
+	get_tree().root.add_child(game)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var pressure_glow: ColorRect = game.get_node_or_null("UI/PressureHud/Margin/Row/RivalMeter/PressureGlow") as ColorRect
+	var combo_drain_ring: Control = game.get_node_or_null("UI/TopBar/ComboPod/ComboDrainRing") as Control
+	assert_that(pressure_glow).is_not_null()
+	assert_that(combo_drain_ring).is_not_null()
+	var glow_material: ShaderMaterial = pressure_glow.material as ShaderMaterial
+	assert_that(glow_material).is_not_null()
+	var idle_intensity: float = float(glow_material.get_shader_parameter("intensity"))
+
+	game.set("score", 999999)
+	game.call("_update_pressure_hud")
+	var full_intensity: float = float(glow_material.get_shader_parameter("intensity"))
+	var full_color: Color = glow_material.get_shader_parameter("glow_color")
+	assert_that(full_intensity).is_greater(idle_intensity)
+	assert_that(full_intensity).is_greater(1.0)
+	assert_that(full_color.r).is_greater(full_color.b)
+
+	game.set("combo", 1)
+	game.call("_arm_combo_timeout")
+	game.call("_update_pressure_hud")
+	assert_that(combo_drain_ring.visible).is_false()
+
+	game.set("combo", 2)
+	game.call("_arm_combo_timeout")
+	game.call("_update_pressure_hud")
+	assert_that(combo_drain_ring.visible).is_true()
+	assert_that(float(combo_drain_ring.get("time_fraction"))).is_greater(0.99)
+
+	game.set("_combo_timeout_remaining", 0.32)
+	game.call("_update_combo_warning_fx")
+	assert_that(float(combo_drain_ring.get("time_fraction"))).is_less(0.30)
+	assert_that(float(combo_drain_ring.get("warning_amount"))).is_greater(0.0)
+
+	game.call("_break_combo")
+	assert_that(combo_drain_ring.visible).is_false()
+	assert_that(game.get("combo")).is_equal(0)
 	game.queue_free()
 
 func test_powerup_juice_resets_board_scale_after_rapid_retrigger() -> void:

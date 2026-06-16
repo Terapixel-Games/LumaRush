@@ -1,6 +1,8 @@
 extends Control
 
 const NEON_RUN_DECK := preload("res://src/ui/NeonRunDeck.gd")
+const HUD_DRAIN_RING := preload("res://src/ui/HudDrainRing.gd")
+const HUD_GLOW_SHADER := preload("res://addons/arcade_core/ui/shaders/glow.gdshader")
 
 @onready var board: BoardView = $BoardView
 @onready var top_bar_bg: Control = $UI/TopBarBg
@@ -71,10 +73,18 @@ var _pressure_heat_label: Label
 var _pressure_rival_label: Label
 var _pressure_matches_label: Label
 var _pressure_bar: ProgressBar
+var _pressure_glow: ColorRect
+var _pressure_glow_material: ShaderMaterial
+var _pressure_glow_tween: Tween
+var _pressure_glow_progress: float = -1.0
+var _pressure_glow_intensity: float = 0.0
+var _pressure_glow_clock: float = 0.0
 var _score_burst_label: Label
 var _cabinet_title_label: Label
 var _combo_pod_label: Label
 var _rival_pod_label: Label
+var _combo_drain_ring: HudDrainRing
+var _combo_warning_tween: Tween
 const COMBO_BREAK_TIMEOUT_SECONDS: float = 1.8
 
 const ICON_UNDO: Texture2D = preload("res://assets/ui/icons/atlas/powerup_undo.tres")
@@ -187,6 +197,7 @@ func _notification(what: int) -> void:
 
 func _process(delta: float) -> void:
 	_tick_combo_timeout(delta)
+	_tick_pressure_glow(delta)
 	if _shake_time_left <= 0.0:
 		if board:
 			var anchored_position := _board_position_for_scale(board.scale)
@@ -219,10 +230,10 @@ func _on_match_feedback(group: Array, center_global: Vector2, color_idx: int = -
 	var next_combo: int = combo + 1
 	var gained: int = group.size() * 10 * next_combo
 	var intensity: float = _match_feedback_intensity(group.size(), next_combo)
-	_show_match_center_score(center_global, gained, next_combo, group.size(), intensity)
 	var match_color := Color(0, 0, 0, 0)
 	if board != null and color_idx >= 0:
 		match_color = board.tile_color_for_index(color_idx)
+	_show_match_center_score(center_global, gained, next_combo, group.size(), intensity, match_color)
 	BackgroundMood.pulse_starfield(intensity, match_color)
 	_pulse_match_chrome(intensity)
 
@@ -1108,6 +1119,7 @@ func _layout_powerups(view_size: Vector2, row_width: float, row_height: float) -
 			button.custom_minimum_size = Vector2(0.0, row_height)
 
 func _refresh_button_pivots() -> void:
+	_layout_combo_drain_ring()
 	for button_variant in [pause_button, account_button, shop_button, audio_button, undo_button, remove_color_button, hint_button]:
 		var button: Control = button_variant as Control
 		if button == null:
@@ -1159,6 +1171,7 @@ func _setup_cabinet_hud() -> void:
 		_combo_pod_label = _make_hud_pod("ComboPod", Color(1.0, 0.76, 0.1, 1.0))
 		top_bar.add_child(_combo_pod_label)
 		top_bar.move_child(_combo_pod_label, min(1, top_bar.get_child_count() - 1))
+		_setup_combo_drain_ring()
 	if _rival_pod_label == null:
 		_rival_pod_label = _make_hud_pod("RivalPod", Color(0.55, 0.24, 1.0, 1.0))
 		top_bar.add_child(_rival_pod_label)
@@ -1176,9 +1189,13 @@ func _make_hud_pod(node_name: String, color: Color) -> Label:
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_outline_color", Color(0.02, 0.01, 0.08, 0.98))
 	label.add_theme_constant_override("outline_size", 4)
+	label.add_theme_stylebox_override("normal", _hud_pod_style(color))
+	return label
+
+func _hud_pod_style(color: Color, warning_amount: float = 0.0) -> StyleBoxFlat:
 	var backing := StyleBoxFlat.new()
 	backing.bg_color = Color(0.010, 0.016, 0.054, 0.72)
-	backing.border_color = color
+	backing.border_color = color.lerp(Color(1.0, 0.10, 0.36, 1.0), warning_amount)
 	backing.border_width_left = 3
 	backing.border_width_top = 3
 	backing.border_width_right = 3
@@ -1187,10 +1204,30 @@ func _make_hud_pod(node_name: String, color: Color) -> Label:
 	backing.corner_radius_top_right = 5
 	backing.corner_radius_bottom_left = 5
 	backing.corner_radius_bottom_right = 5
-	backing.shadow_color = Color(color.r, color.g, color.b, 0.30)
-	backing.shadow_size = 14
-	label.add_theme_stylebox_override("normal", backing)
-	return label
+	var shadow_color: Color = backing.border_color
+	backing.shadow_color = Color(shadow_color.r, shadow_color.g, shadow_color.b, 0.30 + (warning_amount * 0.28))
+	backing.shadow_size = int(round(14.0 + (warning_amount * 12.0)))
+	return backing
+
+func _setup_combo_drain_ring() -> void:
+	if _combo_pod_label == null or _combo_drain_ring != null:
+		return
+	_combo_drain_ring = HUD_DRAIN_RING.new()
+	_combo_drain_ring.name = "ComboDrainRing"
+	_combo_drain_ring.visible = false
+	_combo_drain_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_combo_drain_ring.z_index = 5
+	_combo_pod_label.add_child(_combo_drain_ring)
+	_layout_combo_drain_ring()
+
+func _layout_combo_drain_ring() -> void:
+	if _combo_drain_ring == null:
+		return
+	_combo_drain_ring.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_combo_drain_ring.offset_left = -6.0
+	_combo_drain_ring.offset_top = -6.0
+	_combo_drain_ring.offset_right = 6.0
+	_combo_drain_ring.offset_bottom = 6.0
 
 func _cabinet_title_height(view_size: Vector2) -> float:
 	return clamp(view_size.y * (0.085 if ArcadeResponsiveLayout.is_wide(view_size) else 0.092), 54.0, 104.0)
@@ -1237,10 +1274,12 @@ func _setup_pressure_hud() -> void:
 	_pressure_bar.max_value = 100.0
 	_pressure_bar.value = 0.0
 	_pressure_bar.show_percentage = false
+	_pressure_bar.clip_contents = false
 	_pressure_bar.custom_minimum_size = Vector2(180.0, 14.0)
 	_pressure_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_pressure_bar.add_theme_stylebox_override("background", _pressure_bar_style(Color(0.05, 0.09, 0.16, 0.88)))
 	_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(0.18, 0.86, 1.0, 0.92)))
+	_setup_pressure_glow()
 	row.add_child(_pressure_bar)
 	_pressure_rival_label = _make_pressure_label("Rival")
 	row.add_child(_pressure_rival_label)
@@ -1295,6 +1334,35 @@ func _pressure_bar_style(color: Color) -> StyleBoxFlat:
 	style.corner_radius_bottom_right = 999
 	return style
 
+func _setup_pressure_glow() -> void:
+	if _pressure_bar == null or _pressure_glow != null:
+		return
+	_pressure_glow = ColorRect.new()
+	_pressure_glow.name = "PressureGlow"
+	_pressure_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pressure_glow.color = Color(1.0, 1.0, 1.0, 1.0)
+	_pressure_glow.z_index = 3
+	_pressure_glow_material = ShaderMaterial.new()
+	_pressure_glow_material.shader = HUD_GLOW_SHADER
+	_pressure_glow_material.set_shader_parameter("falloff", 1.4)
+	_pressure_glow_material.set_shader_parameter("edge_mix", 0.92)
+	_pressure_glow_material.set_shader_parameter("time_scale", 0.26)
+	_pressure_glow_material.set_shader_parameter("pulse_amount", 0.0)
+	_pressure_glow.material = _pressure_glow_material
+	_pressure_bar.add_child(_pressure_glow)
+	_layout_pressure_glow()
+	_set_pressure_glow_state(0.0, Color(0.18, 0.86, 1.0, 0.0))
+
+func _layout_pressure_glow() -> void:
+	if _pressure_glow == null or _pressure_bar == null:
+		return
+	var pad: float = clamp(max(_pressure_bar.size.y, _pressure_bar.custom_minimum_size.y) * 0.90, 9.0, 16.0)
+	_pressure_glow.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_pressure_glow.offset_left = -pad
+	_pressure_glow.offset_top = -pad
+	_pressure_glow.offset_right = pad
+	_pressure_glow.offset_bottom = pad
+
 func _layout_pressure_hud(view_size: Vector2, content_left: float, content_width: float) -> void:
 	if _pressure_hud == null or top_bar_bg == null:
 		return
@@ -1307,6 +1375,7 @@ func _layout_pressure_hud(view_size: Vector2, content_left: float, content_width
 	_pressure_hud.custom_minimum_size = _pressure_hud.size
 	if _pressure_bar:
 		_pressure_bar.custom_minimum_size.x = clamp(content_width * 0.28, 90.0, 260.0)
+		_layout_pressure_glow()
 	if _score_burst_label and board:
 		var board_size: Vector2 = Vector2(float(board.width) * board.tile_size, float(board.height) * board.tile_size)
 		_score_burst_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -1337,10 +1406,111 @@ func _update_pressure_hud() -> void:
 	_pressure_bar.value = progress * 100.0
 	if progress >= 1.0:
 		_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(1.0, 0.82, 0.28, 0.95)))
-	elif combo >= HIGH_COMBO_THRESHOLD:
-		_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(0.50, 0.20, 1.0, 0.92)))
 	else:
 		_pressure_bar.add_theme_stylebox_override("fill", _pressure_bar_style(Color(0.18, 0.86, 1.0, 0.92)))
+	var gained_progress: bool = _pressure_glow_progress >= 0.0 and progress > _pressure_glow_progress + 0.002
+	_update_pressure_glow(progress, gained_progress)
+	_update_combo_warning_fx()
+
+func _update_pressure_glow(progress: float, animate: bool) -> void:
+	if _pressure_glow == null or _pressure_glow_material == null:
+		_pressure_glow_progress = progress
+		return
+	var clamped_progress: float = clamp(progress, 0.0, 1.0)
+	var glow_color: Color = _pressure_glow_color(clamped_progress)
+	var target_intensity: float = _pressure_glow_intensity_for_progress(clamped_progress)
+	if FeatureFlags.is_visual_test_mode() or not animate:
+		_set_pressure_glow_state(target_intensity, glow_color)
+	else:
+		if is_instance_valid(_pressure_glow_tween):
+			_pressure_glow_tween.kill()
+		var flash_intensity: float = min(1.72, target_intensity + 0.34)
+		_pressure_glow_material.set_shader_parameter("glow_color", glow_color)
+		_pressure_glow_tween = create_tween()
+		_pressure_glow_tween.tween_method(Callable(self, "_set_pressure_glow_intensity"), _pressure_glow_intensity, flash_intensity, 0.12).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		_pressure_glow_tween.tween_method(Callable(self, "_set_pressure_glow_intensity"), flash_intensity, target_intensity, 0.34).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_pressure_glow_progress = clamped_progress
+
+func _pressure_glow_color(progress: float) -> Color:
+	if progress >= 1.0:
+		return Color(1.0, 0.82, 0.28, 0.96)
+	var cyan := Color(0.18, 0.86, 1.0, 0.76)
+	var warm := Color(1.0, 0.70, 0.22, 0.90)
+	return cyan.lerp(warm, clamp((progress - 0.72) / 0.28, 0.0, 1.0))
+
+func _pressure_glow_intensity_for_progress(progress: float) -> float:
+	if progress >= 1.0:
+		return 1.28
+	return 0.10 + (pow(progress, 0.86) * 0.76)
+
+func _set_pressure_glow_state(intensity: float, color: Color) -> void:
+	if _pressure_glow == null or _pressure_glow_material == null:
+		return
+	_pressure_glow.visible = intensity > 0.02
+	_pressure_glow_material.set_shader_parameter("glow_color", color)
+	_pressure_glow_material.set_shader_parameter("pulse_amount", 0.10 if intensity >= 1.2 else 0.0)
+	_set_pressure_glow_intensity(intensity)
+
+func _set_pressure_glow_intensity(intensity: float) -> void:
+	if _pressure_glow_material == null:
+		return
+	_pressure_glow_intensity = max(0.0, intensity)
+	_pressure_glow_material.set_shader_parameter("intensity", _pressure_glow_intensity)
+
+func _tick_pressure_glow(delta: float) -> void:
+	if _pressure_glow_material == null or FeatureFlags.is_visual_test_mode():
+		return
+	_pressure_glow_clock = fmod(_pressure_glow_clock + delta, 1000.0)
+	_pressure_glow_material.set_shader_parameter("t", _pressure_glow_clock)
+
+func _update_combo_warning_fx() -> void:
+	if _combo_drain_ring == null:
+		return
+	var active: bool = combo >= 2 and _combo_timeout_remaining >= 0.0
+	_combo_drain_ring.visible = active
+	if not active:
+		_stop_combo_warning_tween()
+		_combo_drain_ring.time_fraction = 0.0
+		_combo_drain_ring.warning_amount = 0.0
+		_combo_drain_ring.pulse = 0.0
+		if _combo_pod_label:
+			var base_color := Color(1.0, 0.76, 0.1, 1.0)
+			_combo_pod_label.add_theme_color_override("font_color", base_color)
+			_combo_pod_label.add_theme_stylebox_override("normal", _hud_pod_style(base_color))
+		return
+	var fraction: float = clamp(_combo_timeout_remaining / COMBO_BREAK_TIMEOUT_SECONDS, 0.0, 1.0)
+	var warning_amount: float = clamp((0.42 - fraction) / 0.42, 0.0, 1.0)
+	var base := Color(1.0, 0.76, 0.1, 1.0)
+	var danger := Color(1.0, 0.10, 0.36, 1.0)
+	var pod_color: Color = base.lerp(danger, warning_amount)
+	_combo_drain_ring.time_fraction = fraction
+	_combo_drain_ring.warning_amount = warning_amount
+	if _combo_pod_label:
+		_combo_pod_label.add_theme_color_override("font_color", pod_color)
+		_combo_pod_label.add_theme_stylebox_override("normal", _hud_pod_style(base, warning_amount))
+	if warning_amount > 0.0:
+		_start_combo_warning_tween(warning_amount)
+	else:
+		_stop_combo_warning_tween()
+		_combo_drain_ring.pulse = 0.0
+
+func _start_combo_warning_tween(warning_amount: float) -> void:
+	if _combo_drain_ring == null:
+		return
+	if FeatureFlags.is_visual_test_mode():
+		_combo_drain_ring.pulse = 0.70 if warning_amount > 0.0 else 0.0
+		return
+	if is_instance_valid(_combo_warning_tween):
+		return
+	_combo_warning_tween = create_tween()
+	_combo_warning_tween.set_loops()
+	_combo_warning_tween.tween_property(_combo_drain_ring, "pulse", 1.0, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_combo_warning_tween.tween_property(_combo_drain_ring, "pulse", 0.18, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+func _stop_combo_warning_tween() -> void:
+	if is_instance_valid(_combo_warning_tween):
+		_combo_warning_tween.kill()
+	_combo_warning_tween = null
 
 func _show_score_burst(points: int) -> void:
 	if _score_burst_label == null or points <= 0:
@@ -1377,38 +1547,155 @@ func _show_combo_escalation() -> void:
 			_combo_label.visible = false
 	)
 
-func _show_match_center_score(center_global: Vector2, gained: int, next_combo: int, group_size: int, intensity: float) -> void:
-	var label := Label.new()
-	label.name = "MatchScoreBurst"
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.z_index = 80
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.text = "+%d" % gained
-	label.add_theme_font_override("font", Typography.interface_font(Typography.WEIGHT_BOLD))
+func _show_match_center_score(center_global: Vector2, gained: int, next_combo: int, group_size: int, intensity: float, match_color: Color = Color(0, 0, 0, 0)) -> void:
+	var burst := Control.new()
+	burst.name = "MatchScoreBurst"
+	burst.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	burst.z_index = 80
+	burst.size = Vector2(320.0, 116.0)
+	burst.pivot_offset = burst.size * 0.5
+	burst.scale = Vector2(0.68, 0.68)
+	$UI.add_child(burst)
+	burst.global_position = center_global - (burst.size * 0.5)
+
+	var accent: Color = match_color if match_color.a > 0.0 else Color(1.0, 0.82, 0.28, 1.0)
+	var primary: Color = Color(1.0, 0.92, 0.30, 1.0) if group_size < 5 else Color(1.0, 0.22, 0.30, 1.0)
+	var shock := ColorRect.new()
+	shock.name = "ShockRing"
+	shock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shock.color = Color(1.0, 1.0, 1.0, 1.0)
+	shock.set_anchors_preset(Control.PRESET_FULL_RECT)
+	shock.offset_left = -18.0
+	shock.offset_top = -16.0
+	shock.offset_right = 18.0
+	shock.offset_bottom = 16.0
+	var shock_material := ShaderMaterial.new()
+	shock_material.shader = HUD_GLOW_SHADER
+	shock_material.set_shader_parameter("glow_color", Color(primary.r, primary.g, primary.b, 0.82))
+	shock_material.set_shader_parameter("intensity", 1.1 + (intensity * 0.18))
+	shock_material.set_shader_parameter("falloff", 1.25)
+	shock_material.set_shader_parameter("edge_mix", 0.92)
+	shock_material.set_shader_parameter("pulse_amount", 0.0)
+	shock.material = shock_material
+	burst.add_child(shock)
+
+	var badge := Panel.new()
+	badge.name = "Badge"
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.set_anchors_preset(Control.PRESET_FULL_RECT)
+	badge.offset_left = 18.0
+	badge.offset_top = 18.0
+	badge.offset_right = -18.0
+	badge.offset_bottom = -18.0
+	badge.add_theme_stylebox_override("panel", _match_burst_badge_style(primary, accent, intensity))
+	burst.add_child(badge)
+
+	var margin := MarginContainer.new()
+	margin.name = "Margin"
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 18)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	badge.add_child(margin)
+
+	var stack := VBoxContainer.new()
+	stack.name = "TextStack"
+	stack.alignment = BoxContainer.ALIGNMENT_CENTER
+	stack.add_theme_constant_override("separation", 0)
+	margin.add_child(stack)
+
+	var score_label := Label.new()
+	score_label.name = "Score"
+	score_label.text = "+%d" % gained
+	score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	score_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	score_label.add_theme_font_override("font", Typography.interface_font(Typography.WEIGHT_BOLD))
+	score_label.add_theme_font_size_override("font_size", int(round(clamp(34.0 + (intensity * 9.0), 40.0, 60.0))))
+	score_label.add_theme_color_override("font_color", primary)
+	score_label.add_theme_color_override("font_outline_color", Color(0.03, 0.0, 0.08, 0.98))
+	score_label.add_theme_constant_override("outline_size", 5)
+	score_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stack.add_child(score_label)
+
+	var ribbon_text := ""
 	if next_combo >= 3:
-		label.text = "+%d\nCHAIN x%d" % [gained, next_combo]
+		ribbon_text = "CHAIN x%d" % next_combo
 	elif group_size >= 5:
-		label.text = "+%d\nBIG CLEAR" % gained
-	label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.30, 1.0) if group_size < 5 else Color(1.0, 0.22, 0.30, 1.0))
-	label.add_theme_color_override("font_outline_color", Color(0.03, 0.0, 0.08, 0.98))
-	label.add_theme_constant_override("outline_size", 5)
-	label.add_theme_font_size_override("font_size", int(round(clamp(30.0 + (intensity * 8.0), 34.0, 58.0))))
-	label.size = Vector2(260.0, 96.0)
-	label.pivot_offset = label.size * 0.5
-	label.scale = Vector2(0.68, 0.68)
-	$UI.add_child(label)
-	label.global_position = center_global - (label.size * 0.5)
-	var start_y: float = label.position.y
+		ribbon_text = "BIG CLEAR"
+	if not ribbon_text.is_empty():
+		var ribbon := Label.new()
+		ribbon.name = "Ribbon"
+		ribbon.text = ribbon_text
+		ribbon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		ribbon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		ribbon.add_theme_font_override("font", Typography.interface_font(Typography.WEIGHT_SEMIBOLD))
+		ribbon.add_theme_font_size_override("font_size", int(round(clamp(16.0 + (intensity * 3.0), 18.0, 28.0))))
+		ribbon.add_theme_color_override("font_color", Color(0.90, 1.0, 1.0, 0.96))
+		ribbon.add_theme_color_override("font_outline_color", Color(0.03, 0.0, 0.08, 0.98))
+		ribbon.add_theme_constant_override("outline_size", 3)
+		ribbon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		stack.add_child(ribbon)
+
+	_add_match_burst_sparks(burst, accent, primary)
+	if FeatureFlags.is_visual_test_mode():
+		burst.scale = Vector2.ONE
+		return
+	var start_y: float = burst.position.y
 	var tween := create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(label, "scale", Vector2(1.22, 1.22), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.tween_property(label, "position:y", start_y - 54.0, 0.34).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.chain().tween_property(label, "modulate:a", 0.0, 0.18)
+	tween.tween_property(burst, "scale", Vector2(1.14, 1.14), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(burst, "position:y", start_y - 54.0, 0.34).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.chain().tween_property(burst, "modulate:a", 0.0, 0.18)
 	tween.finished.connect(func() -> void:
-		if is_instance_valid(label):
-			label.queue_free()
+		if is_instance_valid(burst):
+			burst.queue_free()
 	)
+
+func _match_burst_badge_style(primary: Color, accent: Color, intensity: float) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.008, 0.018, 0.060, 0.88)
+	style.border_color = accent.lerp(primary, 0.45)
+	style.border_width_left = 3
+	style.border_width_top = 3
+	style.border_width_right = 3
+	style.border_width_bottom = 3
+	style.corner_radius_top_left = 16
+	style.corner_radius_top_right = 16
+	style.corner_radius_bottom_left = 16
+	style.corner_radius_bottom_right = 16
+	style.shadow_color = Color(primary.r, primary.g, primary.b, 0.34 + (intensity * 0.08))
+	style.shadow_size = int(round(clamp(16.0 + (intensity * 7.0), 18.0, 34.0)))
+	style.anti_aliasing = true
+	style.anti_aliasing_size = 1.1
+	return style
+
+func _add_match_burst_sparks(parent: Control, accent: Color, primary: Color) -> void:
+	var spark_specs: Array[Dictionary] = [
+		{"pos": Vector2(20.0, 24.0), "size": Vector2(6.0, 22.0), "rot": -0.78, "color": accent},
+		{"pos": Vector2(292.0, 22.0), "size": Vector2(5.0, 20.0), "rot": 0.72, "color": primary},
+		{"pos": Vector2(46.0, 96.0), "size": Vector2(5.0, 18.0), "rot": 0.94, "color": primary},
+		{"pos": Vector2(270.0, 92.0), "size": Vector2(6.0, 22.0), "rot": -0.88, "color": accent},
+		{"pos": Vector2(156.0, 8.0), "size": Vector2(4.0, 16.0), "rot": 1.45, "color": accent},
+	]
+	for i in range(spark_specs.size()):
+		var spec: Dictionary = spark_specs[i]
+		var spark := ColorRect.new()
+		spark.name = "Spark%d" % i
+		spark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		spark.size = spec["size"]
+		spark.position = spec["pos"]
+		spark.pivot_offset = spark.size * 0.5
+		spark.rotation = float(spec["rot"])
+		var color: Color = spec["color"]
+		spark.color = Color(color.r, color.g, color.b, 0.78)
+		parent.add_child(spark)
+		if not FeatureFlags.is_visual_test_mode():
+			var direction: Vector2 = (spark.position - (parent.size * 0.5)).normalized()
+			var spark_tween := spark.create_tween()
+			spark_tween.set_parallel(true)
+			spark_tween.tween_property(spark, "position", spark.position + (direction * 18.0), 0.24).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			spark_tween.tween_property(spark, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 
 func _pulse_match_chrome(intensity: float) -> void:
 	if board_glow:
@@ -1809,12 +2096,16 @@ func _remaining_powerup_charges(powerup_type: String) -> int:
 func _arm_combo_timeout() -> void:
 	if combo <= 0:
 		_combo_timeout_remaining = -1.0
+		_update_combo_warning_fx()
 		return
 	_combo_timeout_remaining = COMBO_BREAK_TIMEOUT_SECONDS
+	_update_combo_warning_fx()
 
 func _tick_combo_timeout(delta: float) -> void:
 	if combo <= 0:
-		_combo_timeout_remaining = -1.0
+		if _combo_timeout_remaining != -1.0:
+			_combo_timeout_remaining = -1.0
+			_update_combo_warning_fx()
 		return
 	if _ending_transition_started or _run_finished:
 		return
@@ -1823,6 +2114,7 @@ func _tick_combo_timeout(delta: float) -> void:
 	if _combo_timeout_remaining <= 0.0:
 		return
 	_combo_timeout_remaining = max(0.0, _combo_timeout_remaining - delta)
+	_update_combo_warning_fx()
 	if _combo_timeout_remaining <= 0.0:
 		_break_combo()
 
@@ -1831,3 +2123,6 @@ func _break_combo() -> void:
 		return
 	combo = 0
 	_combo_timeout_remaining = -1.0
+	_update_score()
+	_update_pressure_hud()
+	_update_combo_warning_fx()
