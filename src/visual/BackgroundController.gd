@@ -1,6 +1,10 @@
 extends Node2D
 class_name BackgroundController
 
+const BOOST_BURST_SLOT_COUNT := 4
+const BOOST_BURST_MAX_SLOT_COUNT := 8
+const BOOST_BURST_DEDUPE_MSEC := 90
+
 @onready var bg_rect: ColorRect = $ColorRect
 @onready var center_glow: ColorRect = $CenterGlow
 @onready var particles: GPUParticles2D = $Particles
@@ -47,8 +51,9 @@ var _boost_density_mul: float = 1.0
 var _boost_speed_mul: float = 1.0
 var _boost_brightness_mul: float = 1.0
 var _boost_burst_started_msec: int = -100000
-var _boost_burst_lockout_until_msec: int = -100000
 var _boost_burst_serial: int = 0
+var _boost_burst_slots: Array[Dictionary] = []
+var _last_boost_burst_slot_index: int = -1
 var _viewport_size: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
@@ -97,8 +102,7 @@ func _ready() -> void:
 	particles.emitting = true
 	streak_particles.emitting = true
 	long_streak_particles.emitting = true
-	_boost_particles.emitting = false
-	_boost_streak_particles.emitting = false
+	_set_boost_slots_emitting(false)
 	_calm_point_color = FeatureFlags.starfield_calm_point_color()
 	_calm_streak_color = FeatureFlags.starfield_calm_streak_color()
 	_hype_point_color = FeatureFlags.starfield_hype_point_color()
@@ -169,12 +173,7 @@ func set_deterministic(enabled: bool) -> void:
 		particles.emitting = false
 		streak_particles.emitting = false
 		long_streak_particles.emitting = false
-		if _boost_particles:
-			_boost_particles.emitting = false
-		if _boost_streak_particles:
-			_boost_streak_particles.emitting = false
-		if _boost_long_streak_particles:
-			_boost_long_streak_particles.emitting = false
+		_set_boost_slots_emitting(false)
 		if is_instance_valid(_emission_tween):
 			_emission_tween.kill()
 
@@ -191,6 +190,9 @@ func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0,
 		_boost_speed_mul = max(_boost_speed_mul, _match_speed_mul)
 		_boost_brightness_mul = max(_boost_brightness_mul, _match_brightness_mul)
 		_apply_match_boost_color(match_color)
+		var active_slot := _last_boost_burst_slot()
+		if not active_slot.is_empty():
+			_configure_boost_slot(active_slot, _boost_density_mul, _boost_speed_mul, _boost_brightness_mul, _boost_point_color, _boost_streak_color)
 		_update_starfield_runtime()
 		return
 	if is_instance_valid(_pulse_tween):
@@ -199,22 +201,22 @@ func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0,
 	_boost_speed_mul = _match_speed_mul
 	_boost_brightness_mul = _match_brightness_mul
 	_apply_match_boost_color(match_color)
+	var boost_slot := _next_boost_burst_slot(now_msec)
+	if boost_slot.is_empty():
+		_update_starfield_runtime()
+		return
+	_configure_boost_slot(boost_slot, _boost_density_mul, _boost_speed_mul, _boost_brightness_mul, _boost_point_color, _boost_streak_color)
 	_update_starfield_runtime()
 	_pulse_tween = create_tween()
 	# Keep match hits sharp: spike immediately, hold briefly, then taper.
 	_pulse_tween.tween_interval(FeatureFlags.starfield_match_pulse_seconds() * min(hit, 1.8))
 	_boost_burst_started_msec = now_msec
-	_boost_burst_lockout_until_msec = now_msec + _boost_visual_lockout_msec()
+	boost_slot["lockout_until_msec"] = now_msec + _boost_visual_lockout_msec(boost_slot)
 	_boost_burst_serial += 1
-	if _boost_particles:
-		_boost_particles.restart()
-		_boost_particles.emitting = true
-	if _boost_streak_particles:
-		_boost_streak_particles.restart()
-		_boost_streak_particles.emitting = true
-	if _boost_long_streak_particles:
-		_boost_long_streak_particles.restart()
-		_boost_long_streak_particles.emitting = true
+	for emitter in [boost_slot.get("particles"), boost_slot.get("streak_particles"), boost_slot.get("long_streak_particles")]:
+		if emitter is GPUParticles2D:
+			emitter.restart()
+			emitter.emitting = true
 	_pulse_tween.set_parallel(true)
 	_pulse_tween.tween_method(func(v: float) -> void:
 		_match_speed_mul = v
@@ -228,16 +230,13 @@ func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0,
 	, _match_brightness_mul, 1.0, max(0.22, FeatureFlags.starfield_match_pulse_seconds() * 1.8))
 
 func _should_coalesce_match_burst(now_msec: int) -> bool:
-	return now_msec < _boost_burst_lockout_until_msec
+	return now_msec - _boost_burst_started_msec <= BOOST_BURST_DEDUPE_MSEC
 
-func _boost_visual_lockout_msec() -> int:
+func _boost_visual_lockout_msec(slot: Dictionary) -> int:
 	var lifetime: float = 0.0
-	if _boost_particles:
-		lifetime = max(lifetime, _boost_particles.lifetime)
-	if _boost_streak_particles:
-		lifetime = max(lifetime, _boost_streak_particles.lifetime)
-	if _boost_long_streak_particles:
-		lifetime = max(lifetime, _boost_long_streak_particles.lifetime)
+	for emitter in [slot.get("particles"), slot.get("streak_particles"), slot.get("long_streak_particles")]:
+		if emitter is GPUParticles2D:
+			lifetime = max(lifetime, emitter.lifetime)
 	return int(round(max(0.25, lifetime + 0.12) * 1000.0))
 
 func _apply_match_boost_color(match_color: Color) -> void:
@@ -247,9 +246,6 @@ func _apply_match_boost_color(match_color: Color) -> void:
 	var streak_color := Color(match_color.r, match_color.g, match_color.b, 1.0).lightened(0.32)
 	_boost_point_color = point_color
 	_boost_streak_color = streak_color
-	_apply_boost_material_color(_boost_particles, point_color, 0.96)
-	_apply_boost_material_color(_boost_streak_particles, streak_color, 1.0)
-	_apply_boost_material_color(_boost_long_streak_particles, streak_color, 1.0)
 
 func _apply_boost_material_color(emitter: GPUParticles2D, color: Color, alpha: float) -> void:
 	if emitter == null:
@@ -409,8 +405,18 @@ func _update_starfield_runtime() -> void:
 	_update_boost_emitters()
 
 func _setup_boost_emitters(center: Vector2) -> void:
+	_boost_burst_slots.clear()
+	var primary_slot := _create_boost_burst_slot(center, "")
+	_boost_burst_slots.append(primary_slot)
+	for i in range(1, BOOST_BURST_SLOT_COUNT):
+		_boost_burst_slots.append(_create_boost_burst_slot(center, "Slot%d" % (i + 1)))
+	_boost_particles = primary_slot["particles"]
+	_boost_streak_particles = primary_slot["streak_particles"]
+	_boost_long_streak_particles = primary_slot["long_streak_particles"]
+
+func _create_boost_burst_slot(center: Vector2, suffix: String) -> Dictionary:
 	_boost_particles = GPUParticles2D.new()
-	_boost_particles.name = "BoostParticles"
+	_boost_particles.name = "BoostParticles%s" % suffix
 	_boost_particles.position = center
 	_boost_particles.local_coords = true
 	_boost_particles.one_shot = true
@@ -423,7 +429,7 @@ func _setup_boost_emitters(center: Vector2) -> void:
 	add_child(_boost_particles)
 
 	_boost_streak_particles = GPUParticles2D.new()
-	_boost_streak_particles.name = "BoostStreakParticles"
+	_boost_streak_particles.name = "BoostStreakParticles%s" % suffix
 	_boost_streak_particles.position = center
 	_boost_streak_particles.local_coords = true
 	_boost_streak_particles.one_shot = true
@@ -436,7 +442,7 @@ func _setup_boost_emitters(center: Vector2) -> void:
 	add_child(_boost_streak_particles)
 
 	_boost_long_streak_particles = GPUParticles2D.new()
-	_boost_long_streak_particles.name = "BoostLongStreakParticles"
+	_boost_long_streak_particles.name = "BoostLongStreakParticles%s" % suffix
 	_boost_long_streak_particles.position = center
 	_boost_long_streak_particles.local_coords = true
 	_boost_long_streak_particles.one_shot = true
@@ -447,6 +453,12 @@ func _setup_boost_emitters(center: Vector2) -> void:
 	_boost_long_streak_particles.process_material = (long_streak_particles.process_material as ParticleProcessMaterial).duplicate(true)
 	_prepare_boost_process_material(_boost_long_streak_particles.process_material as ParticleProcessMaterial, true, true)
 	add_child(_boost_long_streak_particles)
+	return {
+		"particles": _boost_particles,
+		"streak_particles": _boost_streak_particles,
+		"long_streak_particles": _boost_long_streak_particles,
+		"lockout_until_msec": -100000,
+	}
 
 func _prepare_boost_process_material(material: ParticleProcessMaterial, streak: bool, long_streak: bool = false) -> void:
 	if material == null:
@@ -474,40 +486,56 @@ func _prepare_boost_process_material(material: ParticleProcessMaterial, streak: 
 		material.scale_max = 2.2
 
 func _update_boost_emitters() -> void:
-	if _boost_particles == null or _boost_streak_particles == null or _boost_long_streak_particles == null:
-		return
-	var extra_density: float = max(0.0, _boost_density_mul - 1.0)
-	_boost_particles.amount = max(1, int(round(720.0 * _star_density * extra_density)))
-	_boost_streak_particles.amount = max(1, int(round(260.0 * _star_density * extra_density)))
-	_boost_long_streak_particles.amount = max(1, int(round(96.0 * _star_density * extra_density)))
-	_boost_particles.speed_scale = _star_speed * _boost_speed_mul
-	_boost_streak_particles.speed_scale = _star_speed * _boost_speed_mul
-	_boost_long_streak_particles.speed_scale = _star_speed * _boost_speed_mul
-	_boost_particles.modulate = Color(
-		_boost_point_color.r,
-		_boost_point_color.g,
-		_boost_point_color.b,
-		min(1.0, 1.35 * _star_brightness * _boost_brightness_mul)
-	)
-	_boost_streak_particles.modulate = Color(
-		_boost_streak_color.r,
-		_boost_streak_color.g,
-		_boost_streak_color.b,
-		min(1.0, 1.55 * _star_brightness * _boost_brightness_mul)
-	)
-	_boost_long_streak_particles.modulate = Color(
-		_boost_streak_color.r,
-		_boost_streak_color.g,
-		_boost_streak_color.b,
-		min(1.0, 1.45 * _star_brightness * _boost_brightness_mul)
-	)
-	_apply_boost_material_color(_boost_particles, _boost_point_color, 0.96)
-	_apply_boost_material_color(_boost_streak_particles, _boost_streak_color, 1.0)
-	_apply_boost_material_color(_boost_long_streak_particles, _boost_streak_color, 1.0)
 	if _emission_activity <= 0.01:
-		_boost_particles.emitting = false
-		_boost_streak_particles.emitting = false
-		_boost_long_streak_particles.emitting = false
+		_set_boost_slots_emitting(false)
+
+func _configure_boost_slot(slot: Dictionary, density_mul: float, speed_mul: float, brightness_mul: float, point_color: Color, streak_color: Color) -> void:
+	var bp: GPUParticles2D = slot.get("particles") as GPUParticles2D
+	var sp: GPUParticles2D = slot.get("streak_particles") as GPUParticles2D
+	var lp: GPUParticles2D = slot.get("long_streak_particles") as GPUParticles2D
+	if bp == null or sp == null or lp == null:
+		return
+	var extra_density: float = max(0.0, density_mul - 1.0)
+	bp.amount = max(1, int(round(720.0 * _star_density * extra_density)))
+	sp.amount = max(1, int(round(260.0 * _star_density * extra_density)))
+	lp.amount = max(1, int(round(96.0 * _star_density * extra_density)))
+	bp.speed_scale = _star_speed * speed_mul
+	sp.speed_scale = _star_speed * speed_mul
+	lp.speed_scale = _star_speed * speed_mul
+	bp.modulate = Color(point_color.r, point_color.g, point_color.b, min(1.0, 1.35 * _star_brightness * brightness_mul))
+	sp.modulate = Color(streak_color.r, streak_color.g, streak_color.b, min(1.0, 1.55 * _star_brightness * brightness_mul))
+	lp.modulate = Color(streak_color.r, streak_color.g, streak_color.b, min(1.0, 1.45 * _star_brightness * brightness_mul))
+	_apply_boost_material_color(bp, point_color, 0.96)
+	_apply_boost_material_color(sp, streak_color, 1.0)
+	_apply_boost_material_color(lp, streak_color, 1.0)
+
+func _next_boost_burst_slot(now_msec: int) -> Dictionary:
+	if _boost_burst_slots.is_empty():
+		return {}
+	var start_index: int = posmod(_last_boost_burst_slot_index + 1, _boost_burst_slots.size())
+	for offset in range(_boost_burst_slots.size()):
+		var idx: int = posmod(start_index + offset, _boost_burst_slots.size())
+		var slot: Dictionary = _boost_burst_slots[idx]
+		if now_msec >= int(slot.get("lockout_until_msec", -100000)):
+			_last_boost_burst_slot_index = idx
+			return slot
+	if _boost_burst_slots.size() < BOOST_BURST_MAX_SLOT_COUNT:
+		var overflow_slot := _create_boost_burst_slot(_viewport_size * 0.5, "Slot%d" % (_boost_burst_slots.size() + 1))
+		_boost_burst_slots.append(overflow_slot)
+		_last_boost_burst_slot_index = _boost_burst_slots.size() - 1
+		return overflow_slot
+	return {}
+
+func _last_boost_burst_slot() -> Dictionary:
+	if _last_boost_burst_slot_index < 0 or _last_boost_burst_slot_index >= _boost_burst_slots.size():
+		return {}
+	return _boost_burst_slots[_last_boost_burst_slot_index]
+
+func _set_boost_slots_emitting(enabled: bool) -> void:
+	for slot in _boost_burst_slots:
+		for emitter in [slot.get("particles"), slot.get("streak_particles"), slot.get("long_streak_particles")]:
+			if emitter is GPUParticles2D:
+				emitter.emitting = enabled
 
 func _set_emission_activity(v: float) -> void:
 	_emission_activity = clamp(v, 0.0, 1.0)
@@ -526,12 +554,10 @@ func _sync_layout() -> void:
 	particles.position = center
 	streak_particles.position = center
 	long_streak_particles.position = center
-	if _boost_particles:
-		_boost_particles.position = center
-	if _boost_streak_particles:
-		_boost_streak_particles.position = center
-	if _boost_long_streak_particles:
-		_boost_long_streak_particles.position = center
+	for slot in _boost_burst_slots:
+		for emitter in [slot.get("particles"), slot.get("streak_particles"), slot.get("long_streak_particles")]:
+			if emitter is GPUParticles2D:
+				emitter.position = center
 
 func _build_soft_particle_texture(size: int, softness: float) -> Texture2D:
 	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
