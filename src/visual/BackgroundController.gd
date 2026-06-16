@@ -206,14 +206,6 @@ func pulse_starfield(intensity: float = 1.0, match_color: Color = Color(0, 0, 0,
 	_pulse_tween.tween_method(func(v: float) -> void:
 		_match_brightness_mul = v
 	, _match_brightness_mul, 1.0, max(0.22, FeatureFlags.starfield_match_pulse_seconds() * 1.8))
-	_pulse_tween.finished.connect(func() -> void:
-		if _boost_particles:
-			_boost_particles.emitting = false
-		if _boost_streak_particles:
-			_boost_streak_particles.emitting = false
-		if _boost_long_streak_particles:
-			_boost_long_streak_particles.emitting = false
-	)
 
 func _apply_match_boost_color(match_color: Color) -> void:
 	if match_color.a <= 0.0:
