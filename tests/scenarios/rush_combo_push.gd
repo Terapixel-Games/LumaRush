@@ -126,6 +126,8 @@ func _perform_best_match(game_scene: Node) -> bool:
 
 	var snapshot: Array = board.get("grid").duplicate(true)
 	var selected_group: Array = board.find_group(best_cell)
+	var match_color_idx: int = posmod(int(board.get_tile(best_cell)), int(board_view.call("_palette_size")))
+	var center_global: Vector2 = _group_center_global(board_view, selected_group)
 	var resolved: Array = board.resolve_move(best_cell)
 	if resolved.size() < 2:
 		return false
@@ -133,10 +135,24 @@ func _perform_best_match(game_scene: Node) -> bool:
 	board_view.call("_normalize_board_color_ids")
 	board_view.call("_clear_hint")
 	board_view.call("_rebuild_tiles_from_grid")
+	board_view.emit_signal("match_feedback", selected_group, center_global, match_color_idx)
 	board_view.emit_signal("move_committed", selected_group, snapshot)
 	board_view.emit_signal("match_made", selected_group)
 	board_view.call("_check_no_moves_and_emit")
 	return true
+
+
+func _group_center_global(board_view: Node, group: Array) -> Vector2:
+	if group.is_empty():
+		return board_view.global_position
+	var tile_size: float = float(board_view.get("tile_size"))
+	var center := Vector2.ZERO
+	for p in group:
+		center += board_view.global_position + Vector2(
+			(float(p.x) + 0.5) * tile_size,
+			(float(p.y) + 0.5) * tile_size
+		)
+	return center / float(group.size())
 
 
 func _track_scene_transition(scene: Node, scene_path: String) -> void:

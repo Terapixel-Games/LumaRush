@@ -296,11 +296,22 @@ func test_default_and_neon_themes_use_modern_neon_tile_palette() -> void:
 		var config: Dictionary = ThemeManager.get_theme_config(theme_id)
 		assert_that(config.get("tile_palette", [])).is_equal(BoardView.TILE_PALETTE_MODERN)
 
-func test_tile_symbols_use_contrasting_foreground_colors() -> void:
+func test_tiles_do_not_render_symbol_labels() -> void:
 	var view := BoardView.new()
-	for color in BoardView.TILE_PALETTE_MODERN:
-		var symbol_color: Color = view.call("_symbol_color_for_tile", color)
-		assert_that(_contrast_ratio(color, symbol_color)).is_greater_equal(3.0)
+	view.width = 3
+	view.height = 3
+	get_tree().root.add_child(view)
+
+	for row in view.tiles:
+		for tile in row:
+			assert_that((tile as ColorRect).get_node_or_null("Symbol")).is_null()
+
+	var legacy_symbol := Label.new()
+	legacy_symbol.name = "Symbol"
+	(view.tiles[0][0] as ColorRect).add_child(legacy_symbol)
+	view._refresh_tiles()
+	assert_that((view.tiles[0][0] as ColorRect).get_node_or_null("Symbol")).is_null()
+	view.queue_free()
 
 func test_match_haptic_signal_emits_when_enabled() -> void:
 	ProjectSettings.set_setting("lumarush/haptics_enabled", true)
@@ -369,14 +380,6 @@ func _rgb_distance(a: Color, b: Color) -> float:
 	var dg: float = a.g - b.g
 	var db: float = a.b - b.b
 	return sqrt((dr * dr) + (dg * dg) + (db * db))
-
-func _relative_luminance(color: Color) -> float:
-	return (color.r * 0.2126) + (color.g * 0.7152) + (color.b * 0.0722)
-
-func _contrast_ratio(a: Color, b: Color) -> float:
-	var high: float = max(_relative_luminance(a), _relative_luminance(b))
-	var low: float = min(_relative_luminance(a), _relative_luminance(b))
-	return (high + 0.05) / (low + 0.05)
 
 func _make_mouse_click(position: Vector2) -> InputEventMouseButton:
 	var click := InputEventMouseButton.new()

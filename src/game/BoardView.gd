@@ -399,31 +399,14 @@ func _apply_tile_color(tile: ColorRect, color: Color) -> void:
 func _apply_tile_visual(tile: ColorRect, color_idx: int) -> void:
 	var color := _color_from_index(color_idx)
 	_apply_tile_color(tile, color)
-	_sync_tile_symbol(tile, color_idx, color)
+	_remove_tile_symbol(tile)
 
-func _sync_tile_symbol(tile: ColorRect, color_idx: int, color: Color) -> void:
-	var symbol := tile.get_node_or_null("Symbol") as Label
+func _remove_tile_symbol(tile: ColorRect) -> void:
+	var symbol := tile.get_node_or_null("Symbol")
 	if symbol == null:
-		symbol = Label.new()
-		symbol.name = "Symbol"
-		symbol.set_anchors_preset(Control.PRESET_FULL_RECT)
-		symbol.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		symbol.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		symbol.add_theme_color_override("font_outline_color", Color(0.02, 0.01, 0.05, 0.92))
-		symbol.add_theme_constant_override("outline_size", 4)
-		tile.add_child(symbol)
-	symbol.text = _tile_symbol(color_idx)
-	symbol.add_theme_color_override("font_color", _symbol_color_for_tile(color))
-	symbol.add_theme_font_size_override("font_size", int(round(clamp(tile_size * 0.38, 18.0, 58.0))))
-
-func _tile_symbol(color_idx: int) -> String:
-	var symbols := ["◇", "⬡", "○", "☆", "△"]
-	return symbols[posmod(color_idx, symbols.size())]
-
-func _symbol_color_for_tile(color: Color) -> Color:
-	var luma: float = (color.r * 0.2126) + (color.g * 0.7152) + (color.b * 0.0722)
-	return Color(0.04, 0.03, 0.09, 1.0) if luma >= 0.24 else Color(1.0, 0.98, 0.88, 1.0)
+		return
+	tile.remove_child(symbol)
+	symbol.queue_free()
 
 func _blur_radius() -> float:
 	return 2.0 if FeatureFlags.tile_blur_mode() == FeatureFlags.TileBlurMode.LITE else 6.0
