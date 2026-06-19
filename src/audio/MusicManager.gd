@@ -241,15 +241,28 @@ func set_track(id: String, restart_if_playing: bool = true) -> bool:
 		else:
 			return false
 	var data: Dictionary = _tracks[id]
-	synth.stream = data["synth"] as AudioStream
-	bass.stream = data["bass"] as AudioStream
-	drums.stream = data["drums"] as AudioStream
-	fx.stream = data["fx"] as AudioStream
+	var switching_tracks: bool = id != _current_track_id
+	if switching_tracks:
+		synth.stream = data["synth"] as AudioStream
+		bass.stream = data["bass"] as AudioStream
+		drums.stream = data["drums"] as AudioStream
+		fx.stream = data["fx"] as AudioStream
 	if restart_if_playing:
-		for p in [synth, bass, drums, fx]:
-			p.stop()
-			p.stream_paused = false
-			p.play()
+		if switching_tracks:
+			for p in [synth, bass, drums, fx]:
+				p.stop()
+				p.stream_paused = false
+				p.play()
+		else:
+			var should_restart_synced := false
+			for p in [synth, bass, drums, fx]:
+				p.stream_paused = false
+				if not p.playing:
+					should_restart_synced = true
+			if should_restart_synced:
+				for p in [synth, bass, drums, fx]:
+					p.stop()
+					p.play()
 	_set_music_bus_muted(false)
 	_current_track_id = id
 	SaveStore.set_selected_track_id(id)

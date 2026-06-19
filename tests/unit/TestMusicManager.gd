@@ -128,6 +128,20 @@ func test_start_all_synced_does_not_restart_active_loop() -> void:
 	assert_that(mm.bass.stream_paused).is_false()
 	mm.queue_free()
 
+func test_set_track_does_not_restart_active_same_track() -> void:
+	var mm := preload("res://src/audio/MusicManager.tscn").instantiate()
+	get_tree().root.add_child(mm)
+	assert_that(mm.set_track("glassgrid", true)).is_true()
+	await get_tree().create_timer(0.15).timeout
+	var before_repeat_selection: float = mm.synth.get_playback_position()
+	assert_that(mm.set_track("glassgrid", true)).is_true()
+	var after_repeat_selection: float = mm.synth.get_playback_position()
+	assert_that(before_repeat_selection).is_greater(0.0)
+	assert_that(after_repeat_selection).is_greater_equal(before_repeat_selection)
+	assert_that(mm.synth.stream_paused).is_false()
+	assert_that(mm.bass.stream_paused).is_false()
+	mm.queue_free()
+
 func test_resume_after_user_gesture_starts_stalled_stems() -> void:
 	var mm := preload("res://src/audio/MusicManager.tscn").instantiate()
 	get_tree().root.add_child(mm)
