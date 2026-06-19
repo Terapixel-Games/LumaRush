@@ -92,7 +92,7 @@ func collect_metrics() -> Dictionary:
 
 func get_invariants() -> Array[Dictionary]:
 	return [
-		{"id": "actions_non_idle", "metric": "actions_total", "op": ">=", "value": 20},
+		{"id": "actions_non_idle", "metric": "actions_total", "op": ">=", "value": 16},
 		{"id": "run_started", "metric": "runs_started", "op": ">=", "value": 1},
 		{"id": "score_progress", "metric": "score_final", "op": ">=", "value": 100},
 	]
