@@ -156,6 +156,20 @@ func test_resume_after_user_gesture_starts_stalled_stems() -> void:
 	assert_that(mm.bass.stream_paused).is_false()
 	mm.queue_free()
 
+func test_resume_after_user_gesture_does_not_restart_active_loop() -> void:
+	var mm := preload("res://src/audio/MusicManager.tscn").instantiate()
+	get_tree().root.add_child(mm)
+	mm.start_all_synced()
+	await get_tree().create_timer(0.15).timeout
+	var before_click_unlock: float = mm.synth.get_playback_position()
+	assert_that(mm.resume_after_user_gesture()).is_true()
+	var after_click_unlock: float = mm.synth.get_playback_position()
+	assert_that(before_click_unlock).is_greater(0.0)
+	assert_that(after_click_unlock).is_greater_equal(before_click_unlock)
+	assert_that(mm.synth.stream_paused).is_false()
+	assert_that(mm.bass.stream_paused).is_false()
+	mm.queue_free()
+
 func test_resume_after_user_gesture_keeps_off_track_muted() -> void:
 	var mm := preload("res://src/audio/MusicManager.tscn").instantiate()
 	get_tree().root.add_child(mm)

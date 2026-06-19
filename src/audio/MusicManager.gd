@@ -89,7 +89,7 @@ func resume_after_user_gesture() -> bool:
 	var should_restart_synced := false
 	for p in [synth, bass, drums, fx]:
 		p.stream_paused = false
-		if not p.playing or p.get_playback_position() <= 0.02:
+		if not p.playing:
 			should_restart_synced = true
 	if should_restart_synced:
 		for p in [synth, bass, drums, fx]:
