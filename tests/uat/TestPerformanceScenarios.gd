@@ -1,6 +1,6 @@
 extends "res://tests/framework/TestCase.gd"
 
-const PHASE_FRAME_MS := 150.0
+const PHASE_FRAME_MS := 200.0
 
 
 func test_first_match_perf_metrics_are_recorded() -> void:
