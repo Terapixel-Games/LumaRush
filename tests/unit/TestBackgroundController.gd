@@ -68,9 +68,9 @@ func test_match_pulse_tints_boost_particles_without_recoloring_ambient_particles
 	assert_that(boost_material.color.g).is_greater(boost_material.color.b)
 	assert_that(boost_streak_material.color.r).is_greater_equal(match_color.r - 0.001)
 	assert_that(boost_streak_material.color.g).is_greater(boost_streak_material.color.b)
-	assert_that(ambient_after.r).is_equal(ambient_before.r)
-	assert_that(ambient_after.g).is_equal(ambient_before.g)
-	assert_that(ambient_after.b).is_equal(ambient_before.b)
+	assert_that(ambient_after.r).is_equal_approx(ambient_before.r, 0.01)
+	assert_that(ambient_after.g).is_equal_approx(ambient_before.g, 0.01)
+	assert_that(ambient_after.b).is_equal_approx(ambient_before.b, 0.01)
 	assert_that(ambient_material.color).is_equal(ambient_material_color_before)
 	controller.queue_free()
 

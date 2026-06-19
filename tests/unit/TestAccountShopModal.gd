@@ -326,7 +326,7 @@ func test_modal_surfaces_share_premium_casino_style() -> void:
 	_assert_modal_panel_contract(account.get_node("Panel"))
 	_assert_modal_panel_contract(shop.get_node("Panel"))
 	_assert_modal_color_rect_contract(save_streak.get_node("Panel") as ColorRect)
-	_assert_modal_panel_contract(pause.get_node("Panel"))
+	_assert_modal_color_rect_contract(pause.get_node("Panel") as ColorRect)
 	_assert_modal_color_rect_contract(audio.get_node("Center/Panel") as ColorRect)
 
 	_assert_gold_primary_button(account.get_node("Panel/VBox/Footer/Close") as Button)
