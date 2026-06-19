@@ -1730,6 +1730,7 @@ func _kick_screen_shake(strength: float) -> void:
 
 func _play_feedback_tier(group_size: int) -> void:
 	MusicManager.on_match_made()
+	MusicManager.play_match_reward(group_size, combo)
 	if combo >= HIGH_COMBO_THRESHOLD:
 		MusicManager.maybe_trigger_high_combo_fx()
 	if combo >= 7 or group_size >= 6:

@@ -20,6 +20,9 @@ const GLASSGRID_BASS_PATH := "res://assets/stems/glassgrid/hype_layer.ogg"
 const GLASSGRID_DRUMS_PATH := "res://assets/stems/glassgrid/match_layer.ogg"
 const GLASSGRID_FX_PATH := "res://assets/stems/glassgrid/fx_layer.ogg"
 
+const MATCH_REWARD_SAMPLE_RATE := 44100
+const MATCH_REWARD_NOTES := [740.0, 932.0, 1244.0]
+
 var synth: AudioStreamPlayer
 var bass: AudioStreamPlayer
 var drums: AudioStreamPlayer
@@ -30,6 +33,7 @@ var _mix_fade_tween: Tween
 var _fx_cooldown_until_ms := 0
 var _tracks: Dictionary = {}
 var _track_bpms: Dictionary = {}
+var _match_reward_streams: Dictionary = {}
 var _current_track_id: String = ""
 var _friendly_names := {
 	"default": "Luma Theme",
@@ -170,6 +174,18 @@ func maybe_trigger_high_combo_fx() -> void:
 	var t := create_tween()
 	t.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t.tween_property(fx, "volume_db", FeatureFlags.COMBO_FLOOR_DB, 0.6)
+
+func play_match_reward(group_size: int = 3, combo_value: int = 1) -> bool:
+	var audio_manager := get_node_or_null("/root/AudioManager")
+	if audio_manager == null or not audio_manager.has_method("play_sfx"):
+		return false
+	var tier: int = clampi(max(0, group_size - 3) + max(0, combo_value - 1), 0, 5)
+	var stream: AudioStream = _match_reward_stream(tier)
+	if stream == null:
+		return false
+	var pitch: float = clamp(1.0 + (float(tier) * 0.035), 1.0, 1.18)
+	audio_manager.call("play_sfx", stream, -5.0, pitch)
+	return true
 
 func set_ads_paused(paused: bool) -> void:
 	if synth == null or bass == null or drums == null or fx == null:
@@ -385,6 +401,38 @@ func _load_stream(path: String) -> AudioStream:
 	if resource is AudioStream:
 		return resource as AudioStream
 	return null
+
+func _match_reward_stream(tier: int) -> AudioStreamWAV:
+	if _match_reward_streams.has(tier):
+		return _match_reward_streams[tier] as AudioStreamWAV
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = MATCH_REWARD_SAMPLE_RATE
+	stream.stereo = false
+	stream.loop_mode = AudioStreamWAV.LOOP_DISABLED
+	stream.data = _build_match_reward_wav_data(tier)
+	_match_reward_streams[tier] = stream
+	return stream
+
+func _build_match_reward_wav_data(tier: int) -> PackedByteArray:
+	var duration: float = 0.24 + (float(tier) * 0.012)
+	var sample_count: int = int(float(MATCH_REWARD_SAMPLE_RATE) * duration)
+	var data := PackedByteArray()
+	data.resize(sample_count * 2)
+	for i in range(sample_count):
+		var t: float = float(i) / float(MATCH_REWARD_SAMPLE_RATE)
+		var progress: float = float(i) / float(max(1, sample_count - 1))
+		var note_position: float = min(progress * float(MATCH_REWARD_NOTES.size()), float(MATCH_REWARD_NOTES.size()) - 0.001)
+		var note_index: int = int(note_position)
+		var note_progress: float = note_position - float(note_index)
+		var freq: float = float(MATCH_REWARD_NOTES[note_index])
+		var attack: float = clamp(t / 0.018, 0.0, 1.0)
+		var release: float = clamp((duration - t) / 0.085, 0.0, 1.0)
+		var envelope: float = attack * release * (1.0 - (note_progress * 0.16))
+		var tone: float = sin(TAU * freq * t) + (0.32 * sin(TAU * freq * 2.0 * t))
+		var sample_value: int = int(clamp(tone * envelope * 0.22 * 32767.0, -32768.0, 32767.0))
+		data.encode_s16(i * 2, sample_value)
+	return data
 
 func _is_audio_unlock_event(event: InputEvent) -> bool:
 	if event is InputEventMouseButton:

@@ -181,3 +181,23 @@ func test_resume_after_user_gesture_keeps_off_track_muted() -> void:
 	assert_that(AudioServer.is_bus_mute(music_bus)).is_true()
 	assert_that(mm.get_current_track_id()).is_equal("off")
 	mm.queue_free()
+
+func test_match_reward_sound_plays_through_sfx_pool() -> void:
+	var mm := preload("res://src/audio/MusicManager.tscn").instantiate()
+	get_tree().root.add_child(mm)
+	AudioManager.set_sfx_enabled(true)
+	AudioManager.stop_all_sfx()
+	assert_that(mm.play_match_reward(5, 3)).is_true()
+	var playing_player: AudioStreamPlayer = _first_playing_sfx_player()
+	assert_that(playing_player).is_not_null()
+	assert_that(playing_player.stream).is_not_null()
+	assert_that(playing_player.stream is AudioStreamWAV).is_true()
+	assert_that((playing_player.stream as AudioStreamWAV).data.size()).is_greater(0)
+	AudioManager.stop_all_sfx()
+	mm.queue_free()
+
+func _first_playing_sfx_player() -> AudioStreamPlayer:
+	for child in AudioManager.get_children():
+		if child is AudioStreamPlayer and (child as AudioStreamPlayer).playing:
+			return child as AudioStreamPlayer
+	return null
