@@ -3,16 +3,28 @@ extends GdUnitTestSuite
 var _original_tutorial_seen: bool = false
 var _original_mode: String = "PURE"
 var _original_open_tip_visible: bool = true
+var _original_undo_charges: int = 0
+var _original_remove_color_charges: int = 0
+var _original_hint_charges: int = 0
 
 func before_test() -> void:
 	_original_tutorial_seen = SaveStore.is_tutorial_seen()
 	_original_mode = RunManager.get_selected_mode()
 	_original_open_tip_visible = SaveStore.should_show_tip(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, true)
+	_original_undo_charges = FeatureFlags.powerup_undo_charges()
+	_original_remove_color_charges = FeatureFlags.powerup_remove_color_charges()
+	_original_hint_charges = FeatureFlags.powerup_hint_charges()
+	ProjectSettings.set_setting("lumarush/powerup_undo_charges", FeatureFlags.POWERUP_UNDO_CHARGES)
+	ProjectSettings.set_setting("lumarush/powerup_remove_color_charges", FeatureFlags.POWERUP_REMOVE_COLOR_CHARGES)
+	ProjectSettings.set_setting("lumarush/powerup_hint_charges", FeatureFlags.POWERUP_HINT_CHARGES)
 
 func after_test() -> void:
 	SaveStore.set_tutorial_seen(_original_tutorial_seen)
 	RunManager.set_selected_mode(_original_mode, "test")
 	SaveStore.set_tip_dismissed(SaveStore.TIP_OPEN_LEADERBOARD_FIRST_POWERUP, not _original_open_tip_visible)
+	ProjectSettings.set_setting("lumarush/powerup_undo_charges", _original_undo_charges)
+	ProjectSettings.set_setting("lumarush/powerup_remove_color_charges", _original_remove_color_charges)
+	ProjectSettings.set_setting("lumarush/powerup_hint_charges", _original_hint_charges)
 
 func test_first_run_tutorial_teaches_board_music_and_powerups() -> void:
 	SaveStore.set_tutorial_seen(false)
