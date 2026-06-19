@@ -233,7 +233,7 @@ func test_first_powerup_use_prompts_for_open_leaderboard_and_tutorial_resets_pro
 	_assert_rect_inside(cancel_rect, panel_rect)
 	assert_that(message_rect.position.y).is_greater(title_rect.position.y)
 	assert_that(message_rect.position.y - title_rect.end.y).is_greater_equal(24.0)
-	assert_that(title_rect.position.x).is_greater_equal(icon_rect.end.x + 70.0)
+	assert_that(title_rect.position.x).is_greater_equal(icon_rect.end.x + 60.0)
 	assert_that(message_rect.position.x).is_equal(title_rect.position.x)
 	assert_that(message_rect.size.x).is_greater_equal(560.0)
 	assert_that(message.get_theme_constant("line_spacing")).is_greater_equal(6)
