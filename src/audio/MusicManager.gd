@@ -90,15 +90,7 @@ func resume_after_user_gesture() -> bool:
 	if _current_track_id == "off":
 		return false
 	_set_music_bus_muted(false)
-	var should_restart_synced := false
-	for p in [synth, bass, drums, fx]:
-		p.stream_paused = false
-		if not p.playing:
-			should_restart_synced = true
-	if should_restart_synced:
-		for p in [synth, bass, drums, fx]:
-			p.stop()
-			p.play()
+	_start_missing_stems_without_rewinding()
 	return true
 
 func set_calm() -> void:
@@ -270,19 +262,26 @@ func set_track(id: String, restart_if_playing: bool = true) -> bool:
 				p.stream_paused = false
 				p.play()
 		else:
-			var should_restart_synced := false
-			for p in [synth, bass, drums, fx]:
-				p.stream_paused = false
-				if not p.playing:
-					should_restart_synced = true
-			if should_restart_synced:
-				for p in [synth, bass, drums, fx]:
-					p.stop()
-					p.play()
+			_start_missing_stems_without_rewinding()
 	_set_music_bus_muted(false)
 	_current_track_id = id
 	SaveStore.set_selected_track_id(id)
 	return true
+
+func _start_missing_stems_without_rewinding() -> void:
+	var stems: Array[AudioStreamPlayer] = [synth, bass, drums, fx]
+	var resume_position := 0.0
+	var has_active_stem := false
+	for p in stems:
+		if p.playing:
+			resume_position = p.get_playback_position()
+			has_active_stem = true
+			break
+	for p in stems:
+		p.stream_paused = false
+		if p.playing:
+			continue
+		p.play(resume_position if has_active_stem else 0.0)
 
 func _input(event: InputEvent) -> void:
 	if not _is_audio_unlock_event(event):
