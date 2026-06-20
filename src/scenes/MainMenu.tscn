@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/MainMenu.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/visual/BackgroundController.tscn" id="2"]
@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/icons/atlas/cart.tres" id="11"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/atlas/music_on.tres" id="12"]
 [ext_resource type="Script" path="res://src/ui/NeonTrackGate.gd" id="13"]
+[ext_resource type="Texture2D" path="res://assets/marketing/logo_horizontal.png" id="14"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -181,7 +182,17 @@ theme_override_constants/separation = 16
 layout_mode = 2
 text = "RUN DECK"
 
+[node name="LogoArt" type="TextureRect" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+texture = ExtResource("14")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="Title" type="Label" parent="UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox"]
+visible = false
 layout_mode = 2
 text = "LUMARUSH"
 

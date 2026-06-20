@@ -19,17 +19,25 @@ func test_menu_panel_is_centered_in_viewport_and_uses_split_deck_when_possible()
 	var audio_button: Control = menu.get_node_or_null("UI/RootMargin/Layout/TopBar/Audio") as Control
 	assert_that(audio_button).is_not_null()
 	var start_button: Button = menu.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Start") as Button
+	var title: Label = menu.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Title") as Label
+	var logo_art: TextureRect = menu.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/LogoArt") as TextureRect
 	var subtitle: Label = menu.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Subtitle") as Label
 	var weekly_button: Button = menu.get_node_or_null("UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard/Margin/VBox/IntelGrid/WeeklyCard/Margin/VBox/WeeklyLadderInfo") as Button
 	var coin_status: Label = menu.get_node_or_null("UI/RootMargin/Layout/TopBar/CoinStatus") as Label
 	var streak_status: Label = menu.get_node_or_null("UI/RootMargin/Layout/TopBar/StreakStatus") as Label
 	var rival_status: Label = menu.get_node_or_null("UI/RootMargin/Layout/TopBar/RivalStatus") as Label
 	assert_that(start_button).is_not_null()
+	assert_that(title).is_not_null()
+	assert_that(logo_art).is_not_null()
 	assert_that(subtitle).is_not_null()
 	assert_that(weekly_button).is_not_null()
 	assert_that(coin_status).is_not_null()
 	assert_that(streak_status).is_not_null()
 	assert_that(rival_status).is_not_null()
+	assert_that(title.visible).is_false()
+	assert_that(logo_art.visible).is_true()
+	assert_that(logo_art.texture).is_not_null()
+	assert_that(logo_art.texture.resource_path).is_equal("res://assets/marketing/logo_horizontal.png")
 	assert_that(start_button.text).is_equal("START RUN")
 	assert_that(subtitle.text).contains("BREAK RIVAL")
 	assert_that(weekly_button.text).contains("RIVAL")

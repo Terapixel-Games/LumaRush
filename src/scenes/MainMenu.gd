@@ -18,6 +18,7 @@ const PROMO_URL := "https://terapixel.games/color-crunch"
 @onready var launch_card: PanelContainer = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/LaunchCard
 @onready var brand_label: Label = $UI/RootMargin/Layout/TopBar/Brand
 @onready var title_label: Label = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/Title
+@onready var logo_art: TextureRect = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/LogoArt
 @onready var signal_grid: GridContainer = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid
 @onready var pure_meta: Label = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/PureCard/PureVBox/PureMeta
 @onready var daily_signal_meta: Label = $UI/RootMargin/Layout/Center/PanelShell/Panel/ContentMargin/Scroll/VBox/DeckHeader/HeroCard/Margin/VBox/SignalGrid/DailyCard/DailyVBox/DailyMeta
@@ -89,8 +90,9 @@ func _process(delta: float) -> void:
 	if FeatureFlags.is_visual_test_mode():
 		return
 	_title_t += delta
-	var color_wave: float = (sin(_title_t * 1.12) + 1.0) * 0.5
-	title_label.add_theme_color_override("font_color", _title_base_color.lerp(_title_accent_color, color_wave))
+	if title_label != null and title_label.visible:
+		var color_wave: float = (sin(_title_t * 1.12) + 1.0) * 0.5
+		title_label.add_theme_color_override("font_color", _title_base_color.lerp(_title_accent_color, color_wave))
 
 func _notification(what: int) -> void:
 	if what == Control.NOTIFICATION_RESIZED:
@@ -164,6 +166,8 @@ func _layout_menu() -> void:
 func _refresh_title_pivots() -> void:
 	if title_label:
 		title_label.pivot_offset = title_label.size * 0.5
+	if logo_art:
+		logo_art.pivot_offset = logo_art.size * 0.5
 
 func _play_menu_motion() -> void:
 	_run_panel_fade_in()
@@ -174,10 +178,13 @@ func _play_menu_motion() -> void:
 func _run_logo_idle_float() -> void:
 	if is_instance_valid(_logo_idle_tween):
 		_logo_idle_tween.kill()
+	var logo_target: Control = logo_art if logo_art != null else title_label
+	if logo_target == null:
+		return
 	_logo_idle_tween = create_tween()
 	_logo_idle_tween.set_loops()
-	_logo_idle_tween.tween_property(title_label, "scale", Vector2(1.02, 1.02), 1.45)
-	_logo_idle_tween.tween_property(title_label, "scale", Vector2.ONE, 1.45)
+	_logo_idle_tween.tween_property(logo_target, "scale", Vector2(1.02, 1.02), 1.45)
+	_logo_idle_tween.tween_property(logo_target, "scale", Vector2.ONE, 1.45)
 
 func _run_cta_pulse() -> void:
 	if is_instance_valid(_cta_pulse_tween):
@@ -268,6 +275,12 @@ func _apply_launch_bay_hierarchy() -> void:
 	if brand_label != null:
 		brand_label.add_theme_font_size_override("font_size", Typography.px(16.0))
 		brand_label.add_theme_color_override("font_color", Color(0.60, 0.90, 1.0, 0.96))
+	if logo_art != null:
+		logo_art.visible = true
+		logo_art.custom_minimum_size = Vector2(0, Typography.px(150.0))
+		logo_art.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		logo_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title_label.visible = false
 	title_label.add_theme_font_size_override("font_size", Typography.px(98.0))
 	title_label.add_theme_color_override("font_color", Color(1.0, 0.42, 0.56, 1.0))
 	title_label.add_theme_color_override("font_outline_color", Color(0.02, 0.0, 0.08, 0.98))
