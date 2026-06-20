@@ -35,6 +35,7 @@ var _tracks: Dictionary = {}
 var _track_bpms: Dictionary = {}
 var _match_reward_streams: Dictionary = {}
 var _current_track_id: String = ""
+var _input_audio_unlock_consumed := false
 var _friendly_names := {
 	"default": "Luma Theme",
 	"glassgrid": "Neon Drift",
@@ -72,6 +73,7 @@ func _exit_tree() -> void:
 	_tracks.clear()
 	_track_bpms.clear()
 	_current_track_id = ""
+	_input_audio_unlock_consumed = false
 
 func start_all_synced() -> void:
 	if synth == null or bass == null or drums == null or fx == null:
@@ -235,12 +237,14 @@ func set_track(id: String, restart_if_playing: bool = true) -> bool:
 		if id == "off":
 			_set_music_bus_muted(true)
 			_current_track_id = id
+			_input_audio_unlock_consumed = false
 			SaveStore.set_selected_track_id(id)
 			return true
 		return false
 	if id == "off":
 		_set_music_bus_muted(true)
 		_current_track_id = id
+		_input_audio_unlock_consumed = false
 		SaveStore.set_selected_track_id(id)
 		return true
 	if not _tracks.has(id):
@@ -265,6 +269,8 @@ func set_track(id: String, restart_if_playing: bool = true) -> bool:
 			_start_missing_stems_without_rewinding()
 	_set_music_bus_muted(false)
 	_current_track_id = id
+	if switching_tracks:
+		_input_audio_unlock_consumed = false
 	SaveStore.set_selected_track_id(id)
 	return true
 
@@ -284,9 +290,11 @@ func _start_missing_stems_without_rewinding() -> void:
 		p.play(resume_position if has_active_stem else 0.0)
 
 func _input(event: InputEvent) -> void:
+	if _input_audio_unlock_consumed:
+		return
 	if not _is_audio_unlock_event(event):
 		return
-	resume_after_user_gesture()
+	_input_audio_unlock_consumed = resume_after_user_gesture()
 
 func _register_builtin_tracks() -> void:
 	_register_track_from_paths(

@@ -185,6 +185,40 @@ func test_resume_after_user_gesture_does_not_rewind_when_one_stem_stalled() -> v
 	assert_that(mm.fx.get_playback_position()).is_greater(0.0)
 	mm.queue_free()
 
+func test_repeated_input_unlock_clicks_do_not_repair_or_restart_music() -> void:
+	var mm := preload("res://src/audio/MusicManager.tscn").instantiate()
+	get_tree().root.add_child(mm)
+	mm.start_all_synced()
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	mm.call("_input", click)
+	await get_tree().create_timer(0.15).timeout
+	mm.fx.stop()
+	var before_second_click: float = mm.synth.get_playback_position()
+	mm.call("_input", click)
+	var after_second_click: float = mm.synth.get_playback_position()
+	assert_that(before_second_click).is_greater(0.0)
+	assert_that(after_second_click).is_greater_equal(before_second_click)
+	assert_that(mm.fx.playing).is_false()
+	mm.queue_free()
+
+func test_track_switch_resets_input_unlock_guard() -> void:
+	var mm := preload("res://src/audio/MusicManager.tscn").instantiate()
+	get_tree().root.add_child(mm)
+	mm.start_all_synced()
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	mm.call("_input", click)
+	assert_that(mm.set_track("off", true)).is_true()
+	assert_that(mm.set_track("glassgrid", false)).is_true()
+	assert_that(mm.synth.playing).is_false()
+	mm.call("_input", click)
+	assert_that(mm.synth.playing).is_true()
+	assert_that(mm.bass.playing).is_true()
+	mm.queue_free()
+
 func test_set_track_same_active_track_does_not_rewind_when_one_stem_stalled() -> void:
 	var mm := preload("res://src/audio/MusicManager.tscn").instantiate()
 	get_tree().root.add_child(mm)
