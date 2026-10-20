@@ -67,6 +67,8 @@ services:
         sync: false
       - key: TPX_PLATFORM_IAP_ADMIN_KEY
         sync: false
+      - key: TPX_NAKAMA_EXCHANGE_KEY
+        sync: false
       - key: TPX_GAME_ID
         value: "lumarush"
       - key: TPX_HTTP_TIMEOUT_MS

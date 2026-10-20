@@ -61,3 +61,30 @@ gcloud run services replace /tmp/lumarush-nakama-service.yaml \
 ```
 
 `backend/nakama/render/start.sh` is reused for Cloud Run. It accepts DB config via `DB_ADDRESS` (preferred), `DATABASE_URL`, or `DB_*` parts.
+
+
+## Identity exchange rollout gate (local preparation only)
+
+The service template now injects server-only `TPX_NAKAMA_EXCHANGE_KEY` via Secret
+Manager. Environment-scoped GitHub **variables** `TPX_NAKAMA_EXCHANGE_SECRET` and
+`TPX_NAKAMA_EXCHANGE_SECRET_VERSION` hold only a secret resource name and a positive
+numeric version. No credential value belongs in Actions variables, logs, rendered
+YAML `value` fields or client builds. Manual template rendering must substitute
+both new placeholders as well. The workflow rejects missing/malformed metadata
+before cloud authentication; it does not create secrets or grant access.
+
+Proposed resource names, subject to inventory and separate approval:
+`lumarush-nakama-exchange-staging` and `lumarush-nakama-exchange-prod`, each in the
+actual target project and distinct from every other game/environment. Bind the
+runtime service account to secret accessor on its single environment's resource;
+use an approved immutable version. Gateway runtime receives the matching lumarush
+mapping through its own aggregate secret. Do not reuse the platform admin key.
+Render fallback needs a protected, separately approved `TPX_NAKAMA_EXCHANGE_KEY`
+setting; the blueprint declares it `sync: false` and supplies no value.
+
+The workflow defaults `CLOUDRUN_SERVICE` to `lumarush-nakama` for both targets.
+Before any release, verify explicit staging/production project/service/runtime
+account/DB/URL isolation: the default is not evidence of separate environments.
+Merging main triggers staging and Pages workflows; tags/manual targets can deploy
+production without proving main ancestry. Do not merge/tag/dispatch merely to
+validate this wiring. Current remote PR13 is unchanged by this local follow-up.

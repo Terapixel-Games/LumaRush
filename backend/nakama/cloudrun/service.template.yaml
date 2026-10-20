@@ -65,6 +65,11 @@ spec:
                 secretKeyRef:
                   name: tpx-magic-link-notify-secret
                   key: latest
+            - name: TPX_NAKAMA_EXCHANGE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "__TPX_NAKAMA_EXCHANGE_SECRET__"
+                  key: "__TPX_NAKAMA_EXCHANGE_SECRET_VERSION__"
             - name: TPX_PLATFORM_IDENTITY_NAKAMA_AUTH_URL
               value: "__TPX_PLATFORM_IDENTITY_NAKAMA_AUTH_URL__"
             - name: TPX_PLATFORM_USERNAME_VALIDATE_URL
