@@ -186,3 +186,60 @@ Active runtime endpoints:
 4. Apply with `gcloud run services replace`.
 
 Use `backend/nakama/cloudrun/README.md` for exact commands.
+
+## Authenticated Nakama identity exchange
+
+The companion platform hardening requires a dedicated backend credential for
+`POST /v1/auth/nakama`. Set server-only `TPX_NAKAMA_EXCHANGE_KEY` to the approved
+credential matching this environment's `lumarush` entry in the gateway's
+`NAKAMA_EXCHANGE_KEYS_JSON`. Use at least 32 characters from `A-Z`, `a-z`, `0-9`,
+`_`, and `-`; no credential is supplied here. Do not reuse platform admin/API keys,
+Nakama server/HTTP keys, or another game's/environment's credential. Never put this
+value in Godot exports, client payloads, checked-in YAML, command tracing, or logs.
+Missing or invalid configuration disables exchange before any outbound request.
+
+Both `modules/lumarush.js` and the template-derived `modules/index.js` now require
+an authenticated nonblank string `ctx.userId`. The template RPC
+`platform_auth_exchange` ignores payload identity/game/credential fields and uses
+only `ctx.userId`, server `GAME_ID`, and the configured credential. The active
+LumaRush path uses server `TPX_GAME_ID` (default `lumarush`). Only identity exchange
+requests get `x-nakama-exchange-key`; other platform requests do not receive it.
+
+Loading analysis: `local.yml` and generated `render/start.sh` runtime config both
+select `js_entrypoint: "lumarush.js"`. `Dockerfile.render` copies the modules and
+uses that startup script; Cloud Run reuses it. `index.js` is a separate alternative
+entrypoint, not imported by `lumarush.js`. These files each define `InitModule`,
+`MODULE_CONFIG`, account RPCs and exchange helpers; do not concatenate them or
+load them into one JavaScript scope. Tests evaluate each module in a separate VM
+and exercise both registrations and exchange paths. Actual deployed runtime
+configuration has not been inspected; no Nakama container was started by these tests.
+
+Server configuration prerequisites (not applied): Render/Cloud Run must inject
+`TPX_NAKAMA_EXCHANGE_KEY` as a protected environment/secret value. `render/start.sh`
+now forwards it into Nakama `runtime.env`, rejects YAML-unsafe characters without
+printing the value, and writes generated runtime config with owner-only access.
+Cloud Run operators must add an approved secret-backed environment reference to
+the service configuration; no secret name/value or binding is created here.
+For local Docker Compose, use a private server runtime-config override containing
+this runtime env value; the supplied Compose path mounts `local.yml` directly and
+does not forward arbitrary host/container env into Nakama runtime automatically.
+Do not pass credentials through the existing traced (`-ecx`) Compose command.
+
+Release coordination:
+
+1. Audit/fix the canonical ArcadeCore template and other generated game callers;
+   this local companion covers LumaRush only. Do not grant exchange authority to
+   a backend that still forwards payload-selected identities.
+2. Review/test both platform and caller commits, then merge to their respective
+   `main` branches before any staging release. The platform main workflow may
+   automatically deploy staging when its environment gate is enabled.
+3. Separately approve provisioning/configuration of per-game/environment
+   credentials and coordinate releases from reviewed main revisions. Hardened
+   callers without credentials and a hardened gateway without matching mappings
+   deliberately fail closed; schedule this availability transition explicitly.
+4. Validate controlled staging account flows and negative identity/game cases,
+   including magic-link initiation and merge flows that depend on exchange;
+   promote reviewed main revisions to production only after validation.
+
+Run the backend tests with Node 20:
+`node --test backend/nakama/tests/*.test.js`.
