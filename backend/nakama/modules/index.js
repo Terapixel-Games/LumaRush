@@ -18,6 +18,7 @@ var MODULE_CONFIG = {
   gameId: "",
   leaderboardId: "",
   platformIdentityUrl: "",
+  nakamaExchangeKey: "",
   platformUsernameValidateUrl: "",
   platformAccountMagicLinkStartUrl: "",
   platformAccountMagicLinkCompleteUrl: "",
@@ -56,6 +57,7 @@ function loadConfig(ctx) {
     gameId: gameId,
     leaderboardId: String(env.LEADERBOARD_ID || (gameId + "_high_scores")).trim().toLowerCase(),
     platformIdentityUrl: String(env.PLATFORM_IDENTITY_URL || "").trim(),
+    nakamaExchangeKey: String(env.TPX_NAKAMA_EXCHANGE_KEY || ""),
     platformUsernameValidateUrl: String(env.PLATFORM_USERNAME_VALIDATE_URL || "").trim(),
     platformAccountMagicLinkStartUrl: String(
       env.PLATFORM_ACCOUNT_MAGIC_LINK_START_URL || env.TPX_PLATFORM_MAGIC_LINK_START_URL || ""
@@ -86,8 +88,12 @@ function loadConfig(ctx) {
 }
 
 function rpcPlatformAuthExchange(ctx, logger, nk, payload) {
+  assertAuthenticated(ctx);
+  if (typeof ctx.userId !== "string" || !ctx.userId.trim()) {
+    throw new Error("User session is required.");
+  }
   var data = parsePayload(payload);
-  var nakamaUserId = String(data.nakama_user_id || ctx.userId || "").trim();
+  var nakamaUserId = String(ctx.userId).trim();
   if (!nakamaUserId) {
     throw new Error("nakama_user_id is required");
   }
@@ -97,9 +103,7 @@ function rpcPlatformAuthExchange(ctx, logger, nk, payload) {
   var response = nk.httpRequest(
     MODULE_CONFIG.platformIdentityUrl + "/v1/auth/nakama",
     "post",
-    {
-      "Content-Type": "application/json",
-    },
+    nakamaExchangeHeaders(),
     JSON.stringify({
       game_id: MODULE_CONFIG.gameId,
       nakama_user_id: nakamaUserId,
@@ -489,15 +493,17 @@ function rpcClientEventTrack(ctx, logger, nk, payload) {
 }
 
 function exchangePlatformSession(ctx, nk) {
+  assertAuthenticated(ctx);
+  if (typeof ctx.userId !== "string" || !ctx.userId.trim()) {
+    throw new Error("User session is required.");
+  }
   if (!MODULE_CONFIG.platformIdentityUrl) {
     throw new Error("PLATFORM_IDENTITY_URL is required");
   }
   var response = nk.httpRequest(
     MODULE_CONFIG.platformIdentityUrl + "/v1/auth/nakama",
     "post",
-    {
-      "Content-Type": "application/json"
-    },
+    nakamaExchangeHeaders(),
     JSON.stringify({
       game_id: MODULE_CONFIG.gameId,
       nakama_user_id: String((ctx && ctx.userId) || "").trim(),
@@ -1298,4 +1304,15 @@ function trimReplayEntries(entries, maxEntries) {
     out[rows[j].key] = rows[j].at;
   }
   return out;
+}
+
+function nakamaExchangeHeaders() {
+  if (!String(MODULE_CONFIG.gameId || "").trim()) {
+    throw new Error("server game ID is required for identity exchange");
+  }
+  var key = MODULE_CONFIG.nakamaExchangeKey;
+  if (typeof key !== "string" || key.length < 32 || !/^[A-Za-z0-9_-]+$/.test(key)) {
+    throw new Error("TPX_NAKAMA_EXCHANGE_KEY is not configured correctly");
+  }
+  return { "Content-Type": "application/json", "x-nakama-exchange-key": key };
 }

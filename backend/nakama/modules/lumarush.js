@@ -73,6 +73,7 @@ var MODULE_CONFIG = {
   authUrl: "",
   eventUrl: "",
   identityNakamaAuthUrl: "",
+  nakamaExchangeKey: "",
   iapVerifyUrl: "",
   iapEntitlementsUrl: "",
   iapCoinsAdjustUrl: "",
@@ -157,6 +158,7 @@ function loadConfig(ctx) {
     authUrl: env.TPX_PLATFORM_AUTH_URL || "",
     eventUrl: env.TPX_PLATFORM_EVENT_URL || "",
     identityNakamaAuthUrl: env.TPX_PLATFORM_IDENTITY_NAKAMA_AUTH_URL || "",
+    nakamaExchangeKey: String(env.TPX_NAKAMA_EXCHANGE_KEY || ""),
     iapVerifyUrl: env.TPX_PLATFORM_IAP_VERIFY_URL || "",
     iapEntitlementsUrl: env.TPX_PLATFORM_IAP_ENTITLEMENTS_URL || "",
     iapCoinsAdjustUrl: env.TPX_PLATFORM_IAP_COINS_ADJUST_URL || "",
@@ -1349,22 +1351,27 @@ function persistIapSnapshot(nk, userId, entitlements) {
 }
 
 function exchangePlatformSession(ctx, nk) {
+  assertAuthenticated(ctx);
+  if (typeof ctx.userId !== "string" || !ctx.userId.trim()) {
+    throw new Error("User session is required.");
+  }
   var authUrl =
     MODULE_CONFIG.identityNakamaAuthUrl ||
     ((ctx && ctx.env && ctx.env.TPX_PLATFORM_IDENTITY_NAKAMA_AUTH_URL) || "");
   if (!authUrl) {
     throw new Error("identity exchange URL is not configured");
   }
-  var response = platformPost(
-    nk,
+  var response = nk.httpRequest(
     authUrl,
-    {
+    "post",
+    nakamaExchangeHeaders(),
+    JSON.stringify({
       game_id: MODULE_CONFIG.gameId,
       nakama_user_id: ctx.userId,
       display_name: ctx.username || "",
-    },
-    "",
-    ""
+    }),
+    MODULE_CONFIG.httpTimeoutMs,
+    false
   );
   if (response.code < 200 || response.code >= 300) {
     throw new Error("identity exchange failed");
@@ -2651,4 +2658,15 @@ if (typeof module !== "undefined" && module.exports) {
       );
     },
   };
+}
+
+function nakamaExchangeHeaders() {
+  if (!String(MODULE_CONFIG.gameId || "").trim()) {
+    throw new Error("server game ID is required for identity exchange");
+  }
+  var key = MODULE_CONFIG.nakamaExchangeKey;
+  if (typeof key !== "string" || key.length < 32 || !/^[A-Za-z0-9_-]+$/.test(key)) {
+    throw new Error("TPX_NAKAMA_EXCHANGE_KEY is not configured correctly");
+  }
+  return { "Content-Type": "application/json", "x-nakama-exchange-key": key };
 }
